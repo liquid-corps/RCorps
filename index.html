@@ -4,29 +4,28 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Registro Civil</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
   /* ============================================================
      FUENTE LOCAL
      ============================================================
-     Descarga "Pixelify Sans" desde https://fonts.google.com/specimen/Pixelify+Sans
-     (botón "Get font" > "Download all"). El zip trae, en la carpeta raíz,
-     un archivo variable único llamado:
-        PixelifySans-VariableFont_wght.ttf
-     Coloca ESE archivo en la misma carpeta que este index.html
-     (o cambia la ruta del src de abajo si le pones otro nombre).
+     Descarga la fuente "Pixel Arial 11" (búscala como "Pixel Arial 11
+     font download", es una fuente pixel freeware muy común).
+     Renombra el archivo descargado a exactamente:
+        PixelArial11.ttf
+     y colócalo en la misma carpeta que este index.html.
+     Si tu archivo trae otro nombre, cambia el "src" de aquí abajo.
      ============================================================ */
   @font-face{
-    font-family:'Pixelify Sans';
-    src:url('PixelifySans-VariableFont_wght.ttf') format('truetype');
-    font-weight:400 700;
+    font-family:'Pixel Arial 11';
+    src:url('PixelArial11.ttf') format('truetype');
+    font-weight:normal;
     font-style:normal;
     font-display:swap;
   }
 </style>
 <style>
   :root{
-    --page-bg:#f1eee4;
+    --page-bg:#5C8D70;
     --card-border:#a99b78;
     --card-fill-top:#ece6d6;
     --card-fill-bottom:#e2dbc6;
@@ -45,7 +44,7 @@
     margin:0;
     min-height:100vh;
     background:var(--page-bg);
-    font-family:'Pixelify Sans', monospace;
+    font-family:'Pixel Arial 11', monospace;
     color:var(--text-dark);
     display:flex;
     flex-direction:column;
@@ -201,13 +200,37 @@
     background-repeat:no-repeat;
     box-shadow:0 6px 16px rgba(0,0,0,0.2);
     padding:14px;
+    padding-right:26px; /* deja espacio para el scroll con imagen */
     display:none;
     max-height:280px;
     overflow-y:auto;
+    -webkit-overflow-scrolling:touch; /* scroll suave con el dedo en iOS/Android */
+    scrollbar-width:thin; /* Firefox: no soporta scroll con imagen, deja uno fino */
   }
   .dropdown-panel.open{display:block;}
   .dropdown-panel .panel-hint{
     font-size:12px;color:var(--text-muted);margin-bottom:8px;
+  }
+
+  /* Scroll con imagen propia (Chrome, Edge, Safari, y sus versiones móviles).
+     El arrastre táctil en celular funciona igual, esto solo cambia el look
+     de la barra cuando el menú se ve en una pantalla con mouse/dedo. */
+  .dropdown-panel::-webkit-scrollbar{
+    width:18px;
+  }
+  .dropdown-panel::-webkit-scrollbar-track{
+    background:transparent;
+  }
+  .dropdown-panel::-webkit-scrollbar-thumb{
+    background-image:url('assets/scroll.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    border-radius:0;
+  }
+  .dropdown-panel::-webkit-scrollbar-button{
+    display:none;
+    height:0;
+    width:0;
   }
 
   /* variante en grilla (Skills) */
@@ -278,6 +301,44 @@
   }
   .status.ok{color:#2f5a2f;}
   .status.err{color:#8a1f1f;}
+
+  /* ---- Modal de error (campos incompletos) ---- */
+  .error-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.2);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+    cursor:pointer;
+    padding:20px;
+  }
+  .error-overlay.open{display:flex;}
+  .error-box{
+    background:linear-gradient(180deg,var(--card-fill-top),var(--card-fill-bottom));
+    border:2px solid var(--card-border);
+    outline:5px solid #fff;
+    padding:30px 34px;
+    max-width:420px;
+    width:100%;
+  }
+  .error-title{
+    font-size:36px;
+    color:var(--text-dark);
+    margin-bottom:14px;
+  }
+  .error-message{
+    font-size:17px;
+    line-height:1.5;
+    color:var(--text-muted);
+  }
+  .error-hint{
+    margin-top:16px;
+    font-size:12px;
+    color:var(--text-muted);
+    opacity:0.8;
+  }
 
   @media (max-width:520px){
     .grid{grid-template-columns:1fr;}
@@ -356,6 +417,16 @@
 
 <div class="status" id="status"></div>
 
+<div class="error-overlay" id="error-overlay">
+  <div class="error-box">
+    <div class="error-title">Error:</div>
+    <div class="error-message" id="error-message">
+      Olvidaste un campo por completar.<br>Por favor completa todos los campos.
+    </div>
+    <div class="error-hint">(toca este mensaje para cerrarlo)</div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 /* ================================================================
@@ -370,6 +441,7 @@
      assets/menu_seleccion.png
      assets/rectangulo_de_escribir_largo.png
      assets/rectangulo_de_escribir_pequeno.png
+     assets/scroll.png (imagen del "pulgar" de la barra de scroll en los menús)
 
    Sube tus imágenes de contenido al repositorio en estas otras carpetas:
      /Clan/    -> imagen completa de cada clan (ya con su nombre dibujado)
@@ -658,6 +730,29 @@ $('btn-limpiar').addEventListener('click', ()=>{
   closeAllPanels(null);
 });
 
+/* ---------- Modal de error (campos incompletos) ---------- */
+const errorOverlay = $('error-overlay');
+const errorMessageEl = $('error-message');
+
+function showError(message){
+  if(message) errorMessageEl.innerHTML = message;
+  errorOverlay.classList.add('open');
+}
+errorOverlay.addEventListener('click', ()=> errorOverlay.classList.remove('open'));
+
+function getMissingFields(){
+  const missing = [];
+  if(!$('f-name').value.trim()) missing.push('Name');
+  if(!$('f-age').value.trim()) missing.push('Age');
+  if(!$('f-rank').value.trim()) missing.push('Rank');
+  if(!$('f-zodiacal').value.trim()) missing.push('Zodiacal');
+  if(!$('f-fecha').value) missing.push('Fecha');
+  if(!photoFile) missing.push('Foto');
+  if(selectedSkills.length===0) missing.push('Skills');
+  if(!selectedClan) missing.push('Clan');
+  return missing;
+}
+
 /* ---------- Enviar al webhook de Discord ----------
    En vez de mandar los datos como texto, se captura la ficha
    (tal cual se ve en pantalla, ya rellena) como una imagen y
@@ -673,12 +768,13 @@ $('btn-enviar').addEventListener('click', async ()=>{
     return;
   }
 
-  const name = $('f-name').value.trim();
-  if(!name){
-    statusEl.className='status err';
-    statusEl.textContent='El campo Name es obligatorio.';
+  const missing = getMissingFields();
+  if(missing.length){
+    showError('Olvidaste un campo por completar.<br>Por favor completa todos los campos.');
     return;
   }
+
+  const name = $('f-name').value.trim();
 
   closeAllPanels(null);
   statusEl.textContent='Generando imagen...';

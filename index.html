@@ -50,18 +50,27 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:40px 16px 80px;
+    padding:24px 12px 80px;
+  }
+
+  /* La ficha tiene un ancho de diseño fijo (como en PC) y en pantallas
+     angostas se escala completa hacia abajo (JS), en vez de reacomodar
+     las columnas. Así se ve igual en celular que en computadora. */
+  .card-scale-wrapper{
+    position:relative;
+    margin:0 auto;
   }
 
   .card{
-    position:relative;
-    width:100%;
-    max-width:640px;
+    position:absolute;
+    top:0;left:0;
+    width:640px;
     box-sizing:border-box;
     background-image:url('assets/base_cuadrada.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
     padding:40px 36px;
+    transform-origin:top left;
   }
 
   h1.title{
@@ -160,9 +169,14 @@
     align-items:flex-start;
     gap:6px;
   }
-  .clan-display img, .tags-display img{
+  .clan-display img{
     display:block;
-    max-width:135px;
+    max-width:85px;
+    height:auto;
+  }
+  .tags-display img{
+    display:block;
+    max-width:120px;
     height:auto;
   }
   .clan-display .fallback, .tags-display .fallback{
@@ -342,16 +356,13 @@
     opacity:0.8;
   }
 
-  @media (max-width:520px){
-    .grid{grid-template-columns:1fr;}
-    .col-right{margin-top:20px;}
-    h1.title{font-size:40px;}
-    .dropdown-panel{left:0 !important;right:0 !important;width:auto !important;}
-  }
+  /* Nota: ya no reacomodamos a una columna en móvil — la ficha completa
+     se escala hacia abajo (ver script al final) para verse igual que en PC. */
 </style>
 </head>
 <body>
 
+<div class="card-scale-wrapper" id="card-scale-wrapper">
 <div class="card" id="card">
   <h1 class="title">Civil</h1>
 
@@ -411,6 +422,7 @@
     </div>
   </div>
 </div>
+</div>
 
 <div class="actions">
   <button type="button" id="btn-limpiar">Limpiar</button>
@@ -454,7 +466,7 @@
    coincidan con los nombres de archivo que subiste.
    ================================================================ */
 
-const WEBHOOK_URL = "https://discord.com/api/webhooks/1523544793458937997/_VVWJCWLF0SX0KpvjoJuzhuNIfnRavh-K10eJ3RNaTE_rTfb6HFXfom1aI7yZUpP9Ty5";
+const WEBHOOK_URL = "PON_AQUI_TU_WEBHOOK_URL";
 
 const CLAN_OPTIONS = [
   { name: "Mizu", image: "Clan/mizu.png" },
@@ -495,36 +507,40 @@ const SKILL_OPTIONS = [
   { name: "Vasijas", image: "Skills/vasijas.png" },
 ];
 
+// ⚠️ Tus archivos de Tags están numerados (0001.gif...0029.gif) sin nombre
+// descriptivo, así que por ahora el "name" de cada uno es solo su número.
+// Si me dices qué representa cada número (ej: 0001 = Mizukage), te dejo
+// los nombres reales puestos aquí.
 const TAG_OPTIONS = [
-  { name: "01", image: "Tags/0001.gif" },
-  { name: "02", image: "Tags/0002.gif" },
-  { name: "03", image: "Tags/0003.gif" },
-  { name: "04", image: "Tags/0004.gif" },
-  { name: "05", image: "Tags/0005.gif" },
-  { name: "06", image: "Tags/0006.gif" },
-  { name: "07", image: "Tags/0007.gif" },
-  { name: "08", image: "Tags/0008.gif" },
-  { name: "09", image: "Tags/0009.gif" },
-  { name: "10", image: "Tags/0010.gif" },
-  { name: "11", image: "Tags/0011.gif" },
-  { name: "12", image: "Tags/0012.gif" },
-  { name: "13", image: "Tags/0013.gif" },
-  { name: "14", image: "Tags/0014.gif" },
-  { name: "15", image: "Tags/0015.gif" },
-  { name: "16", image: "Tags/0016.gif" },
-  { name: "17", image: "Tags/0017.gif" },
-  { name: "18", image: "Tags/0018.gif" },
-  { name: "19", image: "Tags/0019.gif" },
-  { name: "20", image: "Tags/0020.gif" },
-  { name: "21", image: "Tags/0021.gif" },
-  { name: "22", image: "Tags/0022.gif" },
-  { name: "23", image: "Tags/0023.gif" },
-  { name: "24", image: "Tags/0024.gif" },
-  { name: "25", image: "Tags/0025.gif" },
-  { name: "26", image: "Tags/0026.gif" },
-  { name: "27", image: "Tags/0027.gif" },
-  { name: "28", image: "Tags/0028.gif" },
-  { name: "29", image: "Tags/0029.gif" },
+  { name: "0001", image: "Tags/0001.gif" },
+  { name: "0002", image: "Tags/0002.gif" },
+  { name: "0003", image: "Tags/0003.gif" },
+  { name: "0004", image: "Tags/0004.gif" },
+  { name: "0005", image: "Tags/0005.gif" },
+  { name: "0006", image: "Tags/0006.gif" },
+  { name: "0007", image: "Tags/0007.gif" },
+  { name: "0008", image: "Tags/0008.gif" },
+  { name: "0009", image: "Tags/0009.gif" },
+  { name: "0010", image: "Tags/0010.gif" },
+  { name: "0011", image: "Tags/0011.gif" },
+  { name: "0012", image: "Tags/0012.gif" },
+  { name: "0013", image: "Tags/0013.gif" },
+  { name: "0014", image: "Tags/0014.gif" },
+  { name: "0015", image: "Tags/0015.gif" },
+  { name: "0016", image: "Tags/0016.gif" },
+  { name: "0017", image: "Tags/0017.gif" },
+  { name: "0018", image: "Tags/0018.gif" },
+  { name: "0019", image: "Tags/0019.gif" },
+  { name: "0020", image: "Tags/0020.gif" },
+  { name: "0021", image: "Tags/0021.gif" },
+  { name: "0022", image: "Tags/0022.gif" },
+  { name: "0023", image: "Tags/0023.gif" },
+  { name: "0024", image: "Tags/0024.gif" },
+  { name: "0025", image: "Tags/0025.gif" },
+  { name: "0026", image: "Tags/0026.gif" },
+  { name: "0027", image: "Tags/0027.gif" },
+  { name: "0028", image: "Tags/0028.gif" },
+  { name: "0029", image: "Tags/0029.gif" },
 ];
 
 const MAX_SKILLS = 2;
@@ -537,6 +553,30 @@ const MAX_TAGS = 3;
 const $ = (id) => document.getElementById(id);
 const card = $('card');
 
+/* ---------- Escalar la ficha completa en pantallas angostas ----------
+   La ficha tiene un ancho de diseño fijo (640px, igual que en PC).
+   En vez de reacomodar las columnas en móvil, se escala entera hacia
+   abajo para que se vea idéntica, solo más chica. */
+const cardWrapper = $('card-scale-wrapper');
+const CARD_DESIGN_WIDTH = 640;
+
+function updateCardScale(){
+  card.style.transform = 'scale(1)';
+  const naturalWidth = card.offsetWidth;
+  const naturalHeight = card.offsetHeight;
+  const available = cardWrapper.parentElement.clientWidth;
+  const scale = Math.min(1, available / naturalWidth);
+  card.style.transform = `scale(${scale})`;
+  cardWrapper.style.width = (naturalWidth * scale) + 'px';
+  cardWrapper.style.height = (naturalHeight * scale) + 'px';
+}
+window.addEventListener('resize', updateCardScale);
+window.addEventListener('orientationchange', updateCardScale);
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(updateCardScale);
+}
+updateCardScale();
+
 /* ---------- Fecha: automática, siempre la de hoy, no editable ---------- */
 const today = new Date();
 const todayFormatted =
@@ -545,11 +585,20 @@ const todayFormatted =
   String(today.getFullYear()).slice(-2);
 $('f-fecha-display').textContent = todayFormatted;
 
+function getCurrentCardScale(){
+  const match = /scale\(([^)]+)\)/.exec(card.style.transform || '');
+  return match ? parseFloat(match[1]) : 1;
+}
+
 function positionPanel(panel, anchorEl){
+  const scale = getCurrentCardScale() || 1;
   const cardRect = card.getBoundingClientRect();
   const anchorRect = anchorEl.getBoundingClientRect();
-  panel.style.left = (anchorRect.left - cardRect.left) + 'px';
-  panel.style.top = (anchorRect.bottom - cardRect.top + 6) + 'px';
+  // Las coordenadas de getBoundingClientRect ya vienen escaladas por el
+  // transform de la ficha; hay que "deshacer" esa escala porque left/top
+  // del panel se interpretan en unidades locales (antes de escalar).
+  panel.style.left = ((anchorRect.left - cardRect.left) / scale) + 'px';
+  panel.style.top = ((anchorRect.bottom - cardRect.top + 6) / scale) + 'px';
 }
 
 function closeAllPanels(except){
@@ -840,11 +889,18 @@ $('btn-enviar').addEventListener('click', async ()=>{
   $('btn-enviar').disabled = true;
 
   try{
-    const canvas = await html2canvas($('card'), {
+    // Para la captura siempre usamos el tamaño real de diseño (640px),
+    // sin el encogido visual que se aplica en pantallas angostas.
+    const previousTransform = card.style.transform;
+    card.style.transform = 'scale(1)';
+
+    const canvas = await html2canvas(card, {
       backgroundColor: '#f1eee4',
       scale: 2,
       useCORS: true
     });
+
+    card.style.transform = previousTransform;
 
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
     const fileName = 'ficha_' + name.replace(/\s+/g,'_') + '.png';

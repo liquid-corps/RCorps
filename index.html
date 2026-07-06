@@ -161,8 +161,8 @@
     cursor:pointer;
   }
 
-  /* Clan y Tags: cuando hay selección, se muestra solo la imagen (sin botón gris) */
-  .clan-display, .tags-display{
+  /* Clan: cuando hay selección, se muestra solo la imagen (sin botón gris) */
+  .clan-display{
     cursor:pointer;
     display:flex;
     flex-direction:column;
@@ -174,12 +174,7 @@
     max-width:85px;
     height:auto;
   }
-  .tags-display img{
-    display:block;
-    max-width:120px;
-    height:auto;
-  }
-  .clan-display .fallback, .tags-display .fallback{
+  .clan-display .fallback{
     background:var(--gray-btn);
     color:#fff;
     font-size:12px;
@@ -205,9 +200,40 @@
   .photo-box img{width:100%;height:100%;object-fit:cover;}
   .photo-box input{display:none;}
 
-  .tags-row{display:flex;align-items:center;gap:14px;margin-top:18px;position:relative;}
+  .bio-row{margin-top:22px;}
+  .bio-box{
+    width:100%;
+    background-image:url('assets/bio_panel.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    padding:14px 18px;
+    display:flex;
+    gap:6px;
+  }
+  .bio-box label{
+    font-size:15px;
+    color:var(--text-muted);
+    white-space:nowrap;
+    flex:none;
+    padding-top:1px;
+  }
+  .bio-box textarea{
+    flex:1;
+    min-width:0;
+    min-height:96px;
+    resize:none;
+    font-family:inherit;
+    font-size:15px;
+    color:var(--text-dark);
+    background:transparent;
+    border:none;
+    padding:0;
+    margin:0;
+    outline:none;
+    line-height:1.4;
+  }
 
-  /* ---- Panel desplegable genérico (Skills / Clan / Tags) ---- */
+  /* ---- Panel desplegable genérico (Skills / Clan) ---- */
   .dropdown-panel{
     position:absolute;
     top:100%;
@@ -273,7 +299,7 @@
   .skill-option.selected img{opacity:0.5;}
   .skill-option span{font-size:10px;color:var(--text-dark);text-align:center;}
 
-  /* variante en lista (Clan / Tags) */
+  /* variante en lista (Clan) */
   .list-panel{width:220px;}
   .list-option{
     display:block;width:100%;
@@ -415,12 +441,13 @@
         <label>Fecha:</label>
         <span id="f-fecha-display"></span>
       </div>
+    </div>
+  </div>
 
-      <div class="tags-row">
-        <label class="field-label">Tags:</label>
-        <div class="tags-display" id="tags-display"></div>
-        <div class="dropdown-panel list-panel" id="tags-panel"></div>
-      </div>
+  <div class="bio-row">
+    <div class="bio-box">
+      <label for="f-bio">Biografía:</label>
+      <textarea id="f-bio" placeholder="Escribe aquí..."></textarea>
     </div>
   </div>
 </div>
@@ -462,7 +489,6 @@
    Sube tus imágenes de contenido al repositorio en estas otras carpetas:
      /Clan/    -> imagen completa de cada clan (ya con su nombre dibujado)
      /Skills/  -> icono cuadrado 1x1 de cada skill
-     /Tags/    -> imagen completa de cada tag (ya con su nombre dibujado)
 
    Luego actualiza las rutas ("image") de las listas de abajo para que
    coincidan con los nombres de archivo que subiste.
@@ -509,44 +535,7 @@ const SKILL_OPTIONS = [
   { name: "Vasijas", image: "Skills/vasijas.png" },
 ];
 
-// ⚠️ Tus archivos de Tags están numerados (0001.gif...0029.gif) sin nombre
-// descriptivo, así que por ahora el "name" de cada uno es solo su número.
-// Si me dices qué representa cada número (ej: 0001 = Mizukage), te dejo
-// los nombres reales puestos aquí.
-const TAG_OPTIONS = [
-  { name: "001", image: "Tags/0001.gif" },
-  { name: "0002", image: "Tags/0002.gif" },
-  { name: "0003", image: "Tags/0003.gif" },
-  { name: "0004", image: "Tags/0004.gif" },
-  { name: "0005", image: "Tags/0005.gif" },
-  { name: "0006", image: "Tags/0006.gif" },
-  { name: "0007", image: "Tags/0007.gif" },
-  { name: "0008", image: "Tags/0008.gif" },
-  { name: "0009", image: "Tags/0009.gif" },
-  { name: "0010", image: "Tags/0010.gif" },
-  { name: "0011", image: "Tags/0011.gif" },
-  { name: "0012", image: "Tags/0012.gif" },
-  { name: "0013", image: "Tags/0013.gif" },
-  { name: "0014", image: "Tags/0014.gif" },
-  { name: "0015", image: "Tags/0015.gif" },
-  { name: "0016", image: "Tags/0016.gif" },
-  { name: "0017", image: "Tags/0017.gif" },
-  { name: "0018", image: "Tags/0018.gif" },
-  { name: "0019", image: "Tags/0019.gif" },
-  { name: "0020", image: "Tags/0020.gif" },
-  { name: "0021", image: "Tags/0021.gif" },
-  { name: "0022", image: "Tags/0022.gif" },
-  { name: "0023", image: "Tags/0023.gif" },
-  { name: "0024", image: "Tags/0024.gif" },
-  { name: "0025", image: "Tags/0025.gif" },
-  { name: "0026", image: "Tags/0026.gif" },
-  { name: "0027", image: "Tags/0027.gif" },
-  { name: "0028", image: "Tags/0028.gif" },
-  { name: "0029", image: "Tags/0029.gif" },
-];
-
 const MAX_SKILLS = 2;
-const MAX_TAGS = 3;
 
 /* ================================================================
    LÓGICA — normalmente no necesitas tocar nada de aquí abajo
@@ -587,7 +576,7 @@ const todayFormatted =
   String(today.getFullYear()).slice(-2);
 $('f-fecha-display').textContent = todayFormatted;
 
-/* Los menús (Skills/Clan/Tags) ahora se posicionan solo con CSS
+/* Los menús (Skills/Clan) ahora se posicionan solo con CSS
    (position:absolute; top:100%) relativos a su propio botón, así
    que no hace falta calcular nada en JS ni preocuparse por el
    escalado de la ficha en móvil. */
@@ -599,7 +588,7 @@ function closeAllPanels(except){
 }
 document.addEventListener('click', (e)=>{
   const isPanel = e.target.closest('.dropdown-panel');
-  const isTrigger = e.target.closest('.clan-display, .tags-display, .skill-slot');
+  const isTrigger = e.target.closest('.clan-display, .skill-slot');
   if(!isPanel && !isTrigger) closeAllPanels(null);
 });
 
@@ -728,56 +717,6 @@ clanDisplay.addEventListener('click', (e)=>{
   else clanPanel.classList.remove('open');
 });
 
-/* ---------- Tags: panel en lista, selección múltiple máx. 3 ---------- */
-let selectedTags = [];
-const tagsPanel = $('tags-panel');
-const tagsDisplay = $('tags-display');
-
-function renderTagsDisplay(){
-  tagsDisplay.innerHTML='';
-  if(selectedTags.length){
-    selectedTags.forEach(t=> tagsDisplay.appendChild(imgWithFallback(t.image, t.name)));
-  } else {
-    const img = document.createElement('img');
-    img.src = 'assets/menu_seleccion.png';
-    img.alt = 'Seleccionar';
-    img.className = 'btn-select-img';
-    tagsDisplay.appendChild(img);
-  }
-}
-renderTagsDisplay();
-
-TAG_OPTIONS.forEach(opt=>{
-  const btn = document.createElement('button');
-  btn.type='button';
-  btn.className='list-option';
-  btn.appendChild(imgWithFallback(opt.image, opt.name));
-  btn.addEventListener('click', ()=>{
-    const idx = selectedTags.findIndex(t=>t.name===opt.name);
-    if(idx>=0){
-      selectedTags.splice(idx,1);
-      btn.classList.remove('selected');
-    } else {
-      if(selectedTags.length>=MAX_TAGS){
-        alert('Máximo '+MAX_TAGS+' tags.');
-        return;
-      }
-      selectedTags.push(opt);
-      btn.classList.add('selected');
-    }
-    renderTagsDisplay();
-  });
-  tagsPanel.appendChild(btn);
-});
-
-tagsDisplay.addEventListener('click', (e)=>{
-  e.stopPropagation();
-  const willOpen = !tagsPanel.classList.contains('open');
-  closeAllPanels(tagsPanel);
-  if(willOpen){ tagsPanel.classList.add('open'); }
-  else tagsPanel.classList.remove('open');
-});
-
 /* ---------- Foto ---------- */
 const photoBox = $('photo-box');
 const photoInput = $('f-photo');
@@ -816,9 +755,7 @@ $('btn-limpiar').addEventListener('click', ()=>{
   clanPanel.querySelectorAll('.list-option').forEach(o=>o.classList.remove('selected'));
   renderClanDisplay();
 
-  selectedTags = [];
-  tagsPanel.querySelectorAll('.list-option').forEach(o=>o.classList.remove('selected'));
-  renderTagsDisplay();
+  $('f-bio').value='';
 
   photoFile=null;
   photoInput.value='';

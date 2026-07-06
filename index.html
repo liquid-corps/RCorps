@@ -134,7 +134,7 @@
   }
 
   .skills-title{font-size:19px;margin:4px 0 8px 0;}
-  .skills-row{display:flex;gap:14px;margin-bottom:18px;}
+  .skills-row{display:flex;gap:14px;margin-bottom:18px;position:relative;}
   .skill-slot{
     width:68px;height:68px;
     background-image:url('assets/cuadrado_seleccion_skills.png');
@@ -210,6 +210,9 @@
   /* ---- Panel desplegable genérico (Skills / Clan / Tags) ---- */
   .dropdown-panel{
     position:absolute;
+    top:100%;
+    left:0;
+    margin-top:6px;
     z-index:50;
     background-image:url('assets/cuadrado_menu.png');
     background-size:100% 100%;
@@ -392,8 +395,8 @@
       <div class="skills-row">
         <div class="skill-slot" id="skill-slot-1"></div>
         <div class="skill-slot" id="skill-slot-2"></div>
+        <div class="dropdown-panel grid-panel" id="skills-panel"></div>
       </div>
-      <div class="dropdown-panel grid-panel" id="skills-panel"></div>
 
       <div class="clan-row">
         <label class="field-label">Clan:</label>
@@ -466,7 +469,7 @@
    coincidan con los nombres de archivo que subiste.
    ================================================================ */
 
-const WEBHOOK_URL = "https://discord.com/api/webhooks/1523544793458937997/_VVWJCWLF0SX0KpvjoJuzhuNIfnRavh-K10eJ3RNaTE_rTfb6HFXfom1aI7yZUpP9Ty5";
+const WEBHOOK_URL = "PON_AQUI_TU_WEBHOOK_URL";
 
 const CLAN_OPTIONS = [
   { name: "Mizu", image: "Clan/mizu.png" },
@@ -585,21 +588,10 @@ const todayFormatted =
   String(today.getFullYear()).slice(-2);
 $('f-fecha-display').textContent = todayFormatted;
 
-function getCurrentCardScale(){
-  const match = /scale\(([^)]+)\)/.exec(card.style.transform || '');
-  return match ? parseFloat(match[1]) : 1;
-}
-
-function positionPanel(panel, anchorEl){
-  const scale = getCurrentCardScale() || 1;
-  const cardRect = card.getBoundingClientRect();
-  const anchorRect = anchorEl.getBoundingClientRect();
-  // Las coordenadas de getBoundingClientRect ya vienen escaladas por el
-  // transform de la ficha; hay que "deshacer" esa escala porque left/top
-  // del panel se interpretan en unidades locales (antes de escalar).
-  panel.style.left = ((anchorRect.left - cardRect.left) / scale) + 'px';
-  panel.style.top = ((anchorRect.bottom - cardRect.top + 6) / scale) + 'px';
-}
+/* Los menús (Skills/Clan/Tags) ahora se posicionan solo con CSS
+   (position:absolute; top:100%) relativos a su propio botón, así
+   que no hace falta calcular nada en JS ni preocuparse por el
+   escalado de la ficha en móvil. */
 
 function closeAllPanels(except){
   document.querySelectorAll('.dropdown-panel').forEach(p=>{
@@ -685,7 +677,7 @@ renderSkillSlots();
     e.stopPropagation();
     const willOpen = !skillsPanel.classList.contains('open');
     closeAllPanels(skillsPanel);
-    if(willOpen){ positionPanel(skillsPanel, slot); skillsPanel.classList.add('open'); }
+    if(willOpen){ skillsPanel.classList.add('open'); }
     else skillsPanel.classList.remove('open');
   });
 });
@@ -733,7 +725,7 @@ clanDisplay.addEventListener('click', (e)=>{
   e.stopPropagation();
   const willOpen = !clanPanel.classList.contains('open');
   closeAllPanels(clanPanel);
-  if(willOpen){ positionPanel(clanPanel, clanDisplay); clanPanel.classList.add('open'); }
+  if(willOpen){ clanPanel.classList.add('open'); }
   else clanPanel.classList.remove('open');
 });
 
@@ -783,7 +775,7 @@ tagsDisplay.addEventListener('click', (e)=>{
   e.stopPropagation();
   const willOpen = !tagsPanel.classList.contains('open');
   closeAllPanels(tagsPanel);
-  if(willOpen){ positionPanel(tagsPanel, tagsDisplay); tagsPanel.classList.add('open'); }
+  if(willOpen){ tagsPanel.classList.add('open'); }
   else tagsPanel.classList.remove('open');
 });
 

@@ -392,8 +392,23 @@
   /* Nota: ya no reacomodamos a una columna en móvil — la ficha completa
      se escala hacia abajo (ver script al final) para verse igual que en PC. */
 </style>
+<link rel="stylesheet" href="auth.css">
 </head>
 <body>
+
+<div class="hub-bar">
+  <nav>
+    <a href="#">Inicio.</a>
+    <a href="#">Librería.</a>
+    <a href="#">Wiki.</a>
+    <a href="#">Foro.</a>
+  </nav>
+  <div class="hub-right">
+    <a href="#" data-open-registro data-if-logged-out>Registro</a>
+    <a href="#" data-if-logged-in style="display:none;">Perfil</a>
+    <a href="#" data-logout data-if-logged-in style="display:none;">Salir</a>
+  </div>
+</div>
 
 <div class="card-scale-wrapper" id="card-scale-wrapper">
 <div class="card" id="card">
@@ -863,6 +878,110 @@ $('btn-enviar').addEventListener('click', async ()=>{
   }
 });
 </script>
+
+<!-- ============================================================
+     Sistema de cuentas (Registrar / Iniciar sesión / Olvidaste la clave)
+     ============================================================ -->
+<div class="auth-overlay" id="auth-overlay">
+
+  <!-- ---------- PANEL: REGISTRAR ---------- -->
+  <div class="auth-panel" id="panel-registrar">
+    <h2>Registrar</h2>
+
+    <div class="auth-field">
+      <label>Usuario:</label>
+      <input type="text" id="reg-username" placeholder="@Usuario1" maxlength="20">
+    </div>
+    <div class="auth-msg" id="reg-username-msg"></div>
+
+    <div class="auth-field">
+      <label>Usuario de Discord:</label>
+      <input type="text" id="reg-discord" placeholder="username" readonly>
+      <button type="button" class="auth-inline-link" id="btn-vincular-discord">Vincular con Discord</button>
+    </div>
+    <div class="auth-msg" id="reg-discord-msg"></div>
+
+    <div class="auth-field medium">
+      <label>Clave:</label>
+      <input type="password" id="reg-password" maxlength="8">
+    </div>
+    <div class="auth-msg" id="reg-password-msg">(6 a 8 caracteres, letras y números)</div>
+
+    <div class="auth-actions">
+      <button type="button" class="auth-btn-main" id="btn-crear">Crear</button>
+      <button type="button" class="auth-link blue" id="btn-ir-olvide-1">Olvidaste la Clave</button>
+      <button type="button" class="auth-link" id="btn-ir-login-1">Iniciar Sesion</button>
+    </div>
+  </div>
+
+  <!-- ---------- PANEL: INICIAR SESIÓN ---------- -->
+  <div class="auth-panel auth-hidden" id="panel-login">
+    <h2>Iniciar Sesion</h2>
+
+    <div class="auth-field">
+      <label>Usuario:</label>
+      <input type="text" id="login-username" placeholder="@Username">
+    </div>
+    <div class="auth-msg" id="login-username-msg"></div>
+
+    <div class="auth-field medium">
+      <label>Clave:</label>
+      <input type="password" id="login-password">
+    </div>
+    <div class="auth-msg" id="login-password-msg"></div>
+
+    <div class="auth-actions">
+      <button type="button" class="auth-btn-main" id="btn-entrar">Entrar</button>
+      <button type="button" class="auth-link" id="btn-ir-olvide-2">Olvidaste la Contraseña</button>
+      <button type="button" class="auth-link blue" id="btn-ir-registrar-1">Registrar</button>
+    </div>
+  </div>
+
+  <!-- ---------- PANEL: OLVIDASTE LA CLAVE ---------- -->
+  <div class="auth-panel auth-hidden" id="panel-olvide">
+    <h2>Olvidaste la Clave</h2>
+
+    <div class="auth-field">
+      <label>Usuario de discord:</label>
+      <input type="text" id="olvide-discord" placeholder="username">
+      <button type="button" class="auth-inline-link" id="btn-enviar-codigo">Enviar</button>
+    </div>
+    <div class="auth-msg" id="olvide-discord-msg"></div>
+
+    <div class="auth-field medium auth-hidden" id="olvide-codigo-wrap">
+      <label>Código:</label>
+      <input type="text" id="olvide-codigo" maxlength="6">
+    </div>
+    <div class="auth-field medium auth-hidden" id="olvide-clave-wrap">
+      <label>Clave:</label>
+      <input type="password" id="olvide-nueva-clave" maxlength="8">
+    </div>
+    <div class="auth-msg" id="olvide-codigo-msg"></div>
+
+    <div class="auth-actions">
+      <button type="button" class="auth-link" id="btn-ir-login-2">Inciar Sesion</button>
+      <button type="button" class="auth-link blue" id="btn-ir-registrar-2">Registrarse</button>
+    </div>
+  </div>
+
+  <!-- ---------- PANEL: CONFIRMAR ENVÍO ---------- -->
+  <div class="auth-panel confirm auth-hidden" id="panel-confirmar">
+    <p>Estas seguro/a de que quieres enviar<br>
+       este registro? no lo podras cambiar<br>
+       hasta en 7 dias</p>
+    <div class="auth-confirm-buttons">
+      <button type="button" class="auth-btn-img" id="btn-cancelar-confirm">
+        <img src="assets/boton_cancelar.png" alt="Cancelar">
+      </button>
+      <button type="button" class="auth-btn-img" id="btn-aceptar-confirm">
+        <img src="assets/boton_aceptar.png" alt="Aceptar">
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="auth.js"></script>
 
 </body>
 </html>

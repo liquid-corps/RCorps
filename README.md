@@ -1,117 +1,70 @@
-# Sistema de cuentas Lcorps (Registro / Login / Recuperar clave / Vincular Discord)
+# Cómo organizar todos los archivos de Lcorps
 
-Usa **Supabase** como backend (no Firebase): plan gratis sin pedir tarjeta,
-con Auth + base de datos + funciones con secretos, todo incluido.
-
-## Cómo funciona (arquitectura)
-
-Un webhook de Discord **solo puede enviar** mensajes a un canal — no puede
-consultar "¿existe este usuario?" ni guardar contraseñas. Por eso hace falta
-un backend real:
-
-| Pieza | Para qué sirve |
-|---|---|
-| **Supabase Auth** | Guarda usuario + clave de forma segura (cifrada). El "usuario" se guarda como si fuera un correo falso: `usuario@lcorps.local`. También trae **Discord como proveedor de login** integrado, así el botón "Vincular con Discord" no requiere que programes el OAuth2 a mano. |
-| **Postgres (incluido en Supabase)** | Tabla `profiles` (usuario, discord vinculado, fecha de última edición) y `reset_requests` (códigos de recuperación). |
-| **Edge Functions** (Deno) | Único lugar donde viven tus secretos (las 2 URLs de webhook). Aquí se: manda el aviso de recuperación de clave por Discord, se valida el código y cambia la clave, y se reenvía la ficha al webhook de registros. |
-| **Discord Developer App (OAuth2)** | Se configura directo dentro de Supabase (Authentication → Providers → Discord), pegando el Client ID/Secret de tu app de Discord. |
-| **2 Webhooks de Discord** | 1) canal de "nuevos registros" (recibe la imagen de la ficha). 2) canal de "verificaciones/recuperación" (menciona `<@discordId>` con el código, para que le llegue como notificación). |
-
-## Flujo de Registro (Imagen 3)
-1. Usuario escribe **Usuario** → al salir del campo, `username_available` (función SQL) dice si está libre.
-2. **Vincular con Discord** → se abre un popup a tu mismo sitio, que dispara
-   `supabase.auth.linkIdentity({ provider: 'discord' })`. Si ese Discord ya
-   tiene cuenta en otro lado, Supabase devuelve error → "Cuenta ya vinculada".
-3. Escribe **Clave** (6 a 8 caracteres, letras y números).
-4. **Crear** → se le pone usuario+clave a la cuenta ya autenticada por
-   Discord, se guarda el perfil en `profiles`, y (opcional) se reenvía la
-   imagen de la ficha al webhook de registros vía la Edge Function
-   `send-registration-card`.
-
-## Flujo de Login (Imágenes 6 y 7)
-`Entrar` → primero se comprueba si el usuario existe (para poder decir
-"Usuario no encontrado" como en tus capturas); si existe, se intenta
-`signInWithPassword`; si falla, "Clave incorrecta".
-
-## Flujo de recuperación (Imagen 8)
-1. **Usuario de Discord** → `Enviar` → Edge Function `request-password-reset`:
-   busca ese Discord en `profiles`; si no está, "Usuario no encontrado"; si
-   está, genera un código de 6 dígitos (vence en 15 min) y lo publica en el
-   **webhook de verificaciones** mencionando `<@discordId>`.
-2. Aparecen los campos **Código** + **Nueva clave** → Edge Function
-   `reset-password` valida el código y cambia la clave con la Admin API.
-
-## Cooldown de 7 días para editar (Imagen 9)
-La función SQL `update_ficha` revisa `last_edited` en el propio Postgres
-(no se puede saltar editando el HTML del navegador) y avisa cuántos días
-faltan si todavía no se cumplen los 7 días.
-
----
-
-## Pasos para configurar (tú, una sola vez, sin tarjeta)
-
-### 1. Crear proyecto en Supabase
-1. Ve a https://supabase.com → **Start your project** → creá una cuenta
-   (con GitHub o correo, sin tarjeta) → **New project**, nombralo "lcorps".
-2. Cuando esté listo: **Project Settings → API** → copiá `Project URL` y
-   `anon public key` — los vas a pegar en `public/auth.js`.
-3. **Project Settings → API → service_role key**: copiala también (¡es
-   secreta! se usa solo en las Edge Functions, nunca en el navegador).
-
-### 2. Crear las tablas
-- Abrí **SQL Editor → New query**, pegá todo el contenido de
-  `supabase/migrations/0001_init.sql` y dale **Run**.
-
-### 3. Habilitar el login con Discord
-1. En Discord: https://discord.com/developers/applications → **New
-   Application** → pestaña **OAuth2 → General** → copiá **Client ID** y
-   **Client Secret**.
-2. En **OAuth2 → Redirects**, agregá la URL que te muestra Supabase en el
-   siguiente paso (Supabase te da un redirect URI único, algo como
-   `https://xxxx.supabase.co/auth/v1/callback`).
-3. En Supabase: **Authentication → Providers → Discord** → activalo y pegá
-   el Client ID y Client Secret de tu app de Discord → Guardar.
-
-### 4. Crear los 2 webhooks de Discord
-- Canal de registros → *Editar canal → Integraciones → Webhooks → Nuevo
-  webhook* → copiar URL.
-- Canal de verificaciones/recuperación → mismo proceso, otra URL.
-
-### 5. Instalar la CLI de Supabase y subir las funciones
-Con [Node.js](https://nodejs.org) instalado:
-
-```bash
-npm install -g supabase
-supabase login
-supabase link --project-ref TU_PROJECT_REF   # está en Project Settings → General
-supabase secrets set WEBHOOK_REGISTROS=https://discord.com/api/webhooks/....
-supabase secrets set WEBHOOK_VERIFICACIONES=https://discord.com/api/webhooks/....
-supabase functions deploy request-password-reset
-supabase functions deploy reset-password
-supabase functions deploy send-registration-card
 ```
-(`SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` ya están
-disponibles automáticamente dentro de las Edge Functions, no hace falta
-configurarlas a mano.)
+lcorps-site/                        ← esta carpeta es la que subís a tu hosting
+├── index.html                      ← tu ficha + la barra superior + los 4 paneles, todo ya integrado
+├── auth.css                        ← estilos de los paneles (Registrar/Login/Recuperar)
+├── auth.js                         ← lógica que habla con Supabase
+│
+├── assets/                         ← imágenes de UI (ver LEEME.txt adentro)
+│   ├── base_cuadrada.png
+│   ├── cuadrado_menu.png
+│   ├── cuadrado_seleccion_skills.png
+│   ├── cuadrado_foto_importacion.png
+│   ├── menu_seleccion.png
+│   ├── rectangulo_de_escribir_largo.png
+│   ├── rectangulo_de_escribir_pequeno.png
+│   ├── scroll.png
+│   ├── PixelArial11.ttf
+│   ├── hub_bar.png                 ← nuevo (barra superior)
+│   ├── panel_dialogo.png           ← nuevo (panel base)
+│   ├── write_long_bar.png          ← nuevo (usuario / usuario de discord)
+│   ├── write_medium_bar.png        ← nuevo (clave / código)
+│   ├── boton_cancelar.png          ← nuevo
+│   └── boton_aceptar.png           ← nuevo
+│
+├── Clan/                           ← una imagen completa por clan (mizu.png, rain.png...)
+├── Skills/                         ← un ícono cuadrado por skill (aroma.png, biwa.png...)
+│
+└── supabase/                       ← ⚠️ esta carpeta NO se sube al hosting.
+    │                                  Se usa solo desde tu computadora con la
+    │                                  CLI de Supabase para crear la base de
+    │                                  datos y subir las funciones (ver README
+    │                                  de configuración que te pasé antes).
+    ├── migrations/
+    │   └── 0001_init.sql            ← se pega una vez en el SQL Editor de Supabase
+    └── functions/
+        ├── _shared/cors.ts
+        ├── request-password-reset/index.ts
+        ├── reset-password/index.ts
+        └── send-registration-card/index.ts
+```
 
-### 6. Completar el frontend
-- Abrí `public/auth.js` y pegá tu `SUPABASE_URL` y `SUPABASE_ANON_KEY`
-  arriba del todo (la anon key es pública, no pasa nada si se ve).
-- Copiá `public/auth-modals.html` dentro de tu `index.html` (antes de
-  `</body>`) y `public/auth.css` (agregalo con un `<link rel="stylesheet">`
-  o pegalo dentro de tu `<style>`).
-- Asegurate de tener en `assets/`: `panel_dialogo.png`, `write_long_bar.png`,
-  `write_medium_bar.png`, `boton_cancelar.png`, `boton_aceptar.png`,
-  `hub_bar.png` (¡ya los tenés!).
+## Qué es cada cosa
 
-### Nota sobre el plan gratis
-El proyecto de Supabase se "pausa" si pasa una semana sin uso (se reactiva
-solo con un clic desde el dashboard, no perdés datos). Para un proyecto de
-comunidad/rol esto normalmente no es problema.
+- **`index.html`** — Ya tiene todo junto: arriba la barra de navegación
+  (`Inicio | Librería | Wiki | Foro` + `Registro`/`Perfil` a la derecha),
+  después tu ficha "Civil" tal cual la tenías, y al final los 4 paneles
+  (Registrar, Iniciar sesión, Olvidaste la clave, Confirmar) ocultos hasta
+  que se necesitan. También carga `auth.css` y `auth.js`.
+- **`auth.css` / `auth.js`** — van en la raíz del sitio, junto a `index.html`
+  (no dentro de `assets/`).
+- **`assets/`, `Clan/`, `Skills/`** — igual que ya tenías armado tu proyecto;
+  solo se sumaron las 6 imágenes nuevas del sistema de cuentas dentro de
+  `assets/`.
+- **`supabase/`** — es para la base de datos y las funciones con secretos.
+  Vive en tu computadora (o en un repo aparte), **no en el hosting del
+  sitio**, porque `migrations/` y `functions/` se despliegan con la CLI de
+  Supabase, no como archivos web normales.
 
----
+## Antes de subir el sitio
 
-Con esto el sistema queda funcionando igual a como lo mostraste en las
-capturas, pero sin necesitar ninguna tarjeta de crédito. Decime si querés
-que ajuste textos, tiempos de expiración, o que conectemos esto con tu
-`index-1.html` original de la ficha.
+1. Abrí `auth.js` y pegá tu `SUPABASE_URL` y `SUPABASE_ANON_KEY` (líneas
+   marcadas con `PON_AQUI`).
+2. Seguí los pasos de configuración de Supabase (proyecto, tablas, Discord
+   como proveedor, los 2 webhooks, y `supabase functions deploy`) que están
+   en el README que te pasé en el mensaje anterior.
+3. Poné las imágenes que faltan en `assets/`, `Clan/` y `Skills/` (cada
+   carpeta tiene un `LEEME.txt` con la lista exacta).
+4. Subís toda la carpeta `lcorps-site/` (menos `supabase/`) a tu hosting
+   (GitHub Pages, Netlify, etc. — cualquiera que sirva archivos estáticos).

@@ -58,19 +58,10 @@
     width:100%;
     max-width:640px;
     box-sizing:border-box;
-    /* Relleno interior (se ve entre los bordes del marco) */
-    background:linear-gradient(180deg,var(--card-fill-top),var(--card-fill-bottom));
-    /* Marco: se recorta en 9 partes para que el borde no se deforme
-       aunque la ficha crezca mucho de alto. Si el marco se ve muy
-       grueso o muy fino comparado con tu imagen, ajusta el % de
-       border-image-slice y el px de border-width juntos. */
-    border-style:solid;
-    border-width:22px;
-    border-image-source:url('assets/base_cuadrada.png');
-    border-image-slice:6%;
-    border-image-repeat:stretch;
-    padding:36px 32px;
-    overflow:visible; /* los menús desplegables sí pueden salir del marco */
+    background-image:url('assets/base_cuadrada.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    padding:40px 36px;
   }
 
   h1.title{
@@ -83,7 +74,7 @@
 
   .grid{
     display:grid;
-    grid-template-columns:1fr 220px;
+    grid-template-columns:1fr 185px;
     gap:0 24px;
   }
 
@@ -136,7 +127,7 @@
   .skills-title{font-size:19px;margin:4px 0 8px 0;}
   .skills-row{display:flex;gap:14px;margin-bottom:18px;}
   .skill-slot{
-    width:80px;height:80px;
+    width:68px;height:68px;
     background-image:url('assets/cuadrado_seleccion_skills.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
@@ -156,7 +147,7 @@
 
   .btn-select-img{
     display:block;
-    width:130px;
+    width:110px;
     height:auto;
     cursor:pointer;
   }
@@ -171,7 +162,7 @@
   }
   .clan-display img, .tags-display img{
     display:block;
-    max-width:160px;
+    max-width:135px;
     height:auto;
   }
   .clan-display .fallback, .tags-display .fallback{
@@ -407,8 +398,8 @@
       </div>
 
       <div class="field-box" style="margin-top:18px;">
-        <label for="f-fecha">Fecha:</label>
-        <input type="date" id="f-fecha" />
+        <label>Fecha:</label>
+        <span id="f-fecha-display"></span>
       </div>
 
       <div class="tags-row">
@@ -494,6 +485,14 @@ const MAX_TAGS = 3;
 
 const $ = (id) => document.getElementById(id);
 const card = $('card');
+
+/* ---------- Fecha: automática, siempre la de hoy, no editable ---------- */
+const today = new Date();
+const todayFormatted =
+  String(today.getDate()).padStart(2,'0') + '/' +
+  String(today.getMonth()+1).padStart(2,'0') + '/' +
+  String(today.getFullYear()).slice(-2);
+$('f-fecha-display').textContent = todayFormatted;
 
 function positionPanel(panel, anchorEl){
   const cardRect = card.getBoundingClientRect();
@@ -717,7 +716,6 @@ $('btn-limpiar').addEventListener('click', ()=>{
   $('f-age').value='';
   $('f-rank').value='';
   $('f-zodiacal').value='';
-  $('f-fecha').value='';
 
   selectedSkills = [];
   skillsPanel.querySelectorAll('.skill-option').forEach(o=>o.classList.remove('selected'));
@@ -757,7 +755,6 @@ function getMissingFields(){
   if(!$('f-age').value.trim()) missing.push('Age');
   if(!$('f-rank').value.trim()) missing.push('Rank');
   if(!$('f-zodiacal').value.trim()) missing.push('Zodiacal');
-  if(!$('f-fecha').value) missing.push('Fecha');
   if(!photoFile) missing.push('Foto');
   if(selectedSkills.length===0) missing.push('Skills');
   if(!selectedClan) missing.push('Clan');

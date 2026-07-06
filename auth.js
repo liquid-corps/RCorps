@@ -12,8 +12,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // ============================================================
 // 1) PEGA AQUÍ TUS DATOS DE SUPABASE (Project Settings → API)
 // ============================================================
-const SUPABASE_URL = "https://PON_AQUI.supabase.co";
-const SUPABASE_ANON_KEY = "PON_AQUI_TU_ANON_KEY"; // esta clave SÍ es pública, no es secreta
+const SUPABASE_URL = "https://bshwjiukzvfqczgbxuse.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzaHdqaXVrenZmcWN6Z2J4dXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjgwODksImV4cCI6MjA5ODk0NDA4OX0.EGkDntr5xvB-D_G0P-7jxJLZbdMjBW_mWY70KuVTzsQ"; // esta clave SÍ es pública, no es secreta
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DOMINIO_FALSO = "lcorps.local";

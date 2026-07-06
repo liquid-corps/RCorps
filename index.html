@@ -200,14 +200,20 @@
   .photo-box img{width:100%;height:100%;object-fit:cover;}
   .photo-box input{display:none;}
 
-  .bio-row{margin-top:22px;}
+  .bio-row{
+    margin-top:18px;
+    flex:1;
+    display:flex;
+  }
   .bio-box{
     width:100%;
+    flex:1;
     background-image:url('assets/bio_panel.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
     padding:14px 18px;
     display:flex;
+    align-items:flex-start;
     gap:6px;
   }
   .bio-box label{
@@ -220,7 +226,8 @@
   .bio-box textarea{
     flex:1;
     min-width:0;
-    min-height:96px;
+    height:100%;
+    min-height:0;
     resize:none;
     font-family:inherit;
     font-size:15px;
@@ -441,13 +448,13 @@
         <label>Fecha:</label>
         <span id="f-fecha-display"></span>
       </div>
-    </div>
-  </div>
 
-  <div class="bio-row">
-    <div class="bio-box">
-      <label for="f-bio">Biografía:</label>
-      <textarea id="f-bio" placeholder="Escribe aquí..."></textarea>
+      <div class="bio-row">
+        <div class="bio-box">
+          <label for="f-bio">Biografía:</label>
+          <textarea id="f-bio" placeholder="Escribe aquí..."></textarea>
+        </div>
+      </div>
     </div>
   </div>
 </div>

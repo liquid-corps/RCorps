@@ -25,7 +25,7 @@
 </style>
 <style>
   :root{
-    --page-bg:#5C8D70;
+    --page-bg:#f1eee4;
     --card-border:#a99b78;
     --card-fill-top:#ece6d6;
     --card-fill-bottom:#e2dbc6;
@@ -182,6 +182,7 @@
   }
 
   .photo-box{
+    position:relative;
     width:100%;
     aspect-ratio:1/1;
     background-image:url('assets/cuadrado_foto_importacion.png');
@@ -191,14 +192,26 @@
     align-items:center;
     justify-content:center;
     cursor:pointer;
-    overflow:hidden;
+    overflow:visible;
     color:var(--text-muted);
     font-size:12px;
     text-align:center;
     padding:8px;
   }
-  .photo-box img{width:100%;height:100%;object-fit:cover;}
+  .photo-box img.photo-img{width:100%;height:100%;object-fit:cover;border-radius:inherit;}
   .photo-box input{display:none;}
+
+  /* Insignia de Tag decorativo sobre la foto de perfil */
+  .tag-badge{
+    position:absolute;
+    left:50%;
+    bottom:-10px;
+    transform:translateX(-50%);
+    width:68%;
+    height:auto;
+    pointer-events:none;
+    z-index:5;
+  }
 
   .bio-row{
     margin-top:18px;
@@ -221,7 +234,8 @@
     color:var(--text-muted);
     flex:none;
   }
-  .bio-box textarea{
+  .bio-box textarea,
+  .bio-box .bio-static{
     flex:1;
     width:100%;
     min-height:0;
@@ -235,7 +249,18 @@
     margin:0;
     outline:none;
     line-height:1.4;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    word-break:break-word;
+    overflow:hidden;
   }
+  /* Copia estática de la biografía, usada solo al capturar la imagen.
+     html2canvas no siempre respeta el ajuste de línea de un <textarea>,
+     así que al enviar se reemplaza momentáneamente por este <div> con
+     el mismo texto y estilo, para que el recorte de línea (~35
+     caracteres según el ancho de la caja) se vea igual que en pantalla. */
+  .bio-box .bio-static{display:none;}
 
   /* ---- Panel desplegable genérico (Skills / Clan) ---- */
   .dropdown-panel{
@@ -328,19 +353,36 @@
   .actions{
     display:flex;
     justify-content:center;
-    gap:60px;
+    align-items:center;
+    gap:40px;
     margin-top:36px;
   }
   .actions button{
     background:none;border:none;
-    font-family:inherit;
-    font-size:24px;
-    color:var(--maroon);
+    padding:0;
     cursor:pointer;
-    text-decoration:underline;
-    text-decoration-style:dotted;
+    display:block;
   }
-  .actions button:hover{opacity:0.75;}
+  .actions button img{
+    display:block;
+    width:180px;
+    height:auto;
+  }
+  .actions button:hover{opacity:0.85;}
+  .actions button:disabled{opacity:0.5;cursor:not-allowed;}
+
+  /* ---- Indicador de bloqueo (cooldown de 14 días) ---- */
+  .lock-indicator{
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    margin-top:36px;
+    font-size:22px;
+    color:var(--text-dark);
+  }
+  .lock-indicator.show{display:flex;}
+  .lock-indicator .lock-icon{font-size:22px;line-height:1;}
 
   .status{
     margin-top:18px;
@@ -389,11 +431,47 @@
     opacity:0.8;
   }
 
+  /* ---- Botón e ícono "Tags" (flotante, fuera de la ficha) ---- */
+  .tags-widget{
+    position:fixed;
+    top:24px;
+    right:24px;
+    z-index:80;
+  }
+  .tags-trigger{
+    display:block;
+    background:linear-gradient(180deg,var(--card-fill-top),var(--card-fill-bottom));
+    border:2px solid var(--card-border);
+    font-family:inherit;
+    font-size:16px;
+    color:var(--text-dark);
+    padding:10px 26px;
+    cursor:pointer;
+  }
+  .tags-trigger:hover{opacity:0.85;}
+
+  .tags-panel{
+    width:260px;
+    right:0;
+    left:auto;
+  }
+  .tags-panel .list-option{margin-bottom:10px;}
+  .tags-panel .list-option:last-child{margin-bottom:0;}
+
+  @media (max-width:720px){
+    .tags-widget{position:absolute;top:12px;right:12px;}
+  }
+
   /* Nota: ya no reacomodamos a una columna en móvil — la ficha completa
      se escala hacia abajo (ver script al final) para verse igual que en PC. */
 </style>
 </head>
 <body>
+
+<div class="tags-widget" id="tags-widget">
+  <button type="button" class="tags-trigger" id="tags-trigger">Tags</button>
+  <div class="dropdown-panel list-panel tags-panel" id="tags-panel"></div>
+</div>
 
 <div class="card-scale-wrapper" id="card-scale-wrapper">
 <div class="card" id="card">
@@ -438,6 +516,7 @@
     <div class="col-right">
       <div class="photo-box" id="photo-box">
         <span id="photo-placeholder">Foto</span>
+        <img class="tag-badge" id="photo-tag-badge" style="display:none;" alt="" />
         <input type="file" id="f-photo" accept="image/*" />
       </div>
 
@@ -450,6 +529,7 @@
         <div class="bio-box">
           <label for="f-bio">Biografía:</label>
           <textarea id="f-bio" placeholder="Escribe aquí..."></textarea>
+          <div class="bio-static"></div>
         </div>
       </div>
     </div>
@@ -457,12 +537,29 @@
 </div>
 </div>
 
-<div class="actions">
-  <button type="button" id="btn-limpiar">Limpiar</button>
-  <button type="button" id="btn-enviar">Enviar</button>
+<div class="actions" id="actions">
+  <button type="button" id="btn-limpiar"><img src="assets/boton_limpiar.png" alt="Limpiar" /></button>
+  <button type="button" id="btn-enviar"><img src="assets/boton_enviar.png" alt="Enviar" /></button>
+</div>
+
+<div class="lock-indicator" id="lock-indicator">
+  <span class="lock-icon">🔒</span><span id="lock-days-text">14d</span>
 </div>
 
 <div class="status" id="status"></div>
+
+<!-- Modal de confirmación de envío -->
+<div class="error-overlay" id="confirm-overlay">
+  <div class="error-box">
+    <div class="error-message" style="text-align:center;font-size:20px;line-height:1.5;">
+      ¿Estás seguro de que quieres enviar? no podrás enviarme registros hasta en 14 días.
+    </div>
+    <div class="actions" style="margin-top:26px;gap:50px;">
+      <button type="button" id="confirm-send" style="font-family:inherit;font-size:22px;color:#1a4fb5;text-decoration:underline;text-decoration-style:dotted;">Enviar</button>
+      <button type="button" id="confirm-cancel" style="font-family:inherit;font-size:22px;color:var(--maroon);text-decoration:underline;text-decoration-style:dotted;">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <div class="error-overlay" id="error-overlay">
   <div class="error-box">
@@ -541,6 +638,16 @@ const SKILL_OPTIONS = [
 
 const MAX_SKILLS = 2;
 
+// Carpeta Tags/ -> imagen decorativa completa de cada tag (0001.png a 0050.png).
+const TAG_OPTIONS = Array.from({length:50}, (_, i)=>{
+  const num = String(i+1).padStart(4,'0');
+  return { name: 'Tag ' + num, image: `Tags/${num}.png` };
+});
+
+// Cuánto dura el bloqueo tras enviar un registro (en milisegundos).
+const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
+const COOLDOWN_STORAGE_KEY = 'registroCivil_lastSubmit';
+
 /* ================================================================
    LÓGICA — normalmente no necesitas tocar nada de aquí abajo
    ================================================================ */
@@ -592,7 +699,7 @@ function closeAllPanels(except){
 }
 document.addEventListener('click', (e)=>{
   const isPanel = e.target.closest('.dropdown-panel');
-  const isTrigger = e.target.closest('.clan-display, .skill-slot');
+  const isTrigger = e.target.closest('.clan-display, .skill-slot, .tags-trigger');
   if(!isPanel && !isTrigger) closeAllPanels(null);
 });
 
@@ -721,6 +828,54 @@ clanDisplay.addEventListener('click', (e)=>{
   else clanPanel.classList.remove('open');
 });
 
+/* ---------- Tags decorativos: panel en lista, selección única ----------
+   Usa el mismo panel/menú (fondo cuadrado_menu.png, scrollbar propia) y
+   el mismo mecanismo de selección que Skills/Clan. El tag elegido se
+   muestra como insignia sobre la foto de perfil. */
+let selectedTag = null;
+const tagsPanel = $('tags-panel');
+const tagsTrigger = $('tags-trigger');
+const photoTagBadge = $('photo-tag-badge');
+
+function renderTagBadge(){
+  if(selectedTag){
+    photoTagBadge.src = selectedTag.image;
+    photoTagBadge.alt = selectedTag.name;
+    photoTagBadge.style.display = 'block';
+    photoTagBadge.onerror = ()=>{ photoTagBadge.style.display = 'none'; };
+  } else {
+    photoTagBadge.style.display = 'none';
+    photoTagBadge.removeAttribute('src');
+  }
+}
+
+TAG_OPTIONS.forEach(opt=>{
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'list-option';
+  btn.appendChild(imgWithFallback(opt.image, opt.name));
+  btn.addEventListener('click', ()=>{
+    if(selectedTag && selectedTag.name === opt.name){
+      selectedTag = null;
+      btn.classList.remove('selected');
+    } else {
+      selectedTag = opt;
+      tagsPanel.querySelectorAll('.list-option').forEach(o=>o.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+    renderTagBadge();
+  });
+  tagsPanel.appendChild(btn);
+});
+
+tagsTrigger.addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const willOpen = !tagsPanel.classList.contains('open');
+  closeAllPanels(tagsPanel);
+  if(willOpen){ tagsPanel.classList.add('open'); }
+  else tagsPanel.classList.remove('open');
+});
+
 /* ---------- Foto ---------- */
 const photoBox = $('photo-box');
 const photoInput = $('f-photo');
@@ -734,10 +889,11 @@ photoInput.addEventListener('change', ()=>{
   const reader = new FileReader();
   reader.onload = (e)=>{
     photoPlaceholder.style.display='none';
-    let img = photoBox.querySelector('img');
+    let img = photoBox.querySelector('img.photo-img');
     if(!img){
       img = document.createElement('img');
-      photoBox.insertBefore(img, photoInput);
+      img.className = 'photo-img';
+      photoBox.insertBefore(img, $('photo-tag-badge'));
     }
     img.src = e.target.result;
   };
@@ -763,9 +919,13 @@ $('btn-limpiar').addEventListener('click', ()=>{
 
   photoFile=null;
   photoInput.value='';
-  const img = photoBox.querySelector('img');
+  const img = photoBox.querySelector('img.photo-img');
   if(img) img.remove();
   photoPlaceholder.style.display='block';
+
+  selectedTag = null;
+  if(tagsPanel) tagsPanel.querySelectorAll('.list-option').forEach(o=>o.classList.remove('selected'));
+  renderTagBadge();
 
   $('status').textContent='';
   closeAllPanels(null);
@@ -793,11 +953,61 @@ function getMissingFields(){
   return missing;
 }
 
+/* ---------- Bloqueo de 14 días entre registros ----------
+   El timestamp del último envío se guarda en localStorage, así que
+   el bloqueo se mantiene aunque se recargue la página o se cierre
+   el navegador. Solo se libera cuando pasan los 14 días completos. */
+const actionsEl = $('actions');
+const lockIndicatorEl = $('lock-indicator');
+const lockDaysTextEl = $('lock-days-text');
+
+function getCooldownRemainingMs(){
+  const last = parseInt(localStorage.getItem(COOLDOWN_STORAGE_KEY) || '0', 10);
+  if(!last) return 0;
+  const elapsed = Date.now() - last;
+  const remaining = COOLDOWN_MS - elapsed;
+  return remaining > 0 ? remaining : 0;
+}
+
+function refreshLockUI(){
+  const remainingMs = getCooldownRemainingMs();
+  if(remainingMs > 0){
+    const daysLeft = Math.ceil(remainingMs / (24*60*60*1000));
+    lockDaysTextEl.textContent = daysLeft + 'd';
+    lockIndicatorEl.classList.add('show');
+    actionsEl.style.display = 'none';
+  } else {
+    lockIndicatorEl.classList.remove('show');
+    actionsEl.style.display = 'flex';
+  }
+  return remainingMs > 0;
+}
+refreshLockUI();
+// Revisa cada minuto por si el bloqueo ya venció mientras la página
+// seguía abierta, para reactivar los botones sin necesidad de recargar.
+setInterval(refreshLockUI, 60*1000);
+
+/* ---------- Modal de confirmación de envío ---------- */
+const confirmOverlay = $('confirm-overlay');
+// Clic en el fondo oscuro (fuera de la caja) también cancela.
+confirmOverlay.addEventListener('click', (e)=>{
+  if(e.target === confirmOverlay) confirmOverlay.classList.remove('open');
+});
+$('confirm-cancel').addEventListener('click', ()=>{
+  confirmOverlay.classList.remove('open');
+});
+$('confirm-send').addEventListener('click', ()=>{
+  confirmOverlay.classList.remove('open');
+  performSubmit();
+});
+
 /* ---------- Enviar al webhook de Discord ----------
    En vez de mandar los datos como texto, se captura la ficha
    (tal cual se ve en pantalla, ya rellena) como una imagen y
-   esa imagen es lo que se envía al canal. */
-$('btn-enviar').addEventListener('click', async ()=>{
+   esa imagen es lo que se envía al canal. Antes de enviar de verdad
+   se pregunta con un modal de confirmación, porque después de enviar
+   hay que esperar 14 días para poder mandar otro registro. */
+$('btn-enviar').addEventListener('click', ()=>{
   const statusEl = $('status');
   statusEl.className='status';
   statusEl.textContent='';
@@ -808,15 +1018,27 @@ $('btn-enviar').addEventListener('click', async ()=>{
     return;
   }
 
+  if(refreshLockUI()){
+    // Todavía en cooldown; no debería poder llegar aquí porque los
+    // botones están ocultos, pero se valida por si acaso.
+    return;
+  }
+
   const missing = getMissingFields();
   if(missing.length){
     showError('Olvidaste un campo por completar.<br>Por favor completa todos los campos.');
     return;
   }
 
+  closeAllPanels(null);
+  confirmOverlay.classList.add('open');
+});
+
+async function performSubmit(){
+  const statusEl = $('status');
   const name = $('f-name').value.trim();
 
-  closeAllPanels(null);
+  statusEl.className='status';
   statusEl.textContent='Generando imagen...';
   $('btn-enviar').disabled = true;
 
@@ -826,11 +1048,25 @@ $('btn-enviar').addEventListener('click', async ()=>{
     const previousTransform = card.style.transform;
     card.style.transform = 'scale(1)';
 
+    // html2canvas no siempre respeta el ajuste de línea de un <textarea>
+    // (el texto se corre / se ve cortado en la captura aunque en pantalla
+    // se vea bien). Para evitarlo, mientras se genera la imagen se
+    // reemplaza el textarea por un <div> estático con el mismo texto,
+    // que sí se ajusta línea por línea igual que en la página.
+    const bioTextarea = $('f-bio');
+    const bioStatic = bioTextarea.parentElement.querySelector('.bio-static');
+    bioStatic.textContent = bioTextarea.value;
+    bioTextarea.style.display = 'none';
+    bioStatic.style.display = 'block';
+
     const canvas = await html2canvas(card, {
       backgroundColor: '#f1eee4',
       scale: 2,
       useCORS: true
     });
+
+    bioTextarea.style.display = '';
+    bioStatic.style.display = 'none';
 
     card.style.transform = previousTransform;
 
@@ -850,6 +1086,10 @@ $('btn-enviar').addEventListener('click', async ()=>{
     if(response.ok){
       statusEl.className='status ok';
       statusEl.textContent='¡Registro enviado con éxito!';
+      // Se guarda el momento del envío para bloquear nuevos registros
+      // durante 14 días, incluso si se recarga la página.
+      localStorage.setItem(COOLDOWN_STORAGE_KEY, String(Date.now()));
+      refreshLockUI();
     } else {
       statusEl.className='status err';
       statusEl.textContent='Error al enviar (código '+response.status+'). Revisa la URL del webhook.';
@@ -861,7 +1101,7 @@ $('btn-enviar').addEventListener('click', async ()=>{
   } finally {
     $('btn-enviar').disabled = false;
   }
-});
+}
 </script>
 
 </body>

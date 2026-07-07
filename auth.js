@@ -139,6 +139,10 @@ $("btn-vincular-discord").onclick = () => {
     "discord-oauth",
     "width=480,height=720"
   );
+  if (!popup) {
+    setMsg("reg-discord-msg", "El navegador bloqueó la ventana emergente. Permití popups para este sitio e intentá de nuevo.", "err");
+    return;
+  }
   window.addEventListener("message", async function handler(ev) {
     if (ev.data?.source !== "lcorps-discord-linked") return;
     window.removeEventListener("message", handler);
@@ -351,8 +355,13 @@ document.querySelectorAll("[data-logout]").forEach((el) =>
   const params = new URLSearchParams(window.location.search);
   if (params.get("vincular-discord") === "1" && window.opener) {
     // Recién llegamos al popup: mandamos a Discord.
+    // Ojo: usamos signInWithOAuth (no linkIdentity). En este punto todavía
+    // NO existe ninguna sesión -sos un visitante anónimo registrándote-, y
+    // linkIdentity exige que ya haya alguien logueado o falla en silencio
+    // (por eso la página "se reiniciaba" sin vincular nada). signInWithOAuth
+    // sí puede crear la sesión desde cero con la cuenta de Discord.
     if (!params.get("code")) {
-      await supabase.auth.linkIdentity({
+      await supabase.auth.signInWithOAuth({
         provider: "discord",
         options: { redirectTo: window.location.href },
       });

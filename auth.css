@@ -123,6 +123,14 @@
 .auth-msg.err{color:#a02020;}
 .auth-msg.ok{color:#2e6b3e;}
 
+/* Cuando no hay mensaje que mostrar, esta franja no debe reservar espacio:
+   así la barra de abajo queda pegada a la de arriba (sin el hueco feo) y
+   solo se abre lugar cuando aparece un mensaje real. */
+.auth-msg:empty{
+  min-height:0;
+  margin:0;
+}
+
 /* ---- Fila de acciones (Crear | Olvidaste la Clave | Iniciar Sesion) ---- */
 .auth-actions{
   display:flex;

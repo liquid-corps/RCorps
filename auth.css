@@ -14,6 +14,7 @@
   box-sizing:border-box;
   font-family:'Pixel Arial 11', monospace;
   color:#4a3a24;
+  margin-bottom:32px; /* separación entre la barra y la ficha de abajo */
 }
 .hub-bar nav a{
   color:#4a3a24;
@@ -22,6 +23,8 @@
   font-size:16px;
 }
 .hub-bar .hub-right a{
+  color:#4a3a24;
+  text-decoration:none;
   margin-right:0;
   margin-left:18px;
   font-size:18px;

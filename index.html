@@ -513,7 +513,9 @@
    coincidan con los nombres de archivo que subiste.
    ================================================================ */
 
-const WEBHOOK_URL = "https://discord.com/api/webhooks/1523544793458937997/_VVWJCWLF0SX0KpvjoJuzhuNIfnRavh-K10eJ3RNaTE_rTfb6HFXfom1aI7yZUpP9Ty5";
+// El envío al webhook de Discord ahora lo hace la Edge Function
+// "send-registration-card" (ver auth.js) — así la URL del webhook
+// nunca queda visible en el código de la página.
 
 const CLAN_OPTIONS = [
   { name: "Mizu", image: "Clan/mizu.png" },
@@ -808,20 +810,16 @@ function getMissingFields(){
   return missing;
 }
 
-/* ---------- Enviar al webhook de Discord ----------
-   En vez de mandar los datos como texto, se captura la ficha
-   (tal cual se ve en pantalla, ya rellena) como una imagen y
-   esa imagen es lo que se envía al canal. */
+/* ---------- Enviar: ahora pasa primero por el sistema de cuentas ----------
+   Se genera la imagen de la ficha igual que antes, pero en vez de mandarla
+   directo al webhook, se la pasamos a auth.js:
+   - si no iniciaste sesión, te abre el panel de Registrar/Iniciar sesión.
+   - si ya tenés cuenta, te muestra el diálogo de confirmación y recién
+     ahí se envía (respetando el cooldown de 7 días). */
 $('btn-enviar').addEventListener('click', async ()=>{
   const statusEl = $('status');
   statusEl.className='status';
   statusEl.textContent='';
-
-  if(WEBHOOK_URL.includes('PON_AQUI')){
-    statusEl.className='status err';
-    statusEl.textContent='Falta configurar la URL del Webhook en el código (WEBHOOK_URL).';
-    return;
-  }
 
   const missing = getMissingFields();
   if(missing.length){
@@ -849,35 +847,26 @@ $('btn-enviar').addEventListener('click', async ()=>{
 
     card.style.transform = previousTransform;
 
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-    const fileName = 'ficha_' + name.replace(/\s+/g,'_') + '.png';
+    const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
 
-    statusEl.textContent='Enviando...';
-
-    const formData = new FormData();
-    formData.append('payload_json', JSON.stringify({
-      content: `**Nuevo registro:** ${name}`
-    }));
-    formData.append('files[0]', blob, fileName);
-
-    const response = await fetch(WEBHOOK_URL, { method:'POST', body:formData });
-
-    if(response.ok){
-      statusEl.className='status ok';
-      statusEl.textContent='¡Registro enviado con éxito!';
-    } else {
+    if (typeof window.lcorpsEnviarFicha !== 'function') {
       statusEl.className='status err';
-      statusEl.textContent='Error al enviar (código '+response.status+'). Revisa la URL del webhook.';
+      statusEl.textContent='No se pudo cargar el sistema de cuentas (auth.js). Revisa que esté enlazado en el HTML.';
+      return;
     }
+
+    statusEl.textContent='';
+    await window.lcorpsEnviarFicha(imageBase64, name);
   } catch(err){
     statusEl.className='status err';
-    statusEl.textContent='No se pudo generar o enviar la imagen. Revisa la consola para más detalles.';
+    statusEl.textContent='No se pudo generar la imagen. Revisa la consola para más detalles.';
     console.error(err);
   } finally {
     $('btn-enviar').disabled = false;
   }
 });
 </script>
+
 
 <!-- ============================================================
      Sistema de cuentas (Registrar / Iniciar sesión / Olvidaste la clave)

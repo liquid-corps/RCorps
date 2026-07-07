@@ -13,13 +13,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // 1) PEGA AQUÍ TUS DATOS DE SUPABASE (Project Settings → API)
 // ============================================================
 const SUPABASE_URL = "https://bshwjiukzvfqczgbxuse.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzaHdqaXVrenZmcWN6Z2J4dXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjgwODksImV4cCI6MjA5ODk0NDA4OX0.EGkDntr5xvB-D_G0P-7jxJLZbdMjBW_mWY70KuVTzsQ"; // esta clave SÍ es pública, no es secreta
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzaHdqaXVrenZmcWN6Z2J4dXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjgwODksImV4cCI6MjA5ODk0NDA4OX0.EGkDntr5xvB-D_G0P-7jxJLZbdMjBW_mWY70KuVTzsQ";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DOMINIO_FALSO = "lcorps.local";
 
 // URL de tus Edge Functions (se arman solas con tu SUPABASE_URL)
-const FN_URL = (nombre) => `${https://bshwjiukzvfqczgbxuse.supabase.co}/functions/v1/${nombre}`;
+const FN_URL = (nombre) => `${SUPABASE_URL}/functions/v1/${nombre}`;
 
 // ============================================================
 // Helpers de UI
@@ -66,6 +66,56 @@ $("btn-ir-login-1").onclick = () => mostrarPanel("login");
 $("btn-ir-login-2").onclick = () => mostrarPanel("login");
 $("btn-ir-registrar-1").onclick = () => mostrarPanel("registrar");
 $("btn-ir-registrar-2").onclick = () => mostrarPanel("registrar");
+
+// ============================================================
+// Puente con el botón "Enviar" de la ficha (llamado desde index.html)
+// - Si no hay sesión: guarda la imagen para más tarde y abre "Registrar".
+// - Si ya hay sesión: pide confirmación (respeta el cooldown de 7 días)
+//   y recién ahí manda la imagen.
+// ============================================================
+async function enviarImagenAlWebhook(imageBase64, name) {
+  const { data: sesion } = await supabase.auth.getSession();
+  const res = await fetch(FN_URL("send-registration-card"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${sesion.session.access_token}`,
+    },
+    body: JSON.stringify({ username: name, imageBase64 }),
+  });
+  if (!res.ok) throw new Error("No se pudo enviar la imagen al servidor.");
+}
+
+window.lcorpsEnviarFicha = async function (imageBase64, name) {
+  const { data: sesion } = await supabase.auth.getSession();
+
+  if (!sesion.session) {
+    // Todavía no tiene cuenta: guardamos la imagen y lo mandamos a Registrar.
+    window.__fichaPendiente = { imageBase64, name };
+    mostrarPanel("registrar");
+    return;
+  }
+
+  // Ya tiene cuenta: confirmar antes de enviar (cooldown de 7 días).
+  mostrarPanel("confirmar");
+  $("btn-cancelar-confirm").onclick = () => cerrarPaneles();
+  $("btn-aceptar-confirm").onclick = async () => {
+    const { error } = await supabase.rpc("update_ficha", { nueva_ficha: { nombre: name } });
+    if (error) {
+      cerrarPaneles();
+      alert(error.message); // p.ej. "5d restantes para editar"
+      return;
+    }
+    try {
+      await enviarImagenAlWebhook(imageBase64, name);
+      cerrarPaneles();
+      alert("¡Registro enviado con éxito!");
+    } catch (e) {
+      cerrarPaneles();
+      alert("No se pudo enviar la imagen. Intentalo de nuevo.");
+    }
+  };
+};
 
 // ============================================================
 // PANEL REGISTRAR
@@ -160,7 +210,20 @@ $("btn-crear").onclick = async () => {
     // });
 
     cerrarPaneles();
-    alert("¡Cuenta creada! Ya podés iniciar sesión.");
+
+    // Si venías de tocar "Enviar" en la ficha antes de tener cuenta,
+    // ahora que ya existe, se manda sola.
+    if (window.__fichaPendiente) {
+      try {
+        await enviarImagenAlWebhook(window.__fichaPendiente.imageBase64, window.__fichaPendiente.name);
+        alert("¡Cuenta creada y registro enviado con éxito!");
+      } catch (e) {
+        alert("¡Cuenta creada! (la ficha no se pudo enviar, probá tocar Enviar de nuevo)");
+      }
+      window.__fichaPendiente = null;
+    } else {
+      alert("¡Cuenta creada! Ya podés iniciar sesión.");
+    }
   } catch (e) {
     if (e.message.includes("duplicate") || e.message.includes("unique"))
       setMsg("reg-username-msg", "Usuario en uso", "err");

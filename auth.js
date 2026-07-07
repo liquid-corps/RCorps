@@ -19,7 +19,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DOMINIO_FALSO = "lcorps.local";
 
 // URL de tus Edge Functions (se arman solas con tu SUPABASE_URL)
-const FN_URL = (nombre) => `${SUPABASE_URL}/functions/v1/${nombre}`;
+const FN_URL = (nombre) => `${https://bshwjiukzvfqczgbxuse.supabase.co}/functions/v1/${nombre}`;
 
 // ============================================================
 // Helpers de UI

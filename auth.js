@@ -16,7 +16,6 @@ const SUPABASE_URL = "https://bshwjiukzvfqczgbxuse.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzaHdqaXVrenZmcWN6Z2J4dXNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjgwODksImV4cCI6MjA5ODk0NDA4OX0.EGkDntr5xvB-D_G0P-7jxJLZbdMjBW_mWY70KuVTzsQ";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const DOMINIO_FALSO = "lcorps.local";
 
 // URL de tus Edge Functions (se arman solas con tu SUPABASE_URL)
 const FN_URL = (nombre) => `${SUPABASE_URL}/functions/v1/${nombre}`;
@@ -129,73 +128,31 @@ $("reg-username").addEventListener("blur", async () => {
   setMsg("reg-username-msg", data ? "" : "Usuario en uso", "err");
 });
 
-// Vincular Discord: abrimos un popup a este mismo sitio; como comparte el
-// mismo localStorage (mismo origen), cuando el popup termina el login con
-// Discord y se lo linkea a la sesión, la pestaña principal solo necesita
-// refrescar el usuario.
-$("btn-vincular-discord").onclick = () => {
-  const popup = window.open(
-    window.location.pathname + "?vincular-discord=1",
-    "discord-oauth",
-    "width=480,height=720"
-  );
-  if (!popup) {
-    setMsg("reg-discord-msg", "El navegador bloqueó la ventana emergente. Permití popups para este sitio e intentá de nuevo.", "err");
-    return;
-  }
-  window.addEventListener("message", async function handler(ev) {
-    if (ev.data?.source !== "lcorps-discord-linked") return;
-    window.removeEventListener("message", handler);
-    popup?.close();
-
-    if (ev.data.error) {
-      setMsg("reg-discord-msg", "Cuenta ya vinculada", "err");
-      return;
-    }
-    setMsg("reg-discord-msg", "Verificando...", "");
-    const { data: userData } = await supabase.auth.getUser();
-    const identidadDiscord = userData.user?.identities?.find((i) => i.provider === "discord");
-    if (identidadDiscord) {
-      window.__discordVinculado = {
-        discordId: identidadDiscord.identity_data.provider_id || identidadDiscord.identity_data.sub,
-        discordUsername:
-          identidadDiscord.identity_data.full_name ||
-          identidadDiscord.identity_data.name ||
-          identidadDiscord.identity_data.username,
-      };
-      $("reg-discord").value = window.__discordVinculado.discordUsername;
-      setMsg("reg-discord-msg", "Vinculado ✓", "ok");
-    } else {
-      setMsg("reg-discord-msg", "No se pudo vincular.", "err");
-    }
-  });
-};
-
 $("btn-crear").onclick = async () => {
   const username = $("reg-username").value.trim();
+  const email = $("reg-email").value.trim();
   const password = $("reg-password").value;
-  const discordVinculado = window.__discordVinculado;
 
   if (!username) return setMsg("reg-username-msg", "Escribe un usuario.", "err");
-  if (!discordVinculado) return setMsg("reg-discord-msg", "Vincula tu Discord.", "err");
+  if (!email || !email.includes("@")) return setMsg("reg-email-msg", "Escribe un correo válido.", "err");
   if (password.length < 6 || password.length > 8)
     return setMsg("reg-password-msg", "La clave debe tener 6 a 8 caracteres.", "err");
 
   $("btn-crear").disabled = true;
   try {
-    // En este punto ya hay una sesión (se creó al vincular Discord con
-    // signInWithOAuth). Le ponemos usuario/clave a ESA misma cuenta:
-    const { error: passError } = await supabase.auth.updateUser({
-      email: `${username.toLowerCase()}@${DOMINIO_FALSO}`,
+    // Registro directo con el correo real del usuario (ya no hace falta
+    // vincular Discord ni usar un dominio falso: Supabase maneja el
+    // correo real, lo que además habilita su reseteo de clave nativo).
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
       password,
     });
-    if (passError) throw passError;
+    if (signUpError) throw signUpError;
 
     const { error: perfilError } = await supabase.from("profiles").insert({
-      id: (await supabase.auth.getUser()).data.user.id,
+      id: signUpData.user.id,
       username,
-      discord_id: discordVinculado.discordId,
-      discord_username: discordVinculado.discordUsername,
+      email,
     });
     if (perfilError) throw perfilError;
 
@@ -215,6 +172,15 @@ $("btn-crear").onclick = async () => {
 
     cerrarPaneles();
 
+    // OJO: si en tu proyecto de Supabase está activado "Confirm email"
+    // (Authentication → Providers → Email), signUp() NO deja sesión activa
+    // hasta que el usuario confirme el correo, así que la ficha pendiente
+    // recién se podrá enviar después de que confirme e inicie sesión.
+    if (!signUpData.session) {
+      alert("¡Cuenta creada! Revisa tu correo para confirmarla antes de iniciar sesión.");
+      return;
+    }
+
     // Si venías de tocar "Enviar" en la ficha antes de tener cuenta,
     // ahora que ya existe, se manda sola.
     if (window.__fichaPendiente) {
@@ -226,11 +192,13 @@ $("btn-crear").onclick = async () => {
       }
       window.__fichaPendiente = null;
     } else {
-      alert("¡Cuenta creada! Ya podés iniciar sesión.");
+      alert("¡Cuenta creada!");
     }
   } catch (e) {
     if (e.message.includes("duplicate") || e.message.includes("unique"))
       setMsg("reg-username-msg", "Usuario en uso", "err");
+    else if (e.message.toLowerCase().includes("already registered"))
+      setMsg("reg-email-msg", "Ese correo ya tiene una cuenta.", "err");
     else setMsg("reg-password-msg", "No se pudo crear la cuenta.", "err");
   } finally {
     $("btn-crear").disabled = false;
@@ -241,27 +209,18 @@ $("btn-crear").onclick = async () => {
 // PANEL INICIAR SESIÓN
 // ============================================================
 $("btn-entrar").onclick = async () => {
-  setMsg("login-username-msg", "", "");
+  setMsg("login-email-msg", "", "");
   setMsg("login-password-msg", "", "");
-  const username = $("login-username").value.trim();
+  const email = $("login-email").value.trim();
   const password = $("login-password").value;
 
   $("btn-entrar").disabled = true;
   try {
-    // Supabase no distingue "no existe" de "clave mal" por seguridad, así
-    // que primero comprobamos si el usuario existe para dar el mismo
-    // mensaje que en tus capturas.
-    const { data: disponible } = await supabase.rpc("username_available", { uname: username });
-    if (disponible) {
-      setMsg("login-username-msg", "Usuario no encontrado", "err");
-      return;
-    }
-    const { error } = await supabase.auth.signInWithPassword({
-      email: `${username.toLowerCase()}@${DOMINIO_FALSO}`,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      setMsg("login-password-msg", "Clave incorrecta", "err");
+      // Por seguridad, Supabase no distingue "correo no existe" de "clave
+      // incorrecta", así que mostramos un solo mensaje genérico.
+      setMsg("login-password-msg", "Correo o clave incorrectos", "err");
       return;
     }
     cerrarPaneles();
@@ -273,19 +232,26 @@ $("btn-entrar").onclick = async () => {
 // ============================================================
 // PANEL OLVIDASTE LA CLAVE
 // ============================================================
+// NOTA IMPORTANTE (backend): esta Edge Function "request-password-reset"
+// antes le mandaba el código por Discord (mensaje directo con un bot).
+// Ahora que se le manda el correo en vez del usuario de Discord, tenés que
+// actualizar ESA función en tu proyecto de Supabase para que envíe el
+// código por correo (por ejemplo con Resend, SendGrid, o el email builtin
+// de Supabase) en vez de por Discord. Yo no tengo acceso a tus Edge
+// Functions, así que ese cambio del lado del servidor te queda a vos.
 $("btn-enviar-codigo").onclick = async () => {
-  const discordUsername = $("olvide-discord").value.trim();
-  setMsg("olvide-discord-msg", "Enviando...", "");
+  const email = $("olvide-email").value.trim();
+  setMsg("olvide-email-msg", "Enviando...", "");
   const res = await fetch(FN_URL("request-password-reset"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ discordUsername }),
+    body: JSON.stringify({ email }),
   });
   if (!res.ok) {
-    setMsg("olvide-discord-msg", "Usuario no encontrado", "err");
+    setMsg("olvide-email-msg", "Correo no encontrado", "err");
     return;
   }
-  setMsg("olvide-discord-msg", "Código enviado por Discord.", "ok");
+  setMsg("olvide-email-msg", "Código enviado por correo.", "ok");
   $("olvide-codigo-wrap").classList.remove("auth-hidden");
   $("olvide-clave-wrap").classList.remove("auth-hidden");
 };
@@ -345,35 +311,3 @@ document.querySelectorAll("[data-logout]").forEach((el) =>
     supabase.auth.signOut();
   })
 );
-
-// ============================================================
-// Si esta pestaña se abrió como el popup de "Vincular con Discord"
-// (?vincular-discord=1), dispara el login OAuth y, cuando vuelva de
-// Discord, avisa a la ventana principal y se cierra sola.
-// ============================================================
-(async function manejarPopupDeDiscord() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("vincular-discord") === "1" && window.opener) {
-    // Recién llegamos al popup: mandamos a Discord.
-    // Ojo: usamos signInWithOAuth (no linkIdentity). En este punto todavía
-    // NO existe ninguna sesión -sos un visitante anónimo registrándote-, y
-    // linkIdentity exige que ya haya alguien logueado o falla en silencio
-    // (por eso la página "se reiniciaba" sin vincular nada). signInWithOAuth
-    // sí puede crear la sesión desde cero con la cuenta de Discord.
-    if (!params.get("code")) {
-      await supabase.auth.signInWithOAuth({
-        provider: "discord",
-        options: { redirectTo: window.location.href },
-      });
-      return; // la página navega a Discord; el resto corre al volver
-    }
-    // Volvimos de Discord con ?code=...: supabase-js ya procesó la sesión.
-    const { data, error } = await supabase.auth.getUser();
-    const yaTeniaDiscord = data.user?.identities?.filter((i) => i.provider === "discord").length;
-    window.opener.postMessage(
-      { source: "lcorps-discord-linked", error: error?.message && !yaTeniaDiscord },
-      window.location.origin
-    );
-    window.close();
-  }
-})();

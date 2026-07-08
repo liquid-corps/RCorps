@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wiki</title>
 <style>
+  /* ============================================================
+     FUENTE LOCAL (misma que index.html)
+     Requiere el archivo PixelArial11.ttf en la misma carpeta.
+     ============================================================ */
+  @font-face{
+    font-family:'Pixel Arial 11';
+    src:url('PixelArial11.ttf') format('truetype');
+    font-weight:normal;
+    font-style:normal;
+    font-display:swap;
+  }
+</style>
+<style>
   :root{
     --page-bg:#f1eee4;
     --panel-border:#b8ae95;
@@ -17,7 +30,7 @@
   html,body{margin:0;padding:0;}
   body{
     background:var(--page-bg);
-    font-family:'Trebuchet MS','Segoe UI',sans-serif;
+    font-family:'Pixel Arial 11', monospace;
     color:var(--text-dark);
     min-height:100vh;
   }
@@ -401,13 +414,126 @@ const NEW_TAG_MS = 3 * 60 * 60 * 1000;         // "NEW!" dura 3 horas
 const TOP_VIEW_THRESHOLD = 100;                 // "TOP" si supera 100 vistas
 const TOP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;  // ...durante 1 semana
 const SECRET_CODE = 'a3a#HGD#LNLBw7s';          // código secreto para publicar
+const MAX_COVER_CHARS = 35000;                  // límite de tamaño de portada (celda de Sheets)
+
+/* ============================================================
+   BASE DE DATOS COMPARTIDA (Google Sheets + Apps Script)
+   ============================================================
+   Sin esto, cada artículo publicado solo se guarda en el
+   navegador de quien lo publicó (localStorage) y nadie más lo ve.
+   Para que TODOS los visitantes vean los mismos artículos,
+   guardados en una hoja de Google Sheets:
+
+   1. Crea una hoja nueva en https://sheets.google.com
+   2. En la fila 1, escribe exactamente estos encabezados, uno por
+      columna (A a I):
+        id | title | dateStr | text | cover | publishedAt | views | weekViews | weekStart
+   3. Menú "Extensiones" -> "Apps Script". Borra el contenido que
+      aparece y pega TODO el código de abajo (sección "CÓDIGO PARA
+      APPS SCRIPT"). Guarda el proyecto (nómbralo como quieras).
+   4. Arriba a la derecha, botón "Implementar" -> "Nueva implementación".
+      - Tipo: "Aplicación web".
+      - Ejecutar como: "Yo".
+      - Quién tiene acceso: "Cualquier usuario".
+      -> "Implementar". La primera vez te pedirá autorizar permisos
+      (es tu propio script, es seguro aceptar).
+   5. Copia la URL que termina en /exec y pégala aquí abajo,
+      reemplazando "PON_AQUI_TU_URL_DE_APPS_SCRIPT".
+
+   Mientras no reemplaces "PON_AQUI...", la wiki sigue funcionando
+   como antes (guardado solo en tu propio navegador).
+
+   ------------------------------------------------------------------
+   CÓDIGO PARA APPS SCRIPT (pégalo completo en el editor de Apps Script)
+   ------------------------------------------------------------------
+
+   function doGet(e) {
+     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+     var data = sheet.getDataRange().getValues();
+     var headers = data.shift();
+     var articles = data
+       .filter(function(row){ return row[0] !== ''; })
+       .map(function(row){
+         var obj = {};
+         headers.forEach(function(h, i){ obj[h] = row[i]; });
+         return obj;
+       });
+     return ContentService.createTextOutput(JSON.stringify(articles))
+       .setMimeType(ContentService.MimeType.JSON);
+   }
+
+   function doPost(e) {
+     var lock = LockService.getScriptLock();
+     lock.waitLock(10000);
+     try {
+       var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+       var headers = sheet.getDataRange().getValues()[0];
+       var body = JSON.parse(e.postData.contents);
+
+       if (body.action === 'publish') {
+         var id = Utilities.getUuid();
+         var now = Date.now();
+         var row = headers.map(function(h){
+           switch (h) {
+             case 'id': return id;
+             case 'title': return body.title || 'SIN TITULO';
+             case 'dateStr': return body.dateStr || '';
+             case 'text': return body.text || '';
+             case 'cover': return body.cover || '';
+             case 'publishedAt': return now;
+             case 'views': return 0;
+             case 'weekViews': return 0;
+             case 'weekStart': return now;
+             default: return '';
+           }
+         });
+         sheet.appendRow(row);
+         return ContentService.createTextOutput(JSON.stringify({ ok: true, id: id }))
+           .setMimeType(ContentService.MimeType.JSON);
+       }
+
+       if (body.action === 'view') {
+         var data = sheet.getDataRange().getValues();
+         var idCol = headers.indexOf('id');
+         var viewsCol = headers.indexOf('views');
+         var weekViewsCol = headers.indexOf('weekViews');
+         var weekStartCol = headers.indexOf('weekStart');
+         for (var i = 1; i < data.length; i++) {
+           if (String(data[i][idCol]) === String(body.id)) {
+             var now = Date.now();
+             var weekStart = Number(data[i][weekStartCol]) || now;
+             var weekViews = Number(data[i][weekViewsCol]) || 0;
+             if (now - weekStart > 7 * 24 * 60 * 60 * 1000) {
+               weekStart = now;
+               weekViews = 0;
+             }
+             sheet.getRange(i + 1, viewsCol + 1).setValue((Number(data[i][viewsCol]) || 0) + 1);
+             sheet.getRange(i + 1, weekViewsCol + 1).setValue(weekViews + 1);
+             sheet.getRange(i + 1, weekStartCol + 1).setValue(weekStart);
+             break;
+           }
+         }
+         return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+           .setMimeType(ContentService.MimeType.JSON);
+       }
+
+       return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'accion desconocida' }))
+         .setMimeType(ContentService.MimeType.JSON);
+     } finally {
+       lock.releaseLock();
+     }
+   }
+   ------------------------------------------------------------------
+   ============================================================ */
+const SHEETS_API_URL = "PON_AQUI_TU_URL_DE_APPS_SCRIPT";
+const SHEETS_ENABLED = !SHEETS_API_URL.includes('PON_AQUI');
 
 let articles = [];
 let selectedId = null;
 let currentQuery = '';
 
 /* ------------------------------------------------------------------
-   Datos de ejemplo (solo se usan la primera vez, si no hay nada guardado)
+   Datos de ejemplo (solo se usan en modo local, la primera vez)
 ------------------------------------------------------------------ */
 function seedArticles(){
   const now = Date.now();
@@ -475,24 +601,74 @@ function cryptoId(){
 }
 
 /* ------------------------------------------------------------------
-   Persistencia (localStorage funciona como la "base de datos" de la wiki)
+   Persistencia
+   - Modo compartido (Firestore): todos los visitantes ven los
+     mismos artículos, en tiempo real, para siempre.
+   - Modo local (respaldo si no configuraste Firebase): solo en
+     el navegador de quien publicó.
 ------------------------------------------------------------------ */
-function loadArticles(){
+function loadLocalArticles(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       articles = JSON.parse(raw);
     } else {
       articles = seedArticles();
-      saveArticles();
+      saveLocalArticles();
     }
   }catch(e){
     articles = seedArticles();
   }
 }
-function saveArticles(){
+function saveLocalArticles(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(articles)); }
   catch(e){ console.error('No se pudo guardar la wiki', e); }
+}
+
+function startArticlesSync(){
+  if(SHEETS_ENABLED){
+    refreshFromSheet();
+    // Google Sheets no empuja cambios en vivo, así que se refresca
+    // cada 30s para que aparezcan artículos/vistas de otros visitantes.
+    setInterval(refreshFromSheet, 30*1000);
+  } else {
+    loadLocalArticles();
+    renderArticlesList();
+  }
+}
+
+async function fetchArticlesFromSheet(){
+  const res = await fetch(SHEETS_API_URL);
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  return data.map(a => ({
+    id: String(a.id),
+    title: a.title || 'SIN TITULO',
+    dateStr: a.dateStr || '',
+    text: a.text || '',
+    cover: a.cover || null,
+    publishedAt: Number(a.publishedAt) || Date.now(),
+    views: Number(a.views) || 0,
+    weekViews: Number(a.weekViews) || 0,
+    weekStart: Number(a.weekStart) || Date.now()
+  })).sort((a, b) => b.publishedAt - a.publishedAt);
+}
+
+async function refreshFromSheet(){
+  try{
+    articles = await fetchArticlesFromSheet();
+    renderArticlesList();
+    if(selectedId){
+      const still = articles.find(a => a.id === selectedId);
+      if(still) renderContentOnly(still);
+    }
+  }catch(e){
+    console.error('No se pudo conectar a Google Sheets, usando modo local:', e);
+    if(!articles.length){
+      loadLocalArticles();
+      renderArticlesList();
+    }
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -573,15 +749,7 @@ function renderArticlesList(){
 /* ------------------------------------------------------------------
    Render: panel de contenido
 ------------------------------------------------------------------ */
-function selectArticle(id){
-  const a = articles.find(x=>x.id === id);
-  if(!a) return;
-
-  selectedId = id;
-  a.views = (a.views || 0) + 1;
-  a.weekViews = (a.weekViews || 0) + 1;
-  saveArticles();
-
+function renderContentOnly(a){
   $('content-placeholder').style.display = 'none';
   $('content-body').style.display = 'block';
 
@@ -597,8 +765,44 @@ function selectArticle(id){
   $('content-title').textContent = a.title || 'SIN TITULO';
   $('content-text').textContent = a.text;
   $('content-date').textContent = a.dateStr || '';
-  $('content-views').textContent = 'Visualizaciones: ' + a.views;
+  $('content-views').textContent = 'Visualizaciones: ' + (a.views || 0);
+}
 
+async function registerView(a){
+  if(!SHEETS_ENABLED){
+    a.views = (a.views || 0) + 1;
+    a.weekViews = (a.weekViews || 0) + 1;
+    if(Date.now() - a.weekStart > TOP_WINDOW_MS){
+      a.weekStart = Date.now();
+      a.weekViews = 1;
+    }
+    saveLocalArticles();
+    renderArticlesList();
+    return;
+  }
+  try{
+    // text/plain evita el preflight CORS; Apps Script igual lee el
+    // JSON crudo desde e.postData.contents.
+    await fetch(SHEETS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'view', id: a.id })
+    });
+    await refreshFromSheet(); // trae el conteo real, ya sincronizado
+  }catch(e){
+    console.error('No se pudo registrar la vista', e);
+  }
+}
+
+function selectArticle(id){
+  const a = articles.find(x=>x.id === id);
+  if(!a) return;
+
+  selectedId = id;
+  // se muestra al instante con +1 vista (feedback inmediato); el conteo
+  // real y definitivo llega enseguida por la sincronización en vivo
+  renderContentOnly(Object.assign({}, a, { views: (a.views || 0) + 1 }));
+  registerView(a);
   renderArticlesList(); // refresca los tags NEW!/TOP
 }
 
@@ -741,7 +945,7 @@ function resetEditor(){
 
 $('ed-limpiar').addEventListener('click', resetEditor);
 
-$('ed-publicar').addEventListener('click', ()=>{
+$('ed-publicar').addEventListener('click', async ()=>{
   const title = edTitle.value.trim() || 'SIN TITULO';
   const text = edText.value.trim();
   const dateStr = edDate.value.trim();
@@ -750,10 +954,13 @@ $('ed-publicar').addEventListener('click', ()=>{
     $('editor-status').textContent = 'Escribe (o sube) el texto del artículo antes de publicar.';
     return;
   }
+  if(edCoverData && edCoverData.length > MAX_COVER_CHARS){
+    $('editor-status').textContent = 'La imagen de portada es muy pesada, usa una más liviana.';
+    return;
+  }
 
   const now = Date.now();
-  articles.unshift({
-    id: cryptoId(),
+  const newArticle = {
     title,
     dateStr: dateStr || new Date().toLocaleDateString('es-ES'),
     text,
@@ -762,12 +969,38 @@ $('ed-publicar').addEventListener('click', ()=>{
     views: 0,
     weekViews: 0,
     weekStart: now
-  });
-  saveArticles();
-  renderArticlesList();
+  };
 
-  resetEditor();
-  closeEditor();
+  const publishBtn = $('ed-publicar');
+  publishBtn.disabled = true;
+  $('editor-status').textContent = 'Publicando...';
+
+  try{
+    if(SHEETS_ENABLED){
+      // Se guarda como fila nueva en la hoja de Google Sheets: queda
+      // visible para todos los visitantes, para siempre (hasta que
+      // alguien borre la fila a mano en la hoja).
+      const res = await fetch(SHEETS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(Object.assign({ action: 'publish' }, newArticle))
+      });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      await refreshFromSheet();
+    } else {
+      newArticle.id = cryptoId();
+      articles.unshift(newArticle);
+      saveLocalArticles();
+      renderArticlesList();
+    }
+    resetEditor();
+    closeEditor();
+  }catch(e){
+    console.error(e);
+    $('editor-status').textContent = 'Error al publicar. Revisa la consola.';
+  }finally{
+    publishBtn.disabled = false;
+  }
 });
 
 editorOverlay.addEventListener('click', (e)=>{
@@ -777,8 +1010,7 @@ editorOverlay.addEventListener('click', (e)=>{
 /* ------------------------------------------------------------------
    Init
 ------------------------------------------------------------------ */
-loadArticles();
-renderArticlesList();
+startArticlesSync();
 // refresca las etiquetas NEW!/TOP cada minuto sin necesidad de recargar
 setInterval(renderArticlesList, 60*1000);
 

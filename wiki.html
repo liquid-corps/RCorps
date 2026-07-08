@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wiki</title>
+<style>
+  :root{
+    --page-bg:#f1eee4;
+    --panel-border:#b8ae95;
+    --text-dark:#3a332a;
+    --text-muted:#a49c8c;
+    --maroon:#7a2020;
+    --blue:#4a6fa5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--page-bg);
+    font-family:'Trebuchet MS','Segoe UI',sans-serif;
+    color:var(--text-dark);
+    min-height:100vh;
+  }
+
+  /* ============ HOTBAR ============ */
+  .hotbar{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    height:78px;
+    padding:0 34px;
+    background-image:url('assets/hotbar.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:#e7e1d1; /* respaldo si la imagen no carga */
+    border-bottom:1px solid var(--panel-border);
+  }
+  .hotbar-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:22px;
+  }
+  .hotbar-nav a{
+    color:var(--text-dark);
+    text-decoration:none;
+  }
+  .hotbar-nav a:hover{opacity:0.75;}
+  .hotbar-nav .sep{color:var(--text-muted);}
+
+  .search-wrap{position:relative;width:420px;}
+  .search-bar{
+    display:flex;
+    align-items:center;
+    width:100%;
+    height:42px;
+    padding:0 16px;
+    background-image:url('assets/barra_busqueda.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:#faf8f2;
+    border:1px solid var(--panel-border);
+  }
+  .search-bar input{
+    flex:1;
+    border:none;
+    background:transparent;
+    outline:none;
+    font-family:inherit;
+    font-size:18px;
+    color:var(--text-dark);
+  }
+  .search-bar input::placeholder{color:var(--text-muted);}
+  .search-bar .search-icon{
+    color:var(--text-muted);
+    font-size:18px;
+    margin-left:8px;
+  }
+
+  /* ---- sugerencias flotantes bajo la barra de búsqueda ---- */
+  .search-suggestions{
+    position:absolute;
+    top:calc(100% + 6px);
+    right:0;
+    width:100%;
+    z-index:120;
+    display:none;
+  }
+  .search-suggestions.open{display:block;}
+  .suggestion-card{
+    background:#f3f0e6;
+    border:1px solid var(--panel-border);
+    padding:12px 16px;
+    margin-top:-1px;
+    cursor:pointer;
+    box-shadow:0 6px 10px rgba(0,0,0,0.08);
+  }
+  .suggestion-card:hover{background:#eae5d5;}
+  .suggestion-card .s-title{font-size:16px;}
+  .suggestion-card .s-title .s-date{font-size:11px;color:var(--text-muted);margin-left:8px;}
+  .suggestion-card .s-snippet{font-size:13px;color:var(--text-muted);margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* ============ LAYOUT PRINCIPAL ============ */
+  .wiki-layout{
+    display:flex;
+    align-items:flex-start;
+    gap:40px;
+    padding:40px;
+    max-width:1500px;
+    margin:0 auto;
+  }
+
+  /* ---- Panel de artículos (izquierda) ---- */
+  .articles-col{width:360px;flex-shrink:0;}
+  .search-label{
+    font-size:13px;
+    color:var(--text-muted);
+    margin-bottom:8px;
+  }
+  .articles-panel{
+    background-image:url('assets/panel_articulos.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:#e9e5d8;
+    border:1px solid var(--panel-border);
+    padding:14px;
+    max-height:78vh;
+    overflow-y:auto;
+  }
+  .articulo-box{
+    position:relative;
+    background-image:url('assets/articulos_cuadro.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:#f4f1e8;
+    border:1px solid var(--panel-border);
+    padding:14px 16px;
+    margin-bottom:14px;
+    cursor:pointer;
+  }
+  .articulo-box:last-child{margin-bottom:0;}
+  .articulo-box:hover{filter:brightness(0.97);}
+  .articulo-box.active{outline:2px solid var(--maroon);}
+  .articulo-title-row{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .articulo-title-row h3{
+    margin:0;
+    font-size:20px;
+    font-weight:normal;
+  }
+  .articulo-title-row .articulo-date{
+    font-size:12px;
+    color:var(--text-muted);
+  }
+  .articulo-snippet{
+    font-size:14px;
+    line-height:1.35;
+    color:var(--text-muted);
+    display:-webkit-box;
+    -webkit-line-clamp:5;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .articulo-badge{
+    position:absolute;
+    top:-10px;
+    right:14px;
+    height:24px;
+    width:auto;
+  }
+  .articulo-badge.fallback{
+    /* se usa solo si la imagen del tag no carga */
+    display:flex;align-items:center;justify-content:center;
+    padding:3px 10px;font-size:11px;color:#fff;letter-spacing:0.5px;
+  }
+  .articulo-badge.fallback.new{background:var(--maroon);}
+  .articulo-badge.fallback.top{background:var(--blue);}
+  .no-results{
+    padding:20px;
+    color:var(--text-muted);
+    font-size:14px;
+  }
+
+  /* ---- Panel de contenido (derecha) ---- */
+  .content-panel{
+    flex:1;
+    min-height:78vh;
+    background-image:url('assets/panel_contenido.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:#f2efe4;
+    border:1px solid var(--panel-border);
+    padding:34px;
+  }
+  .content-placeholder{
+    font-size:18px;
+    color:var(--text-dark);
+  }
+  .content-cover{
+    width:100%;
+    height:220px;
+    background:#6f8fbf;
+    background-size:cover;
+    background-position:center;
+    margin-bottom:22px;
+  }
+  .content-cover.empty{
+    display:flex;align-items:center;justify-content:center;
+    color:rgba(255,255,255,0.85);
+    font-size:14px;
+    background:#c9c2ac;
+  }
+  #content-title{
+    margin:0 0 16px 0;
+    font-size:26px;
+    font-weight:normal;
+    color:var(--text-dark);
+  }
+  .content-text{
+    font-size:15px;
+    line-height:1.6;
+    color:var(--text-muted);
+    white-space:pre-wrap;
+    word-wrap:break-word;
+  }
+  .content-footer{
+    margin-top:26px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    font-size:12px;
+    color:var(--text-muted);
+  }
+
+  /* ============ EDITOR / PUBLICAR (modo secreto) ============ */
+  .editor-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(60,55,45,0.45);
+    z-index:200;
+    align-items:flex-start;
+    justify-content:center;
+    padding-top:90px;
+  }
+  .editor-overlay.open{display:flex;}
+  .editor-wrap{width:640px;max-width:92vw;}
+  .periodico-pill{
+    display:inline-block;
+    background:#f6f2e6;
+    border:1px solid var(--panel-border);
+    padding:10px 40px;
+    font-size:15px;
+    color:var(--text-muted);
+    margin:0 auto 16px auto;
+    text-align:center;
+    width:100%;
+    cursor:default;
+  }
+  .editor-card{
+    background:#f6f2e6;
+    border:1px solid var(--panel-border);
+    padding:26px;
+  }
+  .editor-card h3{
+    margin:0 0 18px 0;
+    font-size:22px;
+    font-weight:normal;
+  }
+  .editor-row{margin-bottom:14px;}
+  .editor-row label{
+    display:block;
+    font-size:12px;
+    color:var(--text-muted);
+    margin-bottom:4px;
+  }
+  .editor-row input[type=text],
+  .editor-row textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    color:var(--text-dark);
+    background:#fff;
+    border:1px solid var(--panel-border);
+    padding:8px 10px;
+    outline:none;
+    resize:vertical;
+  }
+  .editor-row textarea{min-height:120px;}
+  .upload-btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    background:#fff;
+    border:1px solid var(--panel-border);
+    padding:14px;
+    font-size:14px;
+    color:var(--text-muted);
+    cursor:pointer;
+  }
+  .upload-btn:hover{background:#faf8f2;}
+  .upload-btn input{display:none;}
+  .upload-hint{font-size:11px;color:var(--text-muted);margin-top:4px;}
+  .editor-actions{
+    display:flex;
+    justify-content:center;
+    gap:40px;
+    margin-top:22px;
+  }
+  .editor-actions button{
+    background:#fff;
+    border:1px solid var(--panel-border);
+    padding:10px 30px;
+    font-family:inherit;
+    font-size:15px;
+    color:var(--text-dark);
+    cursor:pointer;
+  }
+  .editor-actions button:hover{background:#f0ecdf;}
+  .editor-status{
+    text-align:center;
+    font-size:13px;
+    color:var(--maroon);
+    margin-top:12px;
+    min-height:16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hotbar">
+  <div class="hotbar-nav">
+    <a href="index.html">Wiki.</a>
+    <span class="sep">|</span>
+    <a href="registro.html">Registro.</a>
+  </div>
+  <div class="search-wrap">
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Buscar..." autocomplete="off">
+      <span class="search-icon">🔍</span>
+    </div>
+    <div class="search-suggestions" id="search-suggestions"></div>
+  </div>
+</div>
+
+<div class="wiki-layout">
+  <div class="articles-col">
+    <div class="search-label" id="search-label" style="display:none;">Buscaste: <span id="search-term"></span></div>
+    <div class="articles-panel" id="articles-panel"></div>
+  </div>
+
+  <div class="content-panel" id="content-panel">
+    <div class="content-placeholder" id="content-placeholder">Toca un Artículo ...</div>
+    <div class="content-body" id="content-body" style="display:none;">
+      <div class="content-cover" id="content-cover"></div>
+      <h2 id="content-title"></h2>
+      <div class="content-text" id="content-text"></div>
+      <div class="content-footer">
+        <span id="content-date"></span>
+        <span id="content-views"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel secreto para publicar artículos: se abre escribiendo el código en la barra de búsqueda -->
+<div class="editor-overlay" id="editor-overlay">
+  <div class="editor-wrap">
+    <div class="periodico-pill">Periodico</div>
+    <div class="editor-card">
+      <h3 id="editor-preview-title">SIN TITULO</h3>
+
+      <div class="editor-row">
+        <label for="ed-title">Título</label>
+        <input type="text" id="ed-title" placeholder="Título del artículo">
+      </div>
+
+      <div class="editor-row">
+        <label for="ed-date">Fecha</label>
+        <input type="text" id="ed-date" placeholder="dd/mm/aa">
+      </div>
+
+      <div class="editor-row">
+        <label class="upload-btn" for="ed-cover">
+          <span id="ed-cover-label">seleccionar (.png/.gif)</span>
+          <input type="file" id="ed-cover" accept="image/png,image/gif">
+        </label>
+      </div>
+
+      <div class="editor-row">
+        <label class="upload-btn" for="ed-textfile">
+          <span id="ed-textfile-label">seleccionar archivo .txt/.pdf</span>
+          <input type="file" id="ed-textfile" accept=".txt,.pdf">
+        </label>
+        <div class="upload-hint">Los .txt se cargan automáticamente abajo. Los .pdf hay que pegar el texto a mano (el navegador no puede leerlos solo).</div>
+      </div>
+
+      <div class="editor-row">
+        <label for="ed-text">Texto</label>
+        <textarea id="ed-text" placeholder="Escribe el artículo aquí..."></textarea>
+      </div>
+
+      <div class="editor-actions">
+        <button type="button" id="ed-limpiar">limpiar</button>
+        <button type="button" id="ed-publicar">publicar</button>
+      </div>
+      <div class="editor-status" id="editor-status"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/* ------------------------------------------------------------------
+   Config
+------------------------------------------------------------------ */
+const STORAGE_KEY = 'wikiArticles_v1';
+const NEW_TAG_MS = 3 * 60 * 60 * 1000;         // "NEW!" dura 3 horas
+const TOP_VIEW_THRESHOLD = 100;                 // "TOP" si supera 100 vistas
+const TOP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;  // ...durante 1 semana
+const SECRET_CODE = 'codigo:edit67';            // código secreto para publicar
+
+let articles = [];
+let selectedId = null;
+let currentQuery = '';
+
+/* ------------------------------------------------------------------
+   Datos de ejemplo (solo se usan la primera vez, si no hay nada guardado)
+------------------------------------------------------------------ */
+function seedArticles(){
+  const now = Date.now();
+  return [
+    {
+      id: cryptoId(),
+      title: 'TORNEO!',
+      dateStr: '02/07/26',
+      text: 'Este Julio del 2027 se hara un torneo para toda la gente de corps. Los lideres Mizu y Rain han decidido crear un torneo con un premio de 500 robux.',
+      cover: null,
+      publishedAt: now - (1*60*60*1000), // hace 1h -> se ve NEW!
+      views: 42,
+      weekViews: 10,
+      weekStart: now
+    },
+    {
+      id: cryptoId(),
+      title: 'SIN TITULO',
+      dateStr: '31/12/9999',
+      text: 'Lucas y Kit fueron al parque, de repente oso baul se aparecio y empezó a ladrar hasta que water llego y le chuzo la barriga para que despues se desinflara y muriera.',
+      cover: null,
+      publishedAt: now - (100*60*60*1000),
+      views: 12,
+      weekViews: 5,
+      weekStart: now
+    },
+    {
+      id: cryptoId(),
+      title: 'SIN TITULO',
+      dateStr: '31/12/9999',
+      text: 'Lucas y Kit fueron al parque, de repente oso baul se aparecio y empezó a ladrar hasta que water llego y le chuzo la barriga para que despues se desinflara y muriera.',
+      cover: null,
+      publishedAt: now - (100*60*60*1000),
+      views: 130,
+      weekViews: 150, // -> se ve TOP
+      weekStart: now
+    },
+    {
+      id: cryptoId(),
+      title: 'SIN TITULO',
+      dateStr: '31/12/9999',
+      text: 'Lucas y Kit fueron al parque, de repente oso baul se aparecio y empezó a ladrar hasta que water llego y le chuzo la barriga para que despues se desinflara y muriera.',
+      cover: null,
+      publishedAt: now - (100*60*60*1000),
+      views: 8,
+      weekViews: 3,
+      weekStart: now
+    },
+    {
+      id: cryptoId(),
+      title: 'SIN TITULO',
+      dateStr: '31/12/9999',
+      text: 'Lucas y Kit fueron al parque, de repente oso baul se aparecio y empezó a ladrar hasta que water llego y le chuzo la barriga para que despues se desinflara y muriera.',
+      cover: null,
+      publishedAt: now - (100*60*60*1000),
+      views: 3,
+      weekViews: 1,
+      weekStart: now
+    }
+  ];
+}
+
+function cryptoId(){
+  return 'a' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+/* ------------------------------------------------------------------
+   Persistencia (localStorage funciona como la "base de datos" de la wiki)
+------------------------------------------------------------------ */
+function loadArticles(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      articles = JSON.parse(raw);
+    } else {
+      articles = seedArticles();
+      saveArticles();
+    }
+  }catch(e){
+    articles = seedArticles();
+  }
+}
+function saveArticles(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(articles)); }
+  catch(e){ console.error('No se pudo guardar la wiki', e); }
+}
+
+/* ------------------------------------------------------------------
+   Lógica de etiquetas NEW! / TOP
+------------------------------------------------------------------ */
+function isNew(a){
+  return (Date.now() - a.publishedAt) < NEW_TAG_MS;
+}
+function isTop(a){
+  // si la ventana de la semana ya venció, se resetea el contador
+  if(Date.now() - a.weekStart > TOP_WINDOW_MS){
+    a.weekStart = Date.now();
+    a.weekViews = 0;
+  }
+  return a.weekViews > TOP_VIEW_THRESHOLD;
+}
+
+/* ------------------------------------------------------------------
+   Render: lista de artículos
+------------------------------------------------------------------ */
+function badgeEl(kind){
+  const img = document.createElement('img');
+  img.className = 'articulo-badge';
+  img.src = kind === 'new' ? 'assets/new_tag.png' : 'assets/top_tag.png';
+  img.alt = kind === 'new' ? 'NEW!' : 'TOP';
+  img.onerror = function(){
+    // respaldo de texto si la imagen no existe
+    const fb = document.createElement('div');
+    fb.className = 'articulo-badge fallback ' + kind;
+    fb.textContent = kind === 'new' ? 'NEW!' : 'TOP';
+    img.replaceWith(fb);
+  };
+  return img;
+}
+
+function renderArticlesList(){
+  const panel = $('articles-panel');
+  panel.innerHTML = '';
+
+  let list = articles;
+  if(currentQuery){
+    const q = currentQuery.toLowerCase();
+    list = articles.filter(a =>
+      a.title.toLowerCase().includes(q) || a.text.toLowerCase().includes(q)
+    );
+  }
+
+  if(list.length === 0){
+    const div = document.createElement('div');
+    div.className = 'no-results';
+    div.textContent = 'No se encontraron artículos.';
+    panel.appendChild(div);
+    return;
+  }
+
+  list.forEach(a=>{
+    const box = document.createElement('div');
+    box.className = 'articulo-box' + (a.id === selectedId ? ' active' : '');
+
+    if(isNew(a)) box.appendChild(badgeEl('new'));
+    else if(isTop(a)) box.appendChild(badgeEl('top'));
+
+    const row = document.createElement('div');
+    row.className = 'articulo-title-row';
+    const h3 = document.createElement('h3');
+    h3.textContent = a.title || 'SIN TITULO';
+    const date = document.createElement('span');
+    date.className = 'articulo-date';
+    date.textContent = a.dateStr || '';
+    row.appendChild(h3);
+    row.appendChild(date);
+
+    const snippet = document.createElement('div');
+    snippet.className = 'articulo-snippet';
+    snippet.textContent = a.text;
+
+    box.appendChild(row);
+    box.appendChild(snippet);
+    box.addEventListener('click', ()=> selectArticle(a.id));
+
+    panel.appendChild(box);
+  });
+}
+
+/* ------------------------------------------------------------------
+   Render: panel de contenido
+------------------------------------------------------------------ */
+function selectArticle(id){
+  const a = articles.find(x=>x.id === id);
+  if(!a) return;
+
+  selectedId = id;
+  a.views = (a.views || 0) + 1;
+  a.weekViews = (a.weekViews || 0) + 1;
+  saveArticles();
+
+  $('content-placeholder').style.display = 'none';
+  $('content-body').style.display = 'block';
+
+  const cover = $('content-cover');
+  cover.className = 'content-cover' + (a.cover ? '' : ' empty');
+  if(a.cover){
+    cover.style.backgroundImage = `url('${a.cover}')`;
+    cover.textContent = '';
+  } else {
+    cover.style.backgroundImage = '';
+    cover.textContent = 'Sin portada';
+  }
+
+  $('content-title').textContent = a.title || 'SIN TITULO';
+  $('content-text').textContent = a.text;
+  $('content-date').textContent = a.dateStr || '';
+  $('content-views').textContent = 'Visualizaciones: ' + a.views;
+
+  renderArticlesList(); // para refrescar el resaltado "active" y tags
+}
+
+/* ------------------------------------------------------------------
+   Búsqueda
+------------------------------------------------------------------ */
+const searchInput = $('search-input');
+const suggestionsBox = $('search-suggestions');
+
+function renderSuggestions(query){
+  suggestionsBox.innerHTML = '';
+  if(!query){
+    suggestionsBox.classList.remove('open');
+    return;
+  }
+  const q = query.toLowerCase();
+  const matches = articles.filter(a =>
+    a.title.toLowerCase().includes(q) || a.text.toLowerCase().includes(q)
+  ).slice(0, 3);
+
+  if(matches.length === 0){
+    suggestionsBox.classList.remove('open');
+    return;
+  }
+
+  matches.forEach(a=>{
+    const card = document.createElement('div');
+    card.className = 'suggestion-card';
+    card.innerHTML = `<div class="s-title">${escapeHtml(a.title || 'SIN TITULO')}<span class="s-date">${escapeHtml(a.dateStr||'')}</span></div>
+                       <div class="s-snippet">${escapeHtml(a.text)}</div>`;
+    card.addEventListener('click', ()=>{
+      searchInput.value = a.title;
+      runSearch(a.title);
+      suggestionsBox.classList.remove('open');
+    });
+    suggestionsBox.appendChild(card);
+  });
+  suggestionsBox.classList.add('open');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function runSearch(query){
+  currentQuery = query.trim();
+  if(currentQuery){
+    $('search-label').style.display = 'block';
+    $('search-term').textContent = currentQuery;
+  } else {
+    $('search-label').style.display = 'none';
+  }
+  renderArticlesList();
+}
+
+searchInput.addEventListener('input', (e)=>{
+  renderSuggestions(e.target.value.trim());
+});
+
+searchInput.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter') return;
+  const val = searchInput.value.trim();
+
+  // Código secreto para abrir el panel de publicación
+  if(val.toLowerCase() === SECRET_CODE){
+    searchInput.value = '';
+    suggestionsBox.classList.remove('open');
+    openEditor();
+    return;
+  }
+
+  suggestionsBox.classList.remove('open');
+  runSearch(val);
+});
+
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.search-wrap')) suggestionsBox.classList.remove('open');
+});
+
+/* ------------------------------------------------------------------
+   Editor / publicar (modo secreto)
+------------------------------------------------------------------ */
+const editorOverlay = $('editor-overlay');
+const edTitle = $('ed-title');
+const edDate = $('ed-date');
+const edText = $('ed-text');
+const edCoverInput = $('ed-cover');
+const edTextFileInput = $('ed-textfile');
+let edCoverData = null;
+
+function openEditor(){
+  editorOverlay.classList.add('open');
+}
+function closeEditor(){
+  editorOverlay.classList.remove('open');
+}
+
+edTitle.addEventListener('input', ()=>{
+  $('editor-preview-title').textContent = edTitle.value.trim() || 'SIN TITULO';
+});
+
+edCoverInput.addEventListener('change', ()=>{
+  const file = edCoverInput.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    edCoverData = e.target.result;
+    $('ed-cover-label').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+});
+
+edTextFileInput.addEventListener('change', ()=>{
+  const file = edTextFileInput.files[0];
+  if(!file) return;
+  $('ed-textfile-label').textContent = file.name;
+  if(file.name.toLowerCase().endsWith('.txt')){
+    const reader = new FileReader();
+    reader.onload = e=>{ edText.value = e.target.result; };
+    reader.readAsText(file);
+  } else {
+    $('editor-status').textContent = 'No se puede leer el .pdf automáticamente: pega el texto en el cuadro de abajo.';
+  }
+});
+
+function resetEditor(){
+  edTitle.value = '';
+  edDate.value = '';
+  edText.value = '';
+  edCoverInput.value = '';
+  edTextFileInput.value = '';
+  edCoverData = null;
+  $('ed-cover-label').textContent = 'seleccionar (.png/.gif)';
+  $('ed-textfile-label').textContent = 'seleccionar archivo .txt/.pdf';
+  $('editor-preview-title').textContent = 'SIN TITULO';
+  $('editor-status').textContent = '';
+}
+
+$('ed-limpiar').addEventListener('click', resetEditor);
+
+$('ed-publicar').addEventListener('click', ()=>{
+  const title = edTitle.value.trim() || 'SIN TITULO';
+  const text = edText.value.trim();
+  const dateStr = edDate.value.trim();
+
+  if(!text){
+    $('editor-status').textContent = 'Escribe (o sube) el texto del artículo antes de publicar.';
+    return;
+  }
+
+  const now = Date.now();
+  articles.unshift({
+    id: cryptoId(),
+    title,
+    dateStr: dateStr || new Date().toLocaleDateString('es-ES'),
+    text,
+    cover: edCoverData,
+    publishedAt: now,
+    views: 0,
+    weekViews: 0,
+    weekStart: now
+  });
+  saveArticles();
+  renderArticlesList();
+
+  resetEditor();
+  closeEditor();
+});
+
+editorOverlay.addEventListener('click', (e)=>{
+  if(e.target === editorOverlay) closeEditor();
+});
+
+/* ------------------------------------------------------------------
+   Init
+------------------------------------------------------------------ */
+loadArticles();
+renderArticlesList();
+// refresca las etiquetas NEW!/TOP cada minuto sin necesidad de recargar
+setInterval(renderArticlesList, 60*1000);
+</script>
+</body>
+</html>

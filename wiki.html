@@ -33,8 +33,6 @@
     background-image:url('assets/hotbar.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
-    background-color:#e7e1d1; /* respaldo si la imagen no carga */
-    border-bottom:1px solid var(--panel-border);
   }
   .hotbar-nav{
     display:flex;
@@ -59,8 +57,6 @@
     background-image:url('assets/barra_busqueda.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
-    background-color:#faf8f2;
-    border:1px solid var(--panel-border);
   }
   .search-bar input{
     flex:1;
@@ -123,8 +119,6 @@
     background-image:url('assets/panel_articulos.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
-    background-color:#e9e5d8;
-    border:1px solid var(--panel-border);
     padding:14px;
     max-height:78vh;
     overflow-y:auto;
@@ -134,15 +128,11 @@
     background-image:url('assets/articulos_cuadro.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
-    background-color:#f4f1e8;
-    border:1px solid var(--panel-border);
     padding:14px 16px;
     margin-bottom:14px;
     cursor:pointer;
   }
   .articulo-box:last-child{margin-bottom:0;}
-  .articulo-box:hover{filter:brightness(0.97);}
-  .articulo-box.active{outline:2px solid var(--maroon);}
   .articulo-title-row{
     display:flex;
     align-items:baseline;
@@ -174,13 +164,6 @@
     height:24px;
     width:auto;
   }
-  .articulo-badge.fallback{
-    /* se usa solo si la imagen del tag no carga */
-    display:flex;align-items:center;justify-content:center;
-    padding:3px 10px;font-size:11px;color:#fff;letter-spacing:0.5px;
-  }
-  .articulo-badge.fallback.new{background:var(--maroon);}
-  .articulo-badge.fallback.top{background:var(--blue);}
   .no-results{
     padding:20px;
     color:var(--text-muted);
@@ -194,8 +177,6 @@
     background-image:url('assets/panel_contenido.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
-    background-color:#f2efe4;
-    border:1px solid var(--panel-border);
     padding:34px;
   }
   .content-placeholder{
@@ -205,17 +186,11 @@
   .content-cover{
     width:100%;
     height:220px;
-    background:#6f8fbf;
     background-size:cover;
     background-position:center;
     margin-bottom:22px;
   }
-  .content-cover.empty{
-    display:flex;align-items:center;justify-content:center;
-    color:rgba(255,255,255,0.85);
-    font-size:14px;
-    background:#c9c2ac;
-  }
+  .content-cover:empty{display:none;margin-bottom:0;}
   #content-title{
     margin:0 0 16px 0;
     font-size:26px;
@@ -421,7 +396,7 @@ const $ = id => document.getElementById(id);
 /* ------------------------------------------------------------------
    Config
 ------------------------------------------------------------------ */
-const STORAGE_KEY = 'wikiArticles_v1';
+const STORAGE_KEY = 'wikiArticles_v2'; // v2: las vistas de muestra ya no son inventadas
 const NEW_TAG_MS = 3 * 60 * 60 * 1000;         // "NEW!" dura 3 horas
 const TOP_VIEW_THRESHOLD = 100;                 // "TOP" si supera 100 vistas
 const TOP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;  // ...durante 1 semana
@@ -444,8 +419,8 @@ function seedArticles(){
       text: 'Este Julio del 2027 se hara un torneo para toda la gente de corps. Los lideres Mizu y Rain han decidido crear un torneo con un premio de 500 robux.',
       cover: null,
       publishedAt: now - (1*60*60*1000), // hace 1h -> se ve NEW!
-      views: 42,
-      weekViews: 10,
+      views: 0,
+      weekViews: 0,
       weekStart: now
     },
     {
@@ -455,8 +430,8 @@ function seedArticles(){
       text: 'Lucas y Kit fueron al parque, de repente oso baul se aparecio y empezó a ladrar hasta que water llego y le chuzo la barriga para que despues se desinflara y muriera.',
       cover: null,
       publishedAt: now - (100*60*60*1000),
-      views: 12,
-      weekViews: 5,
+      views: 0,
+      weekViews: 0,
       weekStart: now
     },
     {
@@ -466,8 +441,8 @@ function seedArticles(){
       text: 'Lucas y Kit fueron al parque, de repente oso baul se aparecio y empezó a ladrar hasta que water llego y le chuzo la barriga para que despues se desinflara y muriera.',
       cover: null,
       publishedAt: now - (100*60*60*1000),
-      views: 130,
-      weekViews: 150, // -> se ve TOP
+      views: 0,
+      weekViews: 0,
       weekStart: now
     },
     {
@@ -477,8 +452,8 @@ function seedArticles(){
       text: 'Lucas y Kit fueron al parque, de repente oso baul se aparecio y empezó a ladrar hasta que water llego y le chuzo la barriga para que despues se desinflara y muriera.',
       cover: null,
       publishedAt: now - (100*60*60*1000),
-      views: 8,
-      weekViews: 3,
+      views: 0,
+      weekViews: 0,
       weekStart: now
     },
     {
@@ -488,8 +463,8 @@ function seedArticles(){
       text: 'Lucas y Kit fueron al parque, de repente oso baul se aparecio y empezó a ladrar hasta que water llego y le chuzo la barriga para que despues se desinflara y muriera.',
       cover: null,
       publishedAt: now - (100*60*60*1000),
-      views: 3,
-      weekViews: 1,
+      views: 0,
+      weekViews: 0,
       weekStart: now
     }
   ];
@@ -543,13 +518,6 @@ function badgeEl(kind){
   img.className = 'articulo-badge';
   img.src = kind === 'new' ? 'assets/new_tag.png' : 'assets/top_tag.png';
   img.alt = kind === 'new' ? 'NEW!' : 'TOP';
-  img.onerror = function(){
-    // respaldo de texto si la imagen no existe
-    const fb = document.createElement('div');
-    fb.className = 'articulo-badge fallback ' + kind;
-    fb.textContent = kind === 'new' ? 'NEW!' : 'TOP';
-    img.replaceWith(fb);
-  };
   return img;
 }
 
@@ -575,7 +543,7 @@ function renderArticlesList(){
 
   list.forEach(a=>{
     const box = document.createElement('div');
-    box.className = 'articulo-box' + (a.id === selectedId ? ' active' : '');
+    box.className = 'articulo-box';
 
     if(isNew(a)) box.appendChild(badgeEl('new'));
     else if(isTop(a)) box.appendChild(badgeEl('top'));
@@ -618,13 +586,12 @@ function selectArticle(id){
   $('content-body').style.display = 'block';
 
   const cover = $('content-cover');
-  cover.className = 'content-cover' + (a.cover ? '' : ' empty');
   if(a.cover){
     cover.style.backgroundImage = `url('${a.cover}')`;
     cover.textContent = '';
   } else {
     cover.style.backgroundImage = '';
-    cover.textContent = 'Sin portada';
+    cover.textContent = '';
   }
 
   $('content-title').textContent = a.title || 'SIN TITULO';
@@ -632,7 +599,7 @@ function selectArticle(id){
   $('content-date').textContent = a.dateStr || '';
   $('content-views').textContent = 'Visualizaciones: ' + a.views;
 
-  renderArticlesList(); // para refrescar el resaltado "active" y tags
+  renderArticlesList(); // refresca los tags NEW!/TOP
 }
 
 /* ------------------------------------------------------------------

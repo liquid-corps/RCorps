@@ -50,8 +50,59 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:24px 12px 80px;
+    padding:0 12px 80px;
   }
+
+  /* ============ HOTBAR (navegación entre Wiki. / Registro.) ============ */
+  .hotbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    min-height:70px;
+    padding:12px 30px;
+    margin-bottom:24px;
+    background-image:url('assets/hotbar.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:var(--card-fill-top);
+    border-bottom:1px solid var(--card-border);
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .hotbar-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:20px;
+  }
+  .hotbar-nav a{color:var(--text-dark);text-decoration:none;}
+  .hotbar-nav a:hover{opacity:0.75;}
+  .hotbar-nav .sep{color:var(--text-muted);}
+  .hotbar-search{
+    display:flex;
+    align-items:center;
+    width:320px;
+    max-width:100%;
+    height:38px;
+    padding:0 14px;
+    background-image:url('assets/barra_busqueda.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:var(--field-bg);
+    border:1px solid var(--field-border);
+  }
+  .hotbar-search input{
+    flex:1;
+    border:none;
+    background:transparent;
+    outline:none;
+    font-family:inherit;
+    font-size:15px;
+    color:var(--text-dark);
+  }
+  .hotbar-search input::placeholder{color:var(--text-muted);}
+  .hotbar-search .search-icon{color:var(--text-muted);margin-left:8px;}
 
   /* La ficha tiene un ancho de diseño fijo (como en PC) y en pantallas
      angostas se escala completa hacia abajo (JS), en vez de reacomodar
@@ -434,7 +485,7 @@
   /* ---- Botón e ícono "Tags" (flotante, fuera de la ficha) ---- */
   .tags-widget{
     position:fixed;
-    top:24px;
+    top:86px;
     right:24px;
     z-index:80;
   }
@@ -459,7 +510,7 @@
   .tags-panel .list-option:last-child{margin-bottom:0;}
 
   @media (max-width:720px){
-    .tags-widget{position:absolute;top:12px;right:12px;}
+    .tags-widget{position:absolute;top:78px;right:12px;}
   }
 
   /* Nota: ya no reacomodamos a una columna en móvil — la ficha completa
@@ -467,6 +518,18 @@
 </style>
 </head>
 <body>
+
+<div class="hotbar">
+  <div class="hotbar-nav">
+    <a href="wiki.html">Wiki.</a>
+    <span class="sep">|</span>
+    <a href="index.html">Registro.</a>
+  </div>
+  <div class="hotbar-search">
+    <input type="text" id="hotbar-search-input" placeholder="Buscar..." autocomplete="off">
+    <span class="search-icon">🔍</span>
+  </div>
+</div>
 
 <div class="tags-widget" id="tags-widget">
   <button type="button" class="tags-trigger" id="tags-trigger">Tags</button>
@@ -600,8 +663,6 @@ const WEBHOOK_URL = "https://discord.com/api/webhooks/1523544793458937997/_VVWJC
 const CLAN_OPTIONS = [
   { name: "Mizu", image: "Clan/mizu.png" },
   { name: "Rain", image: "Clan/rain.png" },
-  { name: "Rain", image: "Clan/asakura.png" },
-  { name: "Rain", image: "Clan/equinox.png" },
 ];
 
 // ⚠️ En tu repo el archivo se llama "relámpago negro.png" (con espacio y tilde).
@@ -641,9 +702,9 @@ const SKILL_OPTIONS = [
 const MAX_SKILLS = 2;
 
 // Carpeta Tags/ -> imagen decorativa completa de cada tag (0001.png a 0050.png).
-const TAG_OPTIONS = Array.from({length:54}, (_, i)=>{
+const TAG_OPTIONS = Array.from({length:50}, (_, i)=>{
   const num = String(i+1).padStart(4,'0');
-  return { name: 'Tag ' + num, image: `Tags/${num}.gif` };
+  return { name: 'Tag ' + num, image: `Tags/${num}.png` };
 });
 
 // Cuánto dura el bloqueo tras enviar un registro (en milisegundos).
@@ -1103,6 +1164,24 @@ async function performSubmit(){
   } finally {
     $('btn-enviar').disabled = false;
   }
+}
+
+/* ---------- Barra de búsqueda del hotbar (lleva a la Wiki) ----------
+   Esta ficha no tiene artículos propios, así que la búsqueda solo
+   redirige a wiki.html con el término (o abre el editor secreto de
+   la wiki si escribes el código ahí). */
+const hotbarSearchInput = $('hotbar-search-input');
+if(hotbarSearchInput){
+  hotbarSearchInput.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Enter') return;
+    const val = hotbarSearchInput.value.trim();
+    if(!val) return;
+    if(val.toLowerCase() === 'codigo:edit67'){
+      window.location.href = 'wiki.html?code=' + encodeURIComponent(val);
+    } else {
+      window.location.href = 'wiki.html?search=' + encodeURIComponent(val);
+    }
+  });
 }
 </script>
 

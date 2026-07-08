@@ -336,9 +336,9 @@
 
 <div class="hotbar">
   <div class="hotbar-nav">
-    <a href="index.html">Wiki.</a>
+    <a href="wiki.html">Wiki.</a>
     <span class="sep">|</span>
-    <a href="registro.html">Registro.</a>
+    <a href="index.html">Registro.</a>
   </div>
   <div class="search-wrap">
     <div class="search-bar">
@@ -814,6 +814,23 @@ loadArticles();
 renderArticlesList();
 // refresca las etiquetas NEW!/TOP cada minuto sin necesidad de recargar
 setInterval(renderArticlesList, 60*1000);
+
+// Si se llega desde otra página con ?search=... o ?code=... en la URL
+// (por ejemplo desde la barra de búsqueda de la ficha de Registro),
+// se aplica automáticamente al cargar.
+(function applyIncomingParams(){
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const search = params.get('search');
+  if(code && code.toLowerCase() === SECRET_CODE){
+    openEditor();
+    return;
+  }
+  if(search){
+    searchInput.value = search;
+    runSearch(search);
+  }
+})();
 </script>
 </body>
 </html>

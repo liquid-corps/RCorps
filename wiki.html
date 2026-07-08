@@ -201,9 +201,10 @@
     height:220px;
     background-size:cover;
     background-position:center;
+    background-color:#e6e0cd;
     margin-bottom:22px;
+    display:none; /* se activa por JS solo cuando el artículo tiene portada */
   }
-  .content-cover:empty{display:none;margin-bottom:0;}
   #content-title{
     margin:0 0 16px 0;
     font-size:26px;
@@ -525,7 +526,7 @@ const MAX_COVER_CHARS = 35000;                  // límite de tamaño de portada
    }
    ------------------------------------------------------------------
    ============================================================ */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxGGg4hBx0fpwn1_9HWCL7Vta9_um_itp7rO2uHKRLfxSqpRKCD-Iq4LYxPdOcmHEPP/exec";
+const SHEETS_API_URL = "PON_AQUI_TU_URL_DE_APPS_SCRIPT";
 const SHEETS_ENABLED = !SHEETS_API_URL.includes('PON_AQUI');
 
 let articles = [];
@@ -756,10 +757,10 @@ function renderContentOnly(a){
   const cover = $('content-cover');
   if(a.cover){
     cover.style.backgroundImage = `url('${a.cover}')`;
-    cover.textContent = '';
+    cover.style.display = 'block';
   } else {
     cover.style.backgroundImage = '';
-    cover.textContent = '';
+    cover.style.display = 'none';
   }
 
   $('content-title').textContent = a.title || 'SIN TITULO';

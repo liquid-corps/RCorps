@@ -269,6 +269,7 @@
     color:var(--text-muted);
     margin-bottom:4px;
   }
+  .editor-row.no-label{margin-bottom:14px;}
   .editor-row input[type=text],
   .editor-row textarea{
     width:100%;
@@ -281,9 +282,11 @@
     outline:none;
     resize:vertical;
   }
-  .editor-row textarea{min-height:120px;}
+  .editor-row textarea{min-height:220px;}
   .upload-btn{
-    display:block;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     width:100%;
     text-align:center;
     background:#fff;
@@ -293,19 +296,21 @@
     color:var(--text-muted);
     cursor:pointer;
   }
+  .upload-btn.big{min-height:180px;}
   .upload-btn:hover{background:#faf8f2;}
   .upload-btn input{display:none;}
   .upload-hint{font-size:11px;color:var(--text-muted);margin-top:4px;}
   .editor-actions{
     display:flex;
-    justify-content:center;
-    gap:40px;
-    margin-top:22px;
+    justify-content:space-between;
+    gap:24px;
+    margin-top:26px;
   }
   .editor-actions button{
-    background:#fff;
+    background:#f6f2e6;
     border:1px solid var(--panel-border);
-    padding:10px 30px;
+    box-shadow:0 3px 6px rgba(0,0,0,0.15);
+    padding:12px 34px;
     font-family:inherit;
     font-size:15px;
     color:var(--text-dark);
@@ -383,7 +388,7 @@
       </div>
 
       <div class="editor-row">
-        <label class="upload-btn" for="ed-textfile">
+        <label class="upload-btn big" for="ed-textfile">
           <span id="ed-textfile-label">seleccionar archivo .txt/.pdf</span>
           <input type="file" id="ed-textfile" accept=".txt,.pdf">
         </label>
@@ -526,7 +531,7 @@ const MAX_COVER_CHARS = 35000;                  // límite de tamaño de portada
    }
    ------------------------------------------------------------------
    ============================================================ */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxGGg4hBx0fpwn1_9HWCL7Vta9_um_itp7rO2uHKRLfxSqpRKCD-Iq4LYxPdOcmHEPP/exec";
+const SHEETS_API_URL = "PON_AQUI_TU_URL_DE_APPS_SCRIPT";
 const SHEETS_ENABLED = !SHEETS_API_URL.includes('PON_AQUI');
 
 let articles = [];
@@ -898,14 +903,32 @@ let edCoverData = null;
 
 function openEditor(){
   editorOverlay.classList.add('open');
+  updateDraftPreview();
 }
 function closeEditor(){
   editorOverlay.classList.remove('open');
+  // al cerrar, se vuelve a mostrar el artículo que estuviera seleccionado (si había uno)
+  const still = selectedId && articles.find(a => a.id === selectedId);
+  if(still) renderContentOnly(still);
+  else { $('content-placeholder').style.display = 'block'; $('content-body').style.display = 'none'; }
+}
+
+function updateDraftPreview(){
+  renderContentOnly({
+    title: edTitle.value.trim() || 'SIN TITULO',
+    dateStr: edDate.value.trim() || new Date().toLocaleDateString('es-ES'),
+    text: edText.value.trim() || 'Texto Ejemplo, Texto Ejemplo, Texto Ejemplo, Texto Ejemplo, Texto Ejemplo, Texto Ejemplo, Texto Ejemplo.',
+    cover: edCoverData,
+    views: 0
+  });
 }
 
 edTitle.addEventListener('input', ()=>{
   $('editor-preview-title').textContent = edTitle.value.trim() || 'SIN TITULO';
+  updateDraftPreview();
 });
+edDate.addEventListener('input', updateDraftPreview);
+edText.addEventListener('input', updateDraftPreview);
 
 edCoverInput.addEventListener('change', ()=>{
   const file = edCoverInput.files[0];
@@ -914,6 +937,7 @@ edCoverInput.addEventListener('change', ()=>{
   reader.onload = e=>{
     edCoverData = e.target.result;
     $('ed-cover-label').textContent = file.name;
+    updateDraftPreview();
   };
   reader.readAsDataURL(file);
 });
@@ -924,7 +948,7 @@ edTextFileInput.addEventListener('change', ()=>{
   $('ed-textfile-label').textContent = file.name;
   if(file.name.toLowerCase().endsWith('.txt')){
     const reader = new FileReader();
-    reader.onload = e=>{ edText.value = e.target.result; };
+    reader.onload = e=>{ edText.value = e.target.result; updateDraftPreview(); };
     reader.readAsText(file);
   } else {
     $('editor-status').textContent = 'No se puede leer el .pdf automáticamente: pega el texto en el cuadro de abajo.';
@@ -942,6 +966,7 @@ function resetEditor(){
   $('ed-textfile-label').textContent = 'seleccionar archivo .txt/.pdf';
   $('editor-preview-title').textContent = 'SIN TITULO';
   $('editor-status').textContent = '';
+  updateDraftPreview();
 }
 
 $('ed-limpiar').addEventListener('click', resetEditor);

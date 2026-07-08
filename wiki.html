@@ -400,7 +400,7 @@ const STORAGE_KEY = 'wikiArticles_v2'; // v2: las vistas de muestra ya no son in
 const NEW_TAG_MS = 3 * 60 * 60 * 1000;         // "NEW!" dura 3 horas
 const TOP_VIEW_THRESHOLD = 100;                 // "TOP" si supera 100 vistas
 const TOP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;  // ...durante 1 semana
-const SECRET_CODE = 'codigo:edit67';            // código secreto para publicar
+const SECRET_CODE = 'a3a#HGD#LNLBw7s';          // código secreto para publicar
 
 let articles = [];
 let selectedId = null;
@@ -665,7 +665,7 @@ searchInput.addEventListener('keydown', (e)=>{
   const val = searchInput.value.trim();
 
   // Código secreto para abrir el panel de publicación
-  if(val.toLowerCase() === SECRET_CODE){
+  if(val === SECRET_CODE){
     searchInput.value = '';
     suggestionsBox.classList.remove('open');
     openEditor();
@@ -789,7 +789,7 @@ setInterval(renderArticlesList, 60*1000);
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   const search = params.get('search');
-  if(code && code.toLowerCase() === SECRET_CODE){
+  if(code && code === SECRET_CODE){
     openEditor();
     return;
   }

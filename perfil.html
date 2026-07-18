@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Perfil - RCorps</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @font-face{
+    font-family:'Pixel Arial 11';
+    src:url('PixelArial11.ttf') format('truetype');
+    font-weight:normal;
+    font-style:normal;
+    font-display:swap;
+  }
+  :root{
+    --page-bg:#808080;
+    --card-bg:#F5EBE6;
+    --card-border:#4a3a24;
+    --field-bg:#ece6d6;
+    --field-border:#8a7c5f;
+    --text-dark:#4a3a24;
+    --text-muted:#8a7c5f;
+    --admin-color:#5a1414;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--page-bg);
+    font-family:'Pixel Arial 11', monospace;
+    color:var(--text-dark);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px 12px 80px;
+  }
+
+  /* ============ TOP NAV ============ */
+  .top-nav{
+    width:100%;
+    max-width:640px;
+    background:#f0ebe0;
+    border:2px solid var(--card-border);
+    border-radius:4px;
+    padding:10px 16px;
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    font-size:15px;
+  }
+  .top-nav .nav-links{display:flex;align-items:center;gap:10px;}
+  .top-nav a{
+    color:var(--text-dark);text-decoration:none;
+  }
+  .top-nav a:hover{opacity:0.7;}
+  .top-nav .sep{color:var(--text-muted);}
+  .top-nav .active{font-weight:bold;text-decoration:underline;text-decoration-style:dotted;}
+
+  /* Badge de ADMIN en la barra */
+  .admin-badge{
+    background:var(--admin-color);
+    color:#fff;
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:3px;
+    font-weight:bold;
+    letter-spacing:0.5px;
+  }
+
+  /* ============ LOGIN VIEW ============ */
+  .login-view{
+    width:100%;
+    max-width:640px;
+    background:var(--card-bg);
+    border:3px solid var(--card-border);
+    border-radius:6px;
+    padding:48px 32px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+  .login-view h1{
+    margin:0;
+    color:var(--admin-color);
+    font-size:34px;
+  }
+  .login-view p{
+    margin:0;
+    color:var(--text-muted);
+    max-width:320px;
+    line-height:1.5;
+    font-size:13px;
+  }
+  .login-view .discord-btn{
+    background:none;border:none;padding:0;cursor:pointer;
+    margin-top:8px;
+  }
+  .login-view .discord-btn img{display:block;width:220px;}
+  .login-view .discord-btn:hover{opacity:0.88;}
+  .login-view .discord-btn:active{transform:scale(0.98);}
+
+  /* ============ PROFILE CARD ============ */
+  .card{
+    width:100%;
+    max-width:640px;
+    background:var(--card-bg);
+    border:3px solid var(--card-border);
+    border-radius:6px;
+    padding:24px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    overflow:visible;
+  }
+
+  /* ---- LEFT COLUMN ---- */
+  .col-left{display:flex;flex-direction:column;gap:18px;position:relative;}
+
+  /* Photo + Tag wrapper (CLAVE: overflow visible para que el tag no se corte) */
+  .photo-wrapper{
+    position:relative;
+    width:100%;
+    /* Reservamos espacio ABAJO para que el tag tenga hueco sin solaparse */
+    margin-bottom:48px;
+  }
+  .photo-box{
+    width:100%;
+    aspect-ratio:1/1;
+    background-image:url('assets/cuadrado_foto_importacion.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-muted);
+    font-size:14px;
+    cursor:default;
+    /* SIN overflow:hidden — el tag debe sobresalir */
+  }
+  .photo-box.editable{cursor:pointer;}
+  .photo-box img.photo-img{
+    width:100%;height:100%;object-fit:cover;display:none;
+  }
+  .photo-box.has-img img.photo-img{display:block;}
+  .photo-box.has-img .placeholder{display:none;}
+  .photo-box .placeholder{padding:8px;text-align:center;}
+
+  /* Tag badge — posicionado DEBAJO de la foto, sin solaparse */
+  .tag-badge{
+    position:absolute;
+    left:50%;
+    /* Dentro del photo-box, pegado al borde inferior, sin salirse */
+    bottom:6px;
+    transform:translateX(-50%);
+    width:64%;
+    max-height:38%;
+    object-fit:contain;
+    display:none;
+    z-index:10;
+    pointer-events:none;
+  }
+  .tag-badge.show{display:block;}
+
+  .btn-select-tag{
+    background:var(--field-bg);
+    border:2px solid var(--field-border);
+    color:var(--text-dark);
+    padding:8px 12px;
+    font-family:inherit;
+    font-size:12px;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn-select-tag:hover{background:#e8e2d4;}
+  .btn-select-tag:disabled{opacity:0.5;cursor:default;}
+
+  /* Skills */
+  .skills-block{position:relative;}
+  .skills-block .section-label{
+    font-size:13px;color:var(--text-dark);margin-bottom:6px;
+  }
+  .skills-row{display:flex;gap:12px;}
+  .skill-slot{
+    flex:1;
+    aspect-ratio:1/1;
+    background-image:url('assets/cuadrado_seleccion_skills.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-muted);
+    font-size:20px;
+    cursor:default;
+  }
+  .skill-slot.editable{cursor:pointer;}
+  .skill-slot .plus{display:block;}
+  .skill-slot img.skill-img{width:70%;height:70%;object-fit:cover;display:none;}
+  .skill-slot.has-img img.skill-img{display:block;}
+  .skill-slot.has-img .plus{display:none;}
+
+  /* Clan */
+  .field-block{display:flex;flex-direction:column;gap:6px;}
+  .field-block label{font-size:12px;color:var(--text-muted);}
+  .field-value{
+    background:var(--field-bg);
+    border:2px solid var(--field-border);
+    padding:8px 12px;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--text-dark);
+    min-height:34px;
+    display:flex;
+    align-items:center;
+  }
+  .field-value.readonly{
+    background:#e8e2d4;
+    color:var(--text-muted);
+  }
+  .field-value input,.field-value select{
+    width:100%;
+    border:none;
+    background:transparent;
+    outline:none;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--text-dark);
+    padding:0;
+  }
+
+  /* ---- RIGHT COLUMN ---- */
+  .col-right{display:flex;flex-direction:column;gap:14px;}
+  .col-right .data-field{display:flex;flex-direction:column;gap:6px;}
+  .col-right .data-field label{font-size:12px;color:var(--text-muted);}
+  .col-right .data-field .field-value{background:var(--field-bg);}
+  .col-right .data-field .field-value.readonly{background:#e8e2d4;color:var(--text-muted);}
+  .col-right .data-field .field-value input{
+    width:100%;border:none;background:transparent;outline:none;
+    font-family:inherit;font-size:14px;color:var(--text-dark);padding:0;
+  }
+  .col-right .narrow{max-width:60%;}
+
+  /* Bio */
+  .bio-box{flex:1;display:flex;flex-direction:column;gap:6px;min-height:140px;}
+  .bio-box label{font-size:12px;color:var(--text-muted);}
+  .bio-box textarea{
+    flex:1;
+    background:var(--field-bg);
+    border:2px solid var(--field-border);
+    padding:10px 12px;
+    font-family:inherit;
+    font-size:13px;
+    color:var(--text-dark);
+    resize:none;
+    outline:none;
+    line-height:1.5;
+    min-height:120px;
+  }
+  .bio-box textarea.readonly{
+    background:#e8e2d4;
+    color:var(--text-muted);
+  }
+
+  /* ============ BOTONES ============ */
+  .btn-outer{width:100%;max-width:640px;}
+  .card-btn-row{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    align-items:center;
+    padding:16px;
+    background:var(--card-bg);
+    border:3px solid var(--card-border);
+    border-top:none;
+    border-radius:0 0 6px 6px;
+  }
+  .card-btn-row button{
+    background:none;border:none;padding:0;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+    transition:opacity 0.15s, transform 0.1s;
+  }
+  .card-btn-row button:hover{opacity:0.85;}
+  .card-btn-row button:active{transform:scale(0.98);}
+  .card-btn-row button:disabled{opacity:0.5;cursor:not-allowed;}
+  .card-btn-row img{display:block;height:38px;width:auto;}
+
+  .hidden{display:none !important;}
+
+  /* ============ DROPDOWN PANELS (Skills / Tags) ============ */
+  .dropdown-panel{
+    position:absolute;
+    z-index:200;
+    background:var(--card-bg);
+    border:2px solid var(--card-border);
+    padding:12px;
+    box-shadow:0 6px 16px rgba(0,0,0,0.3);
+    display:none;
+    max-height:220px;
+    overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:var(--text-muted) transparent;
+  }
+  .dropdown-panel.open{display:block;}
+  .dropdown-panel::-webkit-scrollbar{width:14px;}
+  .dropdown-panel::-webkit-scrollbar-track{background:transparent;}
+  .dropdown-panel::-webkit-scrollbar-thumb{
+    background-image:url('assets/scroll.png');
+    background-size:100% 100%;background-repeat:no-repeat;
+  }
+
+  /* Grid de skills (4 columnas) */
+  .skills-dropdown{
+    width:300px;
+    grid-template-columns:repeat(4, 1fr);
+    gap:8px;
+  }
+  .skills-dropdown.open{display:grid;}
+  .skill-option{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:none;border:none;padding:4px;cursor:pointer;font-family:inherit;
+  }
+  .skill-option img{
+    width:48px;height:48px;object-fit:cover;border:1px solid var(--field-border);
+  }
+  .skill-option span{font-size:8px;color:var(--text-dark);text-align:center;line-height:1.1;}
+  .skill-option.selected img{opacity:0.5;}
+
+  /* Lista de tags (1 columna) */
+  .tags-dropdown{
+    width:200px;
+  }
+  .tags-dropdown .tag-option{
+    display:block;width:100%;background:none;border:none;padding:2px 0;
+    cursor:pointer;margin-bottom:4px;
+  }
+  .tags-dropdown .tag-option img{width:100%;display:block;}
+  .tags-dropdown .tag-option.selected img{opacity:0.5;}
+
+  /* ============ STATUS ============ */
+  .status-msg{
+    margin-top:12px;text-align:center;font-size:13px;
+    min-height:20px;color:var(--text-muted);
+  }
+  .status-msg.ok{color:#2f5a2f;}
+  .status-msg.err{color:#8a1f1f;}
+
+  .spinner{
+    display:inline-block;width:14px;height:14px;
+    border:2px solid var(--text-muted);
+    border-top-color:var(--text-dark);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+    vertical-align:middle;margin-right:6px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ============ MODAL DE CONFIRMACIÓN ============ */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    display:none;align-items:center;justify-content:center;
+    z-index:500;padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .overlay-box{
+    background:var(--card-bg);
+    border:3px solid var(--card-border);
+    border-radius:6px;
+    padding:28px 32px;
+    max-width:380px;width:100%;
+    text-align:center;
+  }
+  .overlay-message{
+    font-size:15px;line-height:1.5;color:var(--text-dark);margin-bottom:20px;
+  }
+  .overlay-actions{display:flex;justify-content:center;gap:40px;}
+  .overlay-link{
+    font-family:inherit;font-size:18px;cursor:pointer;
+    background:none;border:none;padding:0;
+    text-decoration:underline;text-decoration-style:dotted;
+  }
+  .overlay-link.yes{color:#1a4fb5;}
+  .overlay-link.no{color:var(--admin-color);}
+
+  /* ============ RESPONSIVE ============ */
+  @media(max-width:680px){
+    .card{grid-template-columns:1fr;padding:16px;gap:16px;}
+    .card-btn-row{flex-wrap:wrap;}
+    .card-btn-row button{flex:1 1 45%;justify-content:center;}
+    .card-btn-row img{height:34px;}
+    .skills-dropdown{width:100%;grid-template-columns:repeat(3, 1fr);}
+  }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="nav-links">
+    <a href="libreria.html">Libreria</a>
+    <span class="sep">|</span>
+    <a href="index.html">Registro</a>
+    <span class="sep">|</span>
+    <a href="perfil.html" class="active">Perfil</a>
+  </div>
+  <div id="user-info" class="hidden">
+    <span class="admin-badge hidden" id="admin-badge">ADMIN</span>
+  </div>
+</div>
+
+<!-- ============ LOGIN VIEW ============ -->
+<div class="login-view" id="login-view">
+  <h1>Iniciar Sesión</h1>
+  <p>Para acceder a tu perfil, inicia sesión con tu cuenta de Discord.</p>
+  <button type="button" class="discord-btn" id="btn-discord-login">
+    <img src="assets/is.png" alt="Iniciar sesión con Discord" />
+  </button>
+  <p style="font-size:11px;">Solo leemos tu nombre y avatar. No publicamos nada.</p>
+</div>
+
+<!-- ============ PROFILE VIEW ============ -->
+<div class="hidden" id="profile-view">
+  <div class="card">
+
+    <!-- LEFT -->
+    <div class="col-left">
+      <!-- Foto + Tag -->
+      <div class="photo-wrapper">
+        <div class="photo-box" id="photo-box">
+          <span class="placeholder">Foto</span>
+          <img class="photo-img" id="photo-img" src="" alt="" />
+        </div>
+        <img class="tag-badge" id="tag-badge" src="" alt="" />
+      </div>
+      <button type="button" class="btn-select-tag" id="btn-select-tag" disabled>Elegir Tag</button>
+      <div class="dropdown-panel tags-dropdown" id="tags-dropdown"></div>
+
+      <!-- Skills -->
+      <div class="skills-block">
+        <div class="section-label">Skills</div>
+        <div class="skills-row">
+          <div class="skill-slot" id="skill-slot-1">
+            <span class="plus">+</span>
+            <img class="skill-img" src="" alt="" />
+          </div>
+          <div class="skill-slot" id="skill-slot-2">
+            <span class="plus">+</span>
+            <img class="skill-img" src="" alt="" />
+          </div>
+        </div>
+        <div class="dropdown-panel skills-dropdown" id="skills-dropdown"></div>
+      </div>
+
+      <!-- Fecha -->
+      <div class="field-block">
+        <label>Fecha</label>
+        <div class="field-value readonly" id="fecha-display">—</div>
+      </div>
+
+      <!-- Clan -->
+      <div class="field-block">
+        <label>Clan</label>
+        <div class="field-value" id="clan-value">
+          <select id="f-clan" disabled>
+            <option value="">-- Seleccionar --</option>
+            <option value="Mizu">Mizu</option>
+            <option value="Rain">Rain</option>
+            <option value="Equinox">Equinox</option>
+            <option value="Asakura">Asakura</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col-right">
+      <div class="data-field">
+        <label>Name:</label>
+        <div class="field-value readonly" id="name-value">
+          <input type="text" id="f-name" readonly value="" placeholder="(sin nombre)" />
+        </div>
+      </div>
+      <div class="data-field">
+        <label>Edad:</label>
+        <div class="field-value readonly" id="age-value">
+          <input type="text" id="f-age" readonly value="" placeholder="—" />
+        </div>
+      </div>
+      <div class="data-field narrow">
+        <label>Rango:</label>
+        <div class="field-value readonly" id="rank-value">
+          <input type="text" id="f-rank" readonly value="" placeholder="—" />
+        </div>
+      </div>
+      <div class="data-field">
+        <label>Zodiacal:</label>
+        <div class="field-value readonly" id="zodiac-value">
+          <input type="text" id="f-zodiac" readonly value="" placeholder="—" />
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div class="bio-box">
+        <label>Biografía:</label>
+        <textarea id="f-bio" class="readonly" readonly placeholder="Escribe aquí..."></textarea>
+      </div>
+
+      <!-- Discord -->
+      <div class="data-field">
+        <label>Discord:</label>
+        <div class="field-value readonly" id="discord-display">—</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTONES -->
+  <div class="btn-outer">
+    <!-- Vista normal -->
+    <div class="card-btn-row" id="btn-row-view">
+      <button type="button" id="btn-edit" title="Editar">
+        <img src="assets/boton_editar_cerrado.png" alt="Editar" />
+      </button>
+      <button type="button" id="btn-logout" title="Cerrar Sesión">
+        <img src="assets/iniciar_sesion.png" alt="Cerrar Sesión" />
+      </button>
+      <button type="button" id="btn-delete" title="Borrar Cuenta">
+        <img src="assets/borrar_cuenta.png" alt="Borrar Cuenta" />
+      </button>
+    </div>
+    <!-- Modo edición -->
+    <div class="card-btn-row hidden" id="btn-row-edit">
+      <button type="button" id="btn-cancel" title="Cancelar">
+        <img src="assets/boton_cancelar.png" alt="Cancelar" />
+      </button>
+      <button type="button" id="btn-submit" title="Guardar">
+        <img src="assets/boton_enviar.png" alt="Guardar" />
+      </button>
+    </div>
+  </div>
+
+  <div class="status-msg" id="status-msg"></div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="overlay" id="confirm-overlay">
+  <div class="overlay-box">
+    <div class="overlay-message" id="confirm-message"></div>
+    <div class="overlay-actions">
+      <button type="button" class="overlay-link yes" id="confirm-yes">Sí, continuar</button>
+      <button type="button" class="overlay-link no" id="confirm-no">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN
+   ============================================================ */
+const SUPABASE_URL = 'https://gqzspbfeodmhnpxegpjf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxenNwYmZlb2RtaG5weGVncGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5ODcyMjQsImV4cCI6MjA5OTU2MzIyNH0.kwbuMH_UpMrGnBlpf4uuc09nXH0b7Yp4mAVgsjrn_tk';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = (id) => document.getElementById(id);
+
+const SKILL_OPTIONS = [
+  { name: "Aroma", image: "Skills/aroma.png" },
+  { name: "Arte: Biwa", image: "Skills/biwa.png" },
+  { name: "Cuerda", image: "Skills/cuerda.png" },
+  { name: "Arte: Emociones", image: "Skills/emociones.png" },
+  { name: "Arte: Fans de Hielo", image: "Skills/fans_hielo.png" },
+  { name: "Flechas Vectoriales", image: "Skills/flechas_vectoriales.png" },
+  { name: "Hoces de Sangre", image: "Skills/hoces_sangre.png" },
+  { name: "Katana: Agua", image: "Skills/katana_agua.png" },
+  { name: "Katana: Amor", image: "Skills/katana_amor.png" },
+  { name: "Katana: Bestia", image: "Skills/katana_bestia.png" },
+  { name: "Katana: Insecto", image: "Skills/katana_insect.png" },
+  { name: "Katana: Llama", image: "Skills/katana_llama.png" },
+  { name: "Katana: Niebla", image: "Skills/katana_niebla.png" },
+  { name: "Katana: Relámpago", image: "Skills/katana_relampago.png" },
+  { name: "Katana: Solar", image: "Skills/katana_solar.png" },
+  { name: "Katana: Sonido", image: "Skills/katana_sonido.png" },
+  { name: "Katana: Viento", image: "Skills/katana_viento.png" },
+  { name: "Lunar", image: "Skills/lunar.png" },
+  { name: "Obi", image: "Skills/obi.png" },
+  { name: "Ojos Vendados", image: "Skills/ojos_vendados.png" },
+  { name: "Onda de Choque", image: "Skills/onda_choque.png" },
+  { name: "Pistola Enjambre", image: "Skills/pistola_enjambre.png" },
+  { name: "Relámpago Negro", image: "Skills/relampago_negro.png" },
+  { name: "Sangre Explosiva", image: "Skills/sangre_explosiva.png" },
+  { name: "Sueño", image: "Skills/sueno.png" },
+  { name: "Tambores", image: "Skills/tambores.png" },
+  { name: "Temari", image: "Skills/temari.png" },
+  { name: "Vasijas", image: "Skills/vasijas.png" },
+];
+
+const TAG_OPTIONS = Array.from({length:96}, (_, i)=>{
+  const num = String(i+1).padStart(4,'0');
+  return { name: 'Tag ' + num, image: `Tags/${num}.gif` };
+});
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+let currentUser   = null;
+let currentProfile = null;
+let currentCharacter = null;
+let isAdmin       = false;
+let isEditing     = false;
+let originalData  = {};
+let selectedTag   = null;
+let pendingAction = null;
+let currentSkillSlot = null;
+
+/* ============================================================
+   INIT
+   ============================================================ */
+async function init(){
+  try{
+    const { data: { session }, error } = await db.auth.getSession();
+    if(error) throw error;
+
+    if(session){
+      currentUser = session.user;
+      await loadProfile();
+      showProfileView();
+    } else {
+      showLoginView();
+    }
+  } catch(err){
+    console.error('[init]', err);
+    showStatus('Error de conexión: ' + (err.message || err), 'err');
+    showLoginView();
+  }
+  buildTagsDropdown();
+  buildSkillsDropdown();
+  setTodayDate();
+  setupListeners();
+}
+
+async function loadProfile(){
+  try{
+    // Cargar perfil
+    const { data: prof, error: ep } = await db
+      .from('profiles').select('*').eq('id', currentUser.id).single();
+    if(ep && ep.code !== 'PGRST116') throw ep;
+    currentProfile = prof;
+
+    // ¿Es admin? Usamos la RPC que ya está en la BD.
+    try{
+      const { data: isAdm } = await db.rpc('is_admin');
+      isAdmin = !!isAdm;
+    } catch(_){
+      // Fallback: mirar el rol del perfil
+      isAdmin = currentProfile?.role === 'admin';
+    }
+
+    // Cargar personaje del usuario
+    const { data: chars, error: ec } = await db
+      .from('characters').select('*').eq('owner_id', currentUser.id);
+    if(ec) throw ec;
+    currentCharacter = (chars && chars.length) ? chars[0] : null;
+
+    renderHeader();
+    renderProfile();
+  } catch(err){
+    console.error('[loadProfile]', err);
+    showStatus('Error al cargar perfil: ' + (err.message || err), 'err');
+  }
+}
+
+/* ============================================================
+   HEADER (muestra usuario + badge ADMIN)
+   ============================================================ */
+function renderHeader(){
+  const userInfo = $('user-info');
+  const adminBadge = $('admin-badge');
+  userInfo.classList.remove('hidden');
+
+  const username = currentProfile?.username || currentUser.email?.split('@')[0] || 'Usuario';
+  userInfo.innerHTML = '';
+
+  const span = document.createElement('span');
+  span.style.fontSize = '13px';
+  span.style.color = 'var(--text-dark)';
+  span.textContent = '@' + username;
+  userInfo.appendChild(span);
+
+  if(isAdmin){
+    const badge = document.createElement('span');
+    badge.className = 'admin-badge';
+    badge.textContent = 'ADMIN';
+    badge.style.marginLeft = '8px';
+    userInfo.appendChild(badge);
+  }
+}
+
+/* ============================================================
+   RENDER PERFIL
+   ============================================================ */
+function renderProfile(){
+  const ch = currentCharacter || {};
+
+  // Datos de solo lectura (siempre se llenan desde la BD)
+  $('f-name').value   = ch.name   || '';
+  $('f-age').value    = ch.age    || '';
+  $('f-rank').value   = ch.rank   || '';
+  $('f-zodiac').value = ch.zodiac || '';
+  $('f-clan').value   = ch.clan || '';
+  $('f-bio').value    = ch.bio    || '';
+  $('discord-display').textContent = currentProfile?.username ? '@' + currentProfile.username : '—';
+
+  // Skills
+  const skills = ch.skills || [];
+  [1,2].forEach(n=>{
+    const slot = $('skill-slot-'+n);
+    const img = slot.querySelector('img.skill-img');
+    if(skills[n-1]){
+      img.src = skills[n-1];
+      slot.classList.add('has-img');
+    } else {
+      slot.classList.remove('has-img');
+      img.removeAttribute('src');
+    }
+  });
+
+  // Foto
+  const photoBox = $('photo-box');
+  const photoImg = $('photo-img');
+  photoBox.classList.remove('has-img');
+  if(ch.portrait_info){
+    photoImg.src = ch.portrait_info;
+    photoBox.classList.add('has-img');
+  } else {
+    photoImg.removeAttribute('src');
+  }
+
+  // Tag
+  selectedTag = (ch.modes && ch.modes[0]) || null;
+  renderTagBadge();
+}
+
+function setTodayDate(){
+  const d = new Date();
+  const fmt = String(d.getDate()).padStart(2,'0')+'/'+
+              String(d.getMonth()+1).padStart(2,'0')+'/'+
+              String(d.getFullYear()).slice(-2);
+  $('fecha-display').textContent = fmt;
+}
+
+/* ============================================================
+   MOSTRAR VISTAS
+   ============================================================ */
+function showLoginView(){
+  $('login-view').classList.remove('hidden');
+  $('profile-view').classList.add('hidden');
+  $('user-info').classList.add('hidden');
+}
+
+function showProfileView(){
+  $('login-view').classList.add('hidden');
+  $('profile-view').classList.remove('hidden');
+}
+
+/* ============================================================
+   LOGIN CON DISCORD
+   ============================================================ */
+$('btn-discord-login').addEventListener('click', async ()=>{
+  await db.auth.signInWithOAuth({
+    provider: 'discord',
+    options: {
+      redirectTo: window.location.origin + window.location.pathname
+    }
+  });
+});
+
+/* ============================================================
+   MODO EDICIÓN
+   ============================================================ */
+function enterEditMode(){
+  isEditing = true;
+
+  // Guardar estado original (para cancelar)
+  originalData = {
+    name: $('f-name').value,
+    age: $('f-age').value,
+    rank: $('f-rank').value,
+    zodiac: $('f-zodiac').value,
+    clan: $('f-clan').value,
+    bio: $('f-bio').value,
+    skills: [...(currentCharacter?.skills || [])],
+    photo: currentCharacter?.portrait_info || null,
+    tag: selectedTag
+  };
+
+  // Habilitar inputs (todos para admin, solo algunos para user normal)
+  const canEditAll = isAdmin;
+  const idsToEnable = canEditAll
+    ? ['f-name','f-age','f-rank','f-zodiac','f-clan','f-bio']
+    : ['f-bio']; // usuario normal: solo bio
+
+  idsToEnable.forEach(id=>{
+    const el = $(id);
+    el.removeAttribute('readonly');
+    el.disabled = false;
+    const box = el.closest('.field-value, .bio-box');
+    if(box) box.classList.remove('readonly');
+  });
+
+  // Skills editables para todos
+  [1,2].forEach(n=>{
+    $('skill-slot-'+n).classList.add('editable');
+  });
+
+  // Tag editable para todos
+  $('btn-select-tag').disabled = false;
+
+  // Foto clickable para todos
+  $('photo-box').classList.add('editable');
+
+  // Clan: admin puede cambiar, user normal no
+  if(canEditAll){
+    $('f-clan').disabled = false;
+    const clanBox = $('clan-value');
+    if(clanBox) clanBox.classList.remove('readonly');
+  }
+
+  // Cambiar botones
+  $('btn-row-view').classList.add('hidden');
+  $('btn-row-edit').classList.remove('hidden');
+
+  showStatus('Editando… hace tus cambios y dale a "Guardar"', '');
+}
+
+function exitEditMode(save=false){
+  isEditing = false;
+
+  // Deshabilitar inputs
+  ['f-name','f-age','f-rank','f-zodiac','f-clan','f-bio'].forEach(id=>{
+    const el = $(id);
+    el.setAttribute('readonly','');
+    el.disabled = (id === 'f-clan'); // select queda disabled
+    const box = el.closest('.field-value, .bio-box');
+    if(box) box.classList.add('readonly');
+  });
+
+  $('clan-value').classList.add('readonly');
+
+  [1,2].forEach(n=>{
+    $('skill-slot-'+n).classList.remove('editable');
+  });
+  $('btn-select-tag').disabled = true;
+  $('photo-box').classList.remove('editable');
+  closeAllPanels();
+
+  // Restaurar si canceló
+  if(!save && originalData){
+    $('f-name').value = originalData.name;
+    $('f-age').value = originalData.age;
+    $('f-rank').value = originalData.rank;
+    $('f-zodiac').value = originalData.zodiac;
+    $('f-clan').value = originalData.clan;
+    $('f-bio').value = originalData.bio;
+    selectedTag = originalData.tag;
+    if(currentCharacter){
+      currentCharacter.skills = originalData.skills;
+      currentCharacter.portrait_info = originalData.photo;
+    }
+    renderProfile();
+  }
+
+  $('btn-row-edit').classList.add('hidden');
+  $('btn-row-view').classList.remove('hidden');
+  showStatus('', '');
+}
+
+/* ============================================================
+   GUARDAR
+   ============================================================ */
+async function saveProfile(){
+  if(!currentCharacter){
+    showStatus('No hay personaje vinculado a tu cuenta.', 'err');
+    return;
+  }
+
+  // skills del currentCharacter (ya debe estar cargado)
+  let currentSkills = (currentCharacter.skills || []).filter(Boolean);
+  // Si skills está vacío pero hay skills en el DOM (edición en curso), tomar de ahí
+  if(currentSkills.length === 0){
+    [1,2].forEach(n=>{
+      const img = document.querySelector('#skill-slot-'+n+' img.skill-img');
+      if(img && img.src && img.src !== ''){
+        currentSkills.push(img.src);
+      }
+    });
+  }
+
+  const updates = {
+    bio: $('f-bio').value.trim(),
+    skills: currentSkills,
+    modes: selectedTag ? [selectedTag] : [],
+    portrait_info: currentCharacter.portrait_info || null,
+    portrait_list: currentCharacter.portrait_info || null,
+    is_wiki: false,  // personaje de perfil, NO aparece en librería
+  };
+
+  // Si es admin, puede editar todos los campos
+  if(isAdmin){
+    const rawAge = $('f-age').value.trim();
+    updates.name   = $('f-name').value.trim();
+    updates.age    = rawAge === '' ? null : parseInt(rawAge, 10);
+    updates.rank   = $('f-rank').value.trim() || null;
+    updates.zodiac = $('f-zodiac').value.trim() || null;
+    updates.clan   = $('f-clan').value || null;
+  }
+
+  showStatus('<span class="spinner"></span>Guardando…', '');
+  let error, data;
+
+  if(currentCharacter.id){
+    // Actualizar personaje existente
+    const r = await db.from('characters')
+      .update(updates).eq('id', currentCharacter.id);
+    error = r.error;
+  } else {
+    // Crear personaje nuevo (admin sin personaje, o usuario pre-migración)
+    const insertData = {
+      ...updates,
+      owner_id: currentUser.id,
+      category: 'Kages',
+      name: updates.name || 'Sin nombre',
+    };
+    const r = await db.from('characters')
+      .insert(insertData).select('id').single();
+    error = r.error;
+    data = r.data;
+    if(!error && data) currentCharacter.id = data.id;
+  }
+
+  if(error){
+    showStatus('Error al guardar: ' + error.message, 'err');
+    return;
+  }
+  currentCharacter = { ...currentCharacter, ...updates };
+  showStatus('¡Cambios guardados!', 'ok');
+  exitEditMode(true);
+}
+
+/* ============================================================
+   SKILLS DROPDOWN
+   ============================================================ */
+function buildSkillsDropdown(){
+  const panel = $('skills-dropdown');
+  SKILL_OPTIONS.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'skill-option';
+    btn.innerHTML =
+      `<img src="${opt.image}" alt="${opt.name}" />` +
+      `<span>${opt.name}</span>`;
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      selectSkill(currentSkillSlot, opt.image);
+      closeAllPanels();
+    });
+    panel.appendChild(btn);
+  });
+}
+
+function selectSkill(slotNum, imagePath){
+  if(!currentCharacter) currentCharacter = {};
+  if(!currentCharacter.skills) currentCharacter.skills = [];
+  currentCharacter.skills[slotNum-1] = imagePath;
+  // re-render solo skills
+  const skills = currentCharacter.skills;
+  [1,2].forEach(n=>{
+    const slot = $('skill-slot-'+n);
+    const img = slot.querySelector('img.skill-img');
+    if(skills[n-1]){
+      img.src = skills[n-1];
+      slot.classList.add('has-img');
+    } else {
+      slot.classList.remove('has-img');
+      img.removeAttribute('src');
+    }
+  });
+}
+
+/* ============================================================
+   TAGS DROPDOWN
+   ============================================================ */
+function buildTagsDropdown(){
+  const panel = $('tags-dropdown');
+  TAG_OPTIONS.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tag-option';
+    const img = document.createElement('img');
+    img.src = opt.image; img.alt = opt.name;
+    img.onerror = ()=>{ img.style.background='#ccc'; img.style.height='30px'; };
+    btn.appendChild(img);
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(selectedTag === opt.image){
+        selectedTag = null;
+      } else {
+        selectedTag = opt.image;
+      }
+      renderTagBadge();
+      closeAllPanels();
+    });
+    panel.appendChild(btn);
+  });
+}
+
+function renderTagBadge(){
+  const badge = $('tag-badge');
+  if(selectedTag){
+    badge.src = selectedTag;
+    badge.classList.add('show');
+    badge.onerror = ()=>{ badge.classList.remove('show'); };
+  } else {
+    badge.classList.remove('show');
+    badge.removeAttribute('src');
+  }
+}
+
+/* ============================================================
+   CERRAR PANELES
+   ============================================================ */
+function closeAllPanels(){
+  $('skills-dropdown').classList.remove('open');
+  $('tags-dropdown').classList.remove('open');
+  currentSkillSlot = null;
+}
+
+document.addEventListener('click', (e)=>{
+  if(!isEditing) return;
+  const isPanel = e.target.closest('.dropdown-panel');
+  const isSlot = e.target.closest('.skill-slot');
+  const isTagBtn = e.target.closest('#btn-select-tag');
+  if(!isPanel && !isSlot && !isTagBtn) closeAllPanels();
+});
+
+/* ============================================================
+   FOTO
+   ============================================================ */
+$('photo-box').addEventListener('click', ()=>{
+  if(!isEditing) return;
+  // crea un input file temporal y ábrelo
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 2*1024*1024){
+      showStatus('La imagen pesa más de 2MB.', 'err');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      const src = ev.target.result;
+      $('photo-img').src = src;
+      $('photo-box').classList.add('has-img');
+      if(currentCharacter) currentCharacter.portrait_info = src;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+});
+
+/* ============================================================
+   LOGOUT / DELETE
+   ============================================================ */
+async function logout(){
+  await db.auth.signOut();
+  currentUser = currentProfile = currentCharacter = null;
+  isAdmin = false;
+  showLoginView();
+  showStatus('', '');
+}
+
+function askDelete(){
+  askConfirm(
+    '¿Seguro que quieres borrar tu cuenta? Se enviará una solicitud ' +
+    'al equipo de administración.',
+    ()=>{
+      showStatus('Solicitud enviada. Un admin se contactará contigo.', 'ok');
+    }
+  );
+}
+
+/* ============================================================
+   MODAL DE CONFIRMACIÓN
+   ============================================================ */
+function askConfirm(message, onYes){
+  $('confirm-message').textContent = message;
+  pendingAction = onYes;
+  $('confirm-overlay').classList.add('open');
+}
+$('confirm-yes').addEventListener('click', ()=>{
+  $('confirm-overlay').classList.remove('open');
+  if(pendingAction){ const a = pendingAction; pendingAction = null; a(); }
+});
+$('confirm-no').addEventListener('click', ()=>{
+  $('confirm-overlay').classList.remove('open');
+  pendingAction = null;
+});
+$('confirm-overlay').addEventListener('click', (e)=>{
+  if(e.target === $('confirm-overlay')){
+    $('confirm-overlay').classList.remove('open');
+    pendingAction = null;
+  }
+});
+
+/* ============================================================
+   LISTENERS
+   ============================================================ */
+function setupListeners(){
+  $('btn-edit').addEventListener('click', enterEditMode);
+  $('btn-cancel').addEventListener('click', ()=>exitEditMode(false));
+  $('btn-submit').addEventListener('click', saveProfile);
+  $('btn-logout').addEventListener('click', logout);
+  $('btn-delete').addEventListener('click', askDelete);
+
+  $('btn-select-tag').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    $('tags-dropdown').classList.toggle('open');
+  });
+
+  // Skills clickeables
+  [1,2].forEach(n=>{
+    $('skill-slot-'+n).addEventListener('click', (e)=>{
+      if(!isEditing) return;
+      e.stopPropagation();
+      closeAllPanels();
+      currentSkillSlot = n;
+      $('skills-dropdown').classList.add('open');
+    });
+  });
+}
+
+/* ============================================================
+   STATUS HELPER
+   ============================================================ */
+function showStatus(msg, type){
+  const el = $('status-msg');
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+  el.innerHTML = msg;
+}
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+init();
+</script>
+
+</body>
+</html>

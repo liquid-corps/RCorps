@@ -370,7 +370,27 @@ if(window.location.hash.includes('access_token=')){
     width:auto;
     display:block;
     filter:drop-shadow(0 6px 12px rgba(0,0,0,0.35));
+    max-width:320px;
+    object-fit:contain;
   }
+  .modal-portrait-upload-btn{
+    position:absolute;
+    bottom:10px;
+    left:50%;
+    transform:translateX(-50%);
+    pointer-events:auto;
+    background:rgba(0,0,0,0.6);
+    color:#fff;
+    border:none;
+    padding:4px 10px;
+    border-radius:4px;
+    font-size:10px;
+    cursor:pointer;
+    display:none;
+    font-family:inherit;
+    z-index:11;
+  }
+  .modal-portrait-upload-btn:hover{background:rgba(0,0,0,0.8);}
 
   /* Sección de información (derecha) */
   .modal-details{
@@ -721,7 +741,7 @@ if(window.location.hash.includes('access_token=')){
     background-size: 100% 100%;
     background-repeat: no-repeat;
   }
-  .dropdown-panel.list-panel.open { display: block; }
+  .dropdown-panel.list-panel.open { display: flex; flex-wrap: wrap; gap: 6px; }
   .dropdown-panel.grid-panel {
     width: 280px;
     grid-template-columns: 1fr 1fr;
@@ -756,17 +776,17 @@ if(window.location.hash.includes('access_token=')){
   .list-option {
     background: none;
     border: none;
-    padding: 4px;
+    padding: 2px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex: 0 0 auto;
   }
   .list-option img {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     object-fit: cover;
+    display: block;
   }
+  .list-option:hover img { opacity: 0.7; }
 
   /* Overlay de confirmación */
   .confirm-overlay {
@@ -877,8 +897,9 @@ if(window.location.hash.includes('access_token=')){
     <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
     
     <!-- Retrato de personaje desbordante -->
-    <div class="modal-portrait-container" id="m-portrait-container" style="position:relative;">
+    <div class="modal-portrait-container">
       <img id="m-portrait" src="assets/foto_info.png" alt="" />
+      <button type="button" class="modal-portrait-upload-btn" id="btn-change-portrait">Cambiar foto</button>
       <input type="file" id="m-portrait-upload" accept="image/png,image/jpeg" style="display:none;" />
     </div>
     
@@ -1264,12 +1285,12 @@ function setAdminEditMode(admin){
   // Hacer el contenedor de modes y el botón clickeables para admins
   const modesContainer = $('m-modes-container');
   const tagBtn = $('btn-select-tag-lib');
-  // Portrait clickeable para admin (subir imagen)
-  const portraitContainer = $('m-portrait-container');
+  // Botón de cambiar foto para admin
+  const portraitBtn = $('btn-change-portrait');
   const portraitUpload = $('m-portrait-upload');
   if(admin){
-    portraitContainer.style.cursor = 'pointer';
-    portraitContainer.onclick = () => portraitUpload.click();
+    portraitBtn.style.display = 'block';
+    portraitBtn.onclick = () => portraitUpload.click();
     modesContainer.style.cursor = 'pointer';
     modesContainer.onclick = (e) => {
       e.stopPropagation();
@@ -1281,8 +1302,8 @@ function setAdminEditMode(admin){
       toggleTagsPicker();
     };
   } else {
-    portraitContainer.style.cursor = 'default';
-    portraitContainer.onclick = null;
+    portraitBtn.style.display = 'none';
+    portraitBtn.onclick = null;
     modesContainer.style.cursor = 'default';
     modesContainer.onclick = null;
     tagBtn.style.display = 'none';

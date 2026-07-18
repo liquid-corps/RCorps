@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Perfiles - RCorps</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @font-face{
+    font-family:'Pixel Arial 11';
+    src:url('PixelArial11.ttf') format('truetype');
+    font-weight:normal;
+    font-style:normal;
+    font-display:swap;
+  }
+  :root{
+    --page-bg:#f1eee4;
+    --card-border:#a99b78;
+    --card-fill-top:#ece6d6;
+    --card-fill-bottom:#e2dbc6;
+    --field-bg:#f6f2e6;
+    --field-border:#b6a985;
+    --text-muted:#8a7c5f;
+    --text-dark:#4a3a24;
+    --maroon:#5a1414;
+  }
+  *{box-sizing:border-box;}
+  img{max-width:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--page-bg);
+    font-family:'Pixel Arial 11', monospace;
+    color:var(--text-dark);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:0 12px 80px;
+  }
+  .hotbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    min-height:70px;
+    padding:12px 30px;
+    margin-bottom:24px;
+    background-image:url('assets/hotbar.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .hotbar-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:20px;
+  }
+  .hotbar-nav a{color:var(--text-dark);text-decoration:none;}
+  .hotbar-nav a:hover{opacity:0.75;}
+  .hotbar-nav .sep{color:var(--text-muted);}
+  .hotbar-nav .active{font-weight:bold;text-decoration:underline;text-decoration-style:dotted;}
+
+  .page-title{
+    font-size:14px;
+    color:var(--text-muted);
+    margin-bottom:16px;
+    text-align:center;
+  }
+
+  /* Grid */
+  .profiles-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:16px;
+    width:100%;
+    max-width:720px;
+  }
+  @media(max-width:640px){
+    .profiles-grid{grid-template-columns:repeat(3, 1fr);}
+  }
+  @media(max-width:400px){
+    .profiles-grid{grid-template-columns:repeat(2, 1fr);}
+  }
+
+  .profile-card{
+    background:none;
+    border:none;
+    padding:0;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    font-family:inherit;
+  }
+  .profile-card .card-portrait{
+    width:100%;
+    aspect-ratio:3/4;
+    background:#ddd;
+    border:2px solid var(--card-border);
+    border-radius:4px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .profile-card .card-portrait img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .profile-card .card-name{
+    font-size:11px;
+    color:var(--text-dark);
+    text-align:center;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .profile-card:hover .card-portrait{
+    border-color:var(--maroon);
+    box-shadow:0 0 8px rgba(90,20,20,0.2);
+  }
+  .profile-card .card-tag{
+    width:64%;
+    max-height:18px;
+    object-fit:contain;
+    margin-bottom:2px;
+  }
+
+  /* Empty state */
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;
+    padding:80px 20px;
+    color:var(--text-muted);
+    font-size:12px;
+  }
+
+  /* MODAL */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background-image:url('assets/caja_info.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    width:640px;
+    height:430px;
+    position:relative;
+    padding:24px 20px 20px 20px;
+    display:flex;
+    gap:16px;
+    animation:modalFadeIn 0.2s ease-out;
+  }
+  @keyframes modalFadeIn{
+    from{opacity:0;transform:scale(0.96);}
+    to{opacity:1;transform:scale(1);}
+  }
+  .modal-close-btn{
+    position:absolute;
+    top:12px;right:12px;
+    background:#1c1c1c;
+    border:1px solid var(--card-border);
+    color:#fff;
+    width:20px;height:20px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:inherit;font-size:10px;
+    cursor:pointer;z-index:30;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,0.8);
+  }
+  .modal-close-btn:hover{background:#333;}
+
+  .modal-portrait-container{
+    position:absolute;
+    left:-70px;top:-55px;
+    height:495px;z-index:10;
+    pointer-events:none;
+  }
+  .modal-portrait-container img{
+    height:100%;width:auto;
+    display:block;max-width:320px;
+    object-fit:contain;
+    filter:drop-shadow(0 6px 12px rgba(0,0,0,0.35));
+  }
+
+  .modal-details{
+    margin-left:310px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    justify-content:space-between;
+    overflow:hidden;
+  }
+  .modal-fields{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .modal-field-box{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 12px;
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    height:25px;
+  }
+  .modal-field-box.long{
+    background-image:url('assets/escribir_largo.png');
+    width:100%;
+  }
+  .modal-field-box.medium{
+    background-image:url('assets/escribir_medio.png');
+    width:180px;
+  }
+  .modal-field-box.short{
+    background-image:url('assets/escribir_corto.png');
+    width:130px;
+  }
+  .modal-field-box label{
+    font-size:11px;color:var(--text-muted);
+    white-space:nowrap;
+  }
+  .modal-field-box span{
+    font-size:11px;color:var(--text-dark);
+    white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .modal-info-title{
+    font-size:14px;font-weight:bold;
+    color:var(--text-dark);
+    margin:0 0 6px 0;
+  }
+
+  .modal-modes-row{
+    display:flex;align-items:center;
+    gap:8px;
+  }
+  .modal-modes-row label{font-size:11px;color:var(--text-muted);}
+  .modal-modes-container{
+    display:flex;gap:8px;
+    align-items:center;flex-wrap:wrap;
+  }
+  .modal-modes-container img{
+    height:18px;width:auto;
+    object-fit:contain;
+  }
+
+  .modal-skills-section{
+    display:flex;flex-direction:column;
+    gap:4px;
+  }
+  .modal-skills-section label{font-size:11px;color:var(--text-muted);}
+  .modal-skills-row{display:flex;gap:10px;}
+  .modal-skill-slot{
+    width:36px;height:36px;
+    background-image:url('assets/cuadrado_seleccion_skills.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    display:flex;
+    align-items:center;justify-content:center;
+  }
+  .modal-skill-slot img{
+    width:80%;height:80%;
+    object-fit:cover;
+  }
+
+  .modal-bio-section{display:flex;flex-direction:column;gap:4px;}
+  .modal-bio-box{
+    background-image:url('assets/biografia_texto.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    padding:10px 14px;
+    min-height:60px;
+  }
+  .modal-bio-box label{font-size:11px;color:var(--text-muted);}
+  .modal-bio-text{
+    font-size:10px;color:var(--text-dark);
+    line-height:1.4;
+    margin-top:4px;
+    max-height:50px;
+    overflow-y:auto;
+  }
+  .modal-bio-text::-webkit-scrollbar{width:14px;}
+  .modal-bio-text::-webkit-scrollbar-track{background:transparent;}
+  .modal-bio-text::-webkit-scrollbar-thumb{
+    background-image:url('assets/scroll.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+  }
+
+  .loading{
+    grid-column:1/-1;
+    text-align:center;
+    padding:60px;
+    color:var(--text-muted);
+    font-size:12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hotbar">
+  <div class="hotbar-nav">
+    <a href="libreria.html">Libreria.</a>
+    <span class="sep">|</span>
+    <a href="perfiles.html" class="active">Perfiles.</a>
+    <span class="sep">|</span>
+    <a href="perfil.html">Mi Perfil.</a>
+    <span class="sep">|</span>
+    <a href="index.html">Registro.</a>
+  </div>
+</div>
+
+<div class="page-title">Perfiles de usuarios registrados</div>
+
+<div class="profiles-grid" id="profiles-grid">
+  <div class="loading">Cargando...</div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-box">
+    <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
+    <div class="modal-portrait-container">
+      <img id="m-portrait" src="assets/foto_info.png" alt="" />
+    </div>
+    <div class="modal-details">
+      <div>
+        <h3 class="modal-info-title">Info:</h3>
+        <div class="modal-fields">
+          <div class="modal-field-box long">
+            <label>Nombre:</label>
+            <span id="m-name"></span>
+          </div>
+          <div class="modal-field-box long">
+            <label>Usuario de Roblox:</label>
+            <span id="m-roblox"></span>
+          </div>
+          <div class="modal-field-box short">
+            <label>Edad:</label>
+            <span id="m-age"></span>
+          </div>
+          <div class="modal-field-box medium">
+            <label>Genero:</label>
+            <span id="m-gender"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-modes-row">
+        <label>Modos:</label>
+        <div class="modal-modes-container" id="m-modes-container"></div>
+      </div>
+      <div class="modal-skills-section">
+        <label>Skills:</label>
+        <div class="modal-skills-row">
+          <div class="modal-skill-slot" id="m-skill-1"></div>
+          <div class="modal-skill-slot" id="m-skill-2"></div>
+        </div>
+      </div>
+      <div class="modal-bio-section">
+        <div class="modal-bio-box">
+          <label>Biografia...</label>
+          <div class="modal-bio-text" id="m-bio"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://gqzspbfeodmhnpxegpjf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxenNwYmZlZWRtaG5weGVncGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3OTI3NDksImV4cCI6MjA1OTM2ODc0OX0.5rqCJQsjiPHq1Iq6Fe6Ws5W5dYGM5gjwRjqqXZnLoak';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+
+let currentProfiles = [];
+
+/* ============================================================
+   CARGAR PERFILES
+   ============================================================ */
+async function loadProfiles(){
+  const grid = $('profiles-grid');
+  grid.innerHTML = '<div class="loading">Cargando...</div>';
+
+  const { data, error } = await db.from('characters')
+    .select('*')
+    .eq('is_wiki', false)
+    .not('owner_id', 'is', 'null')
+    .order('id');
+
+  if(error){
+    grid.innerHTML = '<div class="empty-state">Error al cargar: ' + error.message + '</div>';
+    return;
+  }
+
+  currentProfiles = data || [];
+
+  if(currentProfiles.length === 0){
+    grid.innerHTML = '<div class="empty-state">No hay perfiles registrados aún.</div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  currentProfiles.forEach(char => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'profile-card';
+    card.onclick = () => openModal(char);
+
+    const portWrap = document.createElement('div');
+    portWrap.className = 'card-portrait';
+    const img = document.createElement('img');
+    img.src = char.portrait_list || char.portrait_info || 'assets/foto_lista1.png';
+    img.alt = char.name || 'Perfil';
+    img.onerror = () => { img.style.background = '#ccc'; };
+    portWrap.appendChild(img);
+    card.appendChild(portWrap);
+
+    const modes = char.modes || [];
+    if(modes.length > 0){
+      const tagImg = document.createElement('img');
+      tagImg.className = 'card-tag';
+      tagImg.src = modes[0];
+      tagImg.alt = 'Tag';
+      tagImg.onerror = () => { tagImg.style.display = 'none'; };
+      card.appendChild(tagImg);
+    }
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'card-name';
+    nameSpan.textContent = char.name || 'Sin nombre';
+    card.appendChild(nameSpan);
+
+    grid.appendChild(card);
+  });
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function openModal(char){
+  $('m-portrait').src = char.portrait_info || 'assets/foto_info.png';
+  $('m-name').textContent = char.name || '';
+  $('m-roblox').textContent = char.roblox || '';
+  $('m-age').textContent = char.age || '';
+  $('m-gender').textContent = char.gender || '';
+  $('m-bio').textContent = char.bio || '';
+
+  // Modes
+  const modesContainer = $('m-modes-container');
+  modesContainer.innerHTML = '';
+  (char.modes || []).forEach(path => {
+    const img = document.createElement('img');
+    img.src = path;
+    img.alt = 'Modo';
+    img.onerror = () => img.remove();
+    modesContainer.appendChild(img);
+  });
+
+  // Skills
+  const skills = char.skills || [];
+  [1,2].forEach(n => {
+    const slot = $('m-skill-' + n);
+    slot.innerHTML = '';
+    const path = skills[n-1];
+    if(path){
+      const img = document.createElement('img');
+      img.src = path;
+      img.alt = 'Skill ' + n;
+      img.onerror = () => { slot.innerHTML = ''; };
+      slot.appendChild(img);
+    }
+  });
+
+  $('detail-modal').classList.add('open');
+}
+
+function closeModal(){
+  $('detail-modal').classList.remove('open');
+}
+
+$('detail-modal').addEventListener('click', e => {
+  if(e.target === $('detail-modal')) closeModal();
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+loadProfiles();
+</script>
+</body>
+</html>

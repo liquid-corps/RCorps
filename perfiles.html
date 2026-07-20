@@ -6,6 +6,7 @@
 <title>Perfiles - RCorps</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@400;700&display=swap');
   @font-face{
     font-family:'Pixel Arial 11';
     src:url('PixelArial11.ttf') format('truetype');
@@ -23,9 +24,46 @@
     --text-muted:#8a7c5f;
     --text-dark:#4a3a24;
     --maroon:#5a1414;
+    --perfil-bg:#f5f0e6;
+    --perfil-border:#a3967d;
+    --perfil-text:#333;
+    --perfil-label:#4e3629;
+    --perfil-value-bg:#fff;
   }
   *{box-sizing:border-box;}
   img{max-width:100%;}
+  /* --- ESTILOS GLOBALES DE SCROLLBAR --- */
+  ::-webkit-scrollbar, html::-webkit-scrollbar, body::-webkit-scrollbar{
+    width:8px !important;
+    height:8px !important;
+  }
+  ::-webkit-scrollbar-track, html::-webkit-scrollbar-track, body::-webkit-scrollbar-track{
+    background:transparent !important;
+  }
+  ::-webkit-scrollbar-thumb, html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb{
+    background-color:#c2b59b !important;
+    border-radius:10px !important;
+  }
+  ::-webkit-scrollbar-thumb:hover, html::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover{
+    background-color:#a3967d !important;
+  }
+  /* Scrollbars dinámicos para el modal y comentarios */
+  .modal-details::-webkit-scrollbar-thumb,
+  #comments-list::-webkit-scrollbar-thumb{
+    background-color:var(--perfil-border, #c2b59b) !important;
+  }
+  .modal-details::-webkit-scrollbar-thumb:hover,
+  #comments-list::-webkit-scrollbar-thumb:hover{
+    filter:brightness(1.2);
+  }
+  .modal-details{scrollbar-width:thin;scrollbar-color:var(--perfil-border, #c2b59b) transparent;}
+  #comments-list{scrollbar-width:thin;scrollbar-color:var(--perfil-border, #c2b59b) transparent;}
+  ::-webkit-scrollbar-button, html::-webkit-scrollbar-button, body::-webkit-scrollbar-button{
+    display:none !important;
+    width:0 !important;
+    height:0 !important;
+  }
+  html{scrollbar-width:thin;scrollbar-color:#c2b59b transparent;}
   body{
     margin:0;
     min-height:100vh;
@@ -65,41 +103,61 @@
   .page-title{
     font-size:14px;
     color:var(--text-muted);
-    margin-bottom:16px;
+    margin-top:40px;
+    margin-bottom:30px;
     text-align:center;
   }
 
   /* Grid */
   .profiles-grid{
     display:grid;
-    grid-template-columns:repeat(5, 1fr);
-    gap:16px;
+    grid-template-columns:repeat(auto-fill, minmax(170px, 1fr));
+    gap:24px;
     width:100%;
-    max-width:720px;
+    max-width:1000px;
+    margin:0 auto;
+    padding:0 20px;
+    justify-content:center;
   }
   @media(max-width:640px){
-    .profiles-grid{grid-template-columns:repeat(3, 1fr);}
+    .profiles-grid{grid-template-columns:repeat(3, 1fr);gap:18px;padding:0 12px;}
   }
-  @media(max-width:400px){
-    .profiles-grid{grid-template-columns:repeat(2, 1fr);}
+  @media(max-width:430px){
+    .profiles-grid{grid-template-columns:repeat(2, 1fr);gap:14px;padding:0 8px;}
   }
 
   .profile-card{
-    background:none;
-    border:none;
-    padding:0;
+    background:#fdfbf7;
+    border-style:double;
+    border-width:3px;
+    border-color:#c2b59b;
+    border-radius:8px;
+    padding:16px;
     cursor:pointer;
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:4px;
+    gap:8px;
     font-family:inherit;
+    box-shadow:
+      inset 0 0 20px rgba(0,0,0,0.85),
+      0 0 8px var(--card-glow, transparent),
+      0 8px 16px rgba(0,0,0,0.5);
+    transition:transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  }
+  .profile-card:hover{
+    transform:translateY(-6px) scale(1.01);
+    filter:brightness(1.15);
+    box-shadow:
+      inset 0 0 20px rgba(0,0,0,0.85),
+      0 0 14px var(--card-glow, transparent),
+      0 12px 24px rgba(0,0,0,0.6);
   }
   .profile-card .card-portrait{
     width:100%;
     aspect-ratio:3/4;
     background:#ddd;
-    border:2px solid var(--card-border);
+    border:1px solid #e0d9ca;
     border-radius:4px;
     overflow:hidden;
     display:flex;
@@ -112,23 +170,27 @@
     object-fit:cover;
   }
   .profile-card .card-name{
-    font-size:11px;
-    color:var(--text-dark);
+    display:block;
+    width:100%;
+    background:rgba(0,0,0,0.6);
+    color:#e0d9ca;
+    padding:6px 0;
+    margin-top:15px;
+    font-weight:bold;
+    font-size:12px;
+    text-transform:uppercase;
     text-align:center;
-    max-width:100%;
+    letter-spacing:1.5px;
+    border-radius:4px;
+    border:1px solid rgba(255,255,255,0.15);
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
   }
-  .profile-card:hover .card-portrait{
-    border-color:var(--maroon);
-    box-shadow:0 0 8px rgba(90,20,20,0.2);
-  }
   .profile-card .card-tag{
-    width:64%;
+    width:60%;
     max-height:18px;
     object-fit:contain;
-    margin-bottom:2px;
   }
 
   /* Empty state */
@@ -149,12 +211,226 @@
     align-items:center;
     justify-content:center;
     z-index:200;
+    overflow-y:auto;
+    padding:24px 0;
   }
   .modal-overlay.open{display:flex;}
+  .modal-stack{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    margin:auto;
+  }
+
+  /* SECCIÓN SOCIAL (likes + comentarios) */
+  .social-box{
+    width:640px;
+    max-width:92vw;
+    background:var(--perfil-bg, #f1eee4);
+    border:2px double var(--perfil-border, #2a2a2a);
+    border-radius:8px;
+    padding:14px 18px;
+    box-sizing:border-box;
+    color:var(--perfil-text, #222);
+    font-size:12px;
+    box-shadow:inset 0 0 15px rgba(0,0,0,0.25), 0 4px 10px rgba(0,0,0,0.3);
+  }
+  .like-row{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:12px;
+  }
+  .like-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    cursor:pointer;padding:6px 14px;font-family:inherit;font-size:13px;
+    font-weight:bold;border-radius:4px;
+    background:color-mix(in srgb, var(--perfil-border) 70%, #000) !important;
+    color:var(--perfil-text) !important;
+    border:2px solid var(--perfil-border) !important;
+    box-shadow:2px 2px 0px #000;
+    transition:all 0.1s ease;
+  }
+  .like-btn:hover{
+    filter:brightness(1.25) !important;
+    box-shadow:1px 1px 0px #000;transform:translate(1px,1px);
+  }
+  .like-btn.liked{filter:brightness(1.4) !important;}
+  .like-btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .like-count{font-size:13px;font-weight:bold;color:var(--perfil-text, #333);}
+  .comments-title{font-weight:bold;font-size:13px;margin:0 0 8px;color:var(--perfil-text, #333);}
+  .comment-form{display:flex;gap:8px;margin-bottom:12px;}
+  .comment-form textarea{
+    flex:1;resize:none;font-family:inherit;font-size:12px;
+    padding:8px;border:1px solid var(--perfil-border, #c2b59b);border-radius:6px;
+    min-height:38px;box-sizing:border-box;
+    background:var(--perfil-value-bg, #fff);
+    color:var(--perfil-text, #333);
+  }
+  .comment-form button{
+    font-family:inherit;font-size:11px;font-weight:bold;text-transform:uppercase;
+    cursor:pointer;padding:6px 16px;border-radius:4px;
+    background:color-mix(in srgb, var(--perfil-border) 60%, #000) !important;
+    color:var(--perfil-text) !important;
+    border:2px solid var(--perfil-border) !important;
+    box-shadow:2px 2px 0px #000;
+    transition:all 0.1s ease;
+  }
+  .comment-form button:hover{
+    filter:brightness(1.25) !important;
+    box-shadow:1px 1px 0px #000;transform:translate(1px,1px);
+  }
+  .comment-form button:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-admin-edit{
+    font-family:inherit;font-size:12px;font-weight:bold;text-transform:uppercase;
+    letter-spacing:0.5px;cursor:pointer;border-radius:4px;padding:6px 14px;
+    background:linear-gradient(180deg,#3a3a3a,#1a1a1a);
+    color:#e0d9ca;border:1.5px solid #a3967d;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4);
+    transition:all 0.2s ease;
+  }
+  .btn-admin-edit:hover{
+    background:linear-gradient(180deg,#4a4a4a,#2a2a2a);
+    color:#fff;border-color:#c2b59b;
+  }
+  .btn-admin-save,.btn-admin-cancel{
+    font-family:inherit;font-size:12px;font-weight:bold;cursor:pointer;
+    border-radius:4px;padding:6px 14px;border:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3);
+    transition:filter 0.2s ease;color:#f5f0e6;
+  }
+  .btn-admin-save{
+    background:linear-gradient(180deg,#4a5768,#2c3e50);
+    border:1px solid #1a252f;
+  }
+  .btn-admin-save:hover{filter:brightness(1.2);}
+  .btn-admin-cancel{
+    background:linear-gradient(180deg,#782727,#4a1414);
+    border:1px solid #2d0a0a;
+  }
+  .btn-admin-cancel:hover{filter:brightness(1.2);}
+  .btn-aprobar{
+    font-family:inherit;font-size:12px;font-weight:bold;text-transform:uppercase;
+    cursor:pointer;border-radius:4px;padding:6px 14px;
+    background:linear-gradient(180deg,#2e7d32,#1b5e20);
+    color:#e0d9ca;border:1.5px solid #388e3c;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px rgba(0,0,0,0.4);
+    transition:all 0.2s ease;
+  }
+  .btn-aprobar:hover{filter:brightness(1.2);color:#fff;}
+  .btn-rechazar{
+    font-family:inherit;font-size:12px;font-weight:bold;text-transform:uppercase;
+    cursor:pointer;border-radius:4px;padding:6px 14px;
+    background:linear-gradient(180deg,#782727,#4a1414);
+    color:#e0d9ca;border:1.5px solid #c0392b;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4);
+    transition:all 0.2s ease;
+  }
+  .btn-rechazar:hover{filter:brightness(1.2);color:#fff;}
+  .mod-actions-container{
+    display:flex;gap:10px;margin-top:12px;padding-top:10px;
+    border-top:1px dashed rgba(169,155,120,0.4);
+    justify-content:flex-start;
+  }
+  .comment-login-note{font-size:11px;color:var(--perfil-text, #333);margin-bottom:10px;opacity:0.8;}
+  .comment-item{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    background:color-mix(in srgb, var(--perfil-bg, #f5f0e6) 80%, #000 20%);
+    border:1px solid var(--perfil-border, #a3967d);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:8px;
+    color:var(--perfil-text, #333);
+  }
+  .comment-avatar{
+    width:40px;height:40px;border-radius:50%;object-fit:cover;
+    background:#ccc;flex-shrink:0;
+    border:2px solid #a3967d;
+  }
+  .comment-body{flex:1;min-width:0;}
+  .comment-author{font-weight:bold;font-size:12px;color:var(--perfil-label, #4e3629);}
+  .comment-date{font-size:10px;color:var(--perfil-text, #333);margin-left:6px;opacity:0.6;}
+  .comment-text{font-size:12px;color:var(--perfil-text, #333);white-space:pre-wrap;word-break:break-word;margin-top:4px;}
+  .comment-delete{
+    cursor:pointer;background:none;border:none;padding:0 4px;flex-shrink:0;
+    font-size:16px;line-height:1;color:var(--perfil-text, #8b3a3a);
+    opacity:0.7;
+  }
+  .comment-delete:hover{opacity:1;filter:brightness(1.3);}
+  .comments-empty{font-size:11px;color:var(--perfil-text, #888);padding:8px 0;opacity:0.6;}
+  .confirm-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    align-items:center;justify-content:center;z-index:300;
+  }
+  .confirm-overlay.open{display:flex;}
+  .confirm-box{
+    background-image:url('assets/caja_info.png');
+    background-size:100% 100%;background-repeat:no-repeat;
+    padding:32px 28px 28px;width:320px;text-align:center;
+  }
+  .confirm-icon{font-size:32px;margin-bottom:8px;}
+  .confirm-msg{font-size:14px;color:var(--text-dark);margin-bottom:18px;line-height:1.4;}
+  .confirm-btns{display:flex;gap:12px;justify-content:center;}
+  .confirm-btn{
+    font-family:inherit;font-size:13px;cursor:pointer;
+    border:none;border-radius:6px;padding:8px 20px;
+  }
+  .confirm-yes{background:#c62828;color:#fff;}
+  .confirm-yes:hover{background:#d32f2f;}
+  .confirm-no{background:var(--card-border);color:#fff;}
+  .confirm-no:hover{background:#a3967d;}
+  .reject-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+    align-items:center;justify-content:center;z-index:400;
+  }
+  .reject-overlay.open{display:flex;}
+  .reject-box{
+    background:#1a1a1a;border:2px double #a3967d;border-radius:8px;
+    padding:28px 24px;width:360px;max-width:90vw;text-align:center;
+    box-shadow:0 0 30px rgba(0,0,0,0.6);
+  }
+  .reject-title{
+    font-size:16px;font-weight:bold;color:#e0d9ca;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;
+  }
+  .reject-desc{font-size:12px;color:#a3967d;margin:0 0 12px;}
+  .reject-textarea{
+    width:100%;box-sizing:border-box;resize:vertical;
+    font-family:inherit;font-size:12px;padding:8px 10px;
+    border:1px solid #555;border-radius:4px;
+    background:#2a2a2a;color:#e0d9ca;outline:none;
+  }
+  .reject-textarea:focus{border-color:#a3967d;}
+  .reject-btns{display:flex;gap:10px;justify-content:center;margin-top:16px;}
+  .reject-btn{
+    font-family:inherit;font-size:13px;font-weight:bold;text-transform:uppercase;
+    cursor:pointer;border-radius:4px;padding:8px 20px;letter-spacing:0.5px;
+    transition:all 0.2s ease;
+  }
+  .reject-btn-yes{
+    background:linear-gradient(180deg,#782727,#4a1414);
+    color:#e0d9ca;border:1.5px solid #c0392b;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),0 2px 4px rgba(0,0,0,0.4);
+  }
+  .reject-btn-yes:hover{filter:brightness(1.2);color:#fff;}
+  .reject-btn-no{
+    background:linear-gradient(180deg,#555,#333);
+    color:#e0d9ca;border:1.5px solid #666;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),0 2px 4px rgba(0,0,0,0.4);
+  }
+  .reject-btn-no:hover{filter:brightness(1.2);color:#fff;}
+  #comments-list{
+    max-height:220px;
+    overflow-y:auto;
+    padding-right:6px;
+  }
   .modal-box{
+    background-color:var(--perfil-bg);
     background-image:url('assets/caja_info.png');
     background-size:100% 100%;
     background-repeat:no-repeat;
+    background-blend-mode:overlay;
     width:640px;
     height:430px;
     position:relative;
@@ -162,6 +438,12 @@
     display:flex;
     gap:16px;
     animation:modalFadeIn 0.2s ease-out;
+    box-shadow:
+      inset 0 0 30px rgba(0,0,0,0.4),
+      0 0 12px var(--perfil-border),
+      0 10px 25px rgba(0,0,0,0.5);
+    border:2px double var(--perfil-border);
+    border-radius:10px;
   }
   @keyframes modalFadeIn{
     from{opacity:0;transform:scale(0.96);}
@@ -170,9 +452,9 @@
   .modal-close-btn{
     position:absolute;
     top:12px;right:12px;
-    background:#1c1c1c;
-    border:1px solid var(--card-border);
-    color:#fff;
+    background:color-mix(in srgb, var(--perfil-bg) 70%, #000);
+    border:1px solid var(--perfil-border);
+    color:var(--perfil-text);
     width:20px;height:20px;
     display:flex;align-items:center;justify-content:center;
     font-family:inherit;font-size:10px;
@@ -183,15 +465,22 @@
 
   .modal-portrait-container{
     position:absolute;
-    left:-70px;top:-55px;
-    height:495px;z-index:10;
+    left:20px;top:24px;
+    width:270px;height:386px;
+    z-index:10;
     pointer-events:none;
+    border:2px solid var(--perfil-border);
+    border-radius:6px;
+    background:color-mix(in srgb, var(--perfil-bg) 60%, #000);
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
   .modal-portrait-container img{
-    height:100%;width:auto;
-    display:block;max-width:320px;
-    object-fit:contain;
-    filter:drop-shadow(0 6px 12px rgba(0,0,0,0.35));
+    width:100%;height:100%;
+    display:block;
+    object-fit:cover;
   }
 
   .modal-details{
@@ -199,56 +488,67 @@
     flex:1;
     display:flex;
     flex-direction:column;
-    height:100%;
-    justify-content:space-between;
-    overflow:hidden;
+    min-height:0;
+    justify-content:flex-start;
+    gap:8px;
+    overflow-y:auto;
+  }
+  .modal-details > * {
+    flex-shrink:0;
   }
   .modal-fields{
     display:flex;
     flex-direction:column;
     gap:6px;
   }
+  .status-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 11px;border-radius:999px;font-size:12px;font-weight:bold;
+  }
+  .status-badge.pendiente{background:#f6e7b8;color:#8a6d1a;border:1px solid #d9c06a;}
+  .status-badge.aprobado{background:#d8f0d6;color:#2c6e2c;border:1px solid #9bd19b;}
+  .status-badge.rechazado{background:#f6d8d8;color:#9a2c2c;border:1px solid #d99b9b;}
+  .status-badge .dot{width:8px;height:8px;border-radius:50%;background:currentColor;}
   .modal-field-box{
     display:flex;
     align-items:center;
     gap:8px;
-    padding:6px 12px;
-    background-size:100% 100%;
-    background-repeat:no-repeat;
-    height:25px;
-  }
-  .modal-field-box.long{
-    background-image:url('assets/escribir_largo.png');
-    width:100%;
-  }
-  .modal-field-box.medium{
-    background-image:url('assets/escribir_medio.png');
-    width:180px;
-  }
-  .modal-field-box.short{
-    background-image:url('assets/escribir_corto.png');
-    width:130px;
+    padding:4px 10px;
+    height:auto;
+    min-height:28px;
   }
   .modal-field-box label{
-    font-size:11px;color:var(--text-muted);
+    font-size:11px;
+    color:var(--perfil-label, #4e3629);
+    font-weight:bold;
     white-space:nowrap;
+    flex-shrink:0;
   }
   .modal-field-box span{
-    font-size:11px;color:var(--text-dark);
+    font-size:11px;
+    color:var(--perfil-text, #333);
     white-space:nowrap;overflow:hidden;
     text-overflow:ellipsis;
+    background:var(--perfil-value-bg, #fff);
+    border:1px solid var(--perfil-border, #c2b59b);
+    border-radius:3px;
+    padding:2px 8px;
+    flex:1;
+    min-width:0;
   }
   .modal-info-title{
     font-size:14px;font-weight:bold;
-    color:var(--text-dark);
-    margin:0 0 6px 0;
+    color:var(--perfil-label, #4e3629);
+    margin:0 0 10px 0;
+    border-bottom:1px solid var(--perfil-border, #a3967d);
+    padding-bottom:4px;
   }
 
   .modal-modes-row{
     display:flex;align-items:center;
     gap:8px;
   }
-  .modal-modes-row label{font-size:11px;color:var(--text-muted);}
+  .modal-modes-row label{font-size:11px;color:var(--perfil-label, #4e3629);font-weight:bold;}
   .modal-modes-container{
     display:flex;gap:8px;
     align-items:center;flex-wrap:wrap;
@@ -262,7 +562,7 @@
     display:flex;flex-direction:column;
     gap:4px;
   }
-  .modal-skills-section label{font-size:11px;color:var(--text-muted);}
+  .modal-skills-section label{font-size:11px;color:var(--perfil-label, #4e3629);font-weight:bold;}
   .modal-skills-row{display:flex;gap:10px;}
   .modal-skill-slot{
     width:36px;height:36px;
@@ -279,28 +579,24 @@
 
   .modal-bio-section{display:flex;flex-direction:column;gap:4px;}
   .modal-bio-box{
-    background-image:url('assets/biografia_texto.png');
-    background-size:100% 100%;
-    background-repeat:no-repeat;
-    padding:10px 14px;
-    min-height:60px;
+    padding:4px 0;
+    min-height:auto;
+    height:auto;
   }
-  .modal-bio-box label{font-size:11px;color:var(--text-muted);}
+  .modal-bio-box label{font-size:11px;color:var(--perfil-label, #4e3629);font-weight:bold;}
   .modal-bio-text{
-    font-size:10px;color:var(--text-dark);
+    font-size:10px;color:var(--perfil-text, #333);
+    background:var(--perfil-value-bg, #fff);
+    border:1px solid var(--perfil-border, #c2b59b);
+    border-radius:3px;
+    padding:6px 10px;
     line-height:1.4;
     margin-top:4px;
-    max-height:50px;
-    overflow-y:auto;
+    max-height:none;
+    overflow:visible;
+    word-break:break-word;
+    white-space:pre-wrap;
   }
-  .modal-bio-text::-webkit-scrollbar{width:14px;}
-  .modal-bio-text::-webkit-scrollbar-track{background:transparent;}
-  .modal-bio-text::-webkit-scrollbar-thumb{
-    background-image:url('assets/scroll.png');
-    background-size:100% 100%;
-    background-repeat:no-repeat;
-  }
-
   .loading{
     grid-column:1/-1;
     text-align:center;
@@ -308,19 +604,92 @@
     color:var(--text-muted);
     font-size:12px;
   }
+
+  /* ============ RESPONSIVE MÓVIL ============ */
+  @media(max-width:680px){
+    body{padding:0 8px 80px;}
+    .hotbar{justify-content:center;text-align:center;padding:12px 14px;gap:12px;}
+    .hotbar-nav{flex-wrap:wrap;justify-content:center;font-size:17px;gap:8px;}
+    .profiles-grid{grid-template-columns:repeat(2, 1fr);max-width:100%;}
+    .modal-box{
+      width:94vw;
+      height:auto;
+      min-height:430px;
+      flex-direction:column;
+      padding:18px 14px;
+      gap:12px;
+    }
+    .modal-portrait-container{
+      position:relative;
+      left:auto;top:auto;
+      width:50%;
+      height:auto;
+      aspect-ratio:3/4;
+      margin:24px auto 8px;
+    }
+    .modal-portrait-container img{position:absolute;inset:0;}
+    .modal-details{margin-left:0;height:auto;}
+    .social-box{width:94vw;max-width:94vw;padding:12px 14px;}
+    .comment-form button{padding:0 12px;}
+  }
+  @media(max-width:430px){
+    .hotbar-nav{font-size:15px;gap:6px;}
+    .profiles-grid{gap:10px;}
+    .modal-field-box.medium,.modal-field-box.short{width:100%;}
+    .modal-bio-box{min-height:70px;}
+    .like-btn{padding:6px 10px;font-size:12px;}
+  }
+
+  .page-transition{
+    position:fixed;inset:0;background:var(--page-bg);
+    display:flex;align-items:center;justify-content:center;z-index:9999;
+    opacity:1;transition:opacity 0.35s ease;
+  }
+  .page-transition.hidden{opacity:0;pointer-events:none;}
+  .page-transition .pt-spinner{
+    width:48px;height:48px;
+    border:4px solid rgba(169,155,120,0.25);
+    border-top-color:var(--card-border);
+    border-right-color:var(--text-muted);
+    border-radius:50%;
+    animation:spinPulse 1s ease-in-out infinite;
+    box-shadow:0 0 18px rgba(169,155,120,0.25);
+  }
+  @keyframes spinPulse{
+    0%{transform:rotate(0deg) scale(1);opacity:0.7;}
+    50%{transform:rotate(180deg) scale(1.15);opacity:1;}
+    100%{transform:rotate(360deg) scale(1);opacity:0.7;}
+  }
+  .inline-spinner{
+    display:flex;align-items:center;justify-content:center;
+    padding:60px 0;
+  }
+  .inline-spinner .sp{
+    width:42px;height:42px;
+    border:4px solid rgba(169,155,120,0.25);
+    border-top-color:var(--card-border);
+    border-right-color:var(--text-muted);
+    border-radius:50%;
+    animation:spinPulse 1s ease-in-out infinite;
+    box-shadow:0 0 14px rgba(169,155,120,0.2);
+  }
 </style>
 </head>
 <body>
 
+<div class="page-transition" id="page-transition">
+  <div class="pt-spinner"></div>
+</div>
+
 <div class="hotbar">
   <div class="hotbar-nav">
-    <a href="libreria.html">Libreria.</a>
+    <a href="libreria.html" class="nav-link">Libreria.</a>
     <span class="sep">|</span>
-    <a href="perfiles.html" class="active">Perfiles.</a>
+    <a href="perfiles.html" class="nav-link active">Perfiles.</a>
     <span class="sep">|</span>
-    <a href="perfil.html">Mi Perfil.</a>
+    <a href="perfil.html" class="nav-link">Mi Perfil.</a>
     <span class="sep">|</span>
-    <a href="index.html">Registro.</a>
+    <a href="index.html" class="nav-link">Inicio.</a>
   </div>
 </div>
 
@@ -332,6 +701,7 @@
 
 <!-- Modal -->
 <div class="modal-overlay" id="detail-modal">
+ <div class="modal-stack">
   <div class="modal-box">
     <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
     <div class="modal-portrait-container">
@@ -345,19 +715,31 @@
             <label>Nombre:</label>
             <span id="m-name"></span>
           </div>
-          <div class="modal-field-box long">
-            <label>Usuario de Roblox:</label>
-            <span id="m-roblox"></span>
-          </div>
           <div class="modal-field-box short">
             <label>Edad:</label>
             <span id="m-age"></span>
           </div>
           <div class="modal-field-box medium">
-            <label>Genero:</label>
-            <span id="m-gender"></span>
+            <label>Rango:</label>
+            <span id="m-rank"></span>
+          </div>
+          <div class="modal-field-box medium">
+            <label>Zodiacal:</label>
+            <span id="m-zodiac"></span>
+          </div>
+          <div class="modal-field-box medium">
+            <label>Clan:</label>
+            <span id="m-clan"></span>
           </div>
         </div>
+      </div>
+      <div id="modal-status-badge" class="status-badge" style="display:none;margin-top:10px;"></div>
+      <div id="admin-edit-bar" style="display:none;margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+        <button type="button" id="btn-admin-edit" class="btn-admin-edit" onclick="startAdminEdit()">Editar</button>
+        <button type="button" id="btn-admin-save" class="btn-admin-save" onclick="saveAdminEdit()"
+          style="display:none;">Guardar</button>
+        <button type="button" id="btn-admin-cancel" class="btn-admin-cancel" onclick="cancelAdminEdit()"
+          style="display:none;">Cancelar</button>
       </div>
       <div class="modal-modes-row">
         <label>Modos:</label>
@@ -376,6 +758,56 @@
           <div class="modal-bio-text" id="m-bio"></div>
         </div>
       </div>
+      <div id="approve-bar" class="mod-actions-container" style="display:none;">
+        <button type="button" class="btn-aprobar" onclick="approveProfile(true)">Aprobar</button>
+        <button type="button" class="btn-rechazar" onclick="approveProfile(false)">Rechazar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Likes + comentarios -->
+  <div class="social-box">
+    <div class="like-row">
+      <button type="button" class="like-btn" id="like-btn" onclick="toggleLike()">
+        <span>♥</span><span id="like-label">Me gusta</span>
+      </button>
+      <span class="like-count"><span id="like-count">0</span> likes</span>
+    </div>
+
+    <p class="comments-title">Comentarios</p>
+    <div id="comment-login-note" class="comment-login-note" style="display:none;">
+      Inicia sesión en <a href="perfil.html">Mi Perfil</a> para comentar y dar like.
+    </div>
+    <div class="comment-form" id="comment-form">
+      <textarea id="comment-input" maxlength="500" placeholder="Escribe un comentario..."></textarea>
+      <button type="button" id="comment-send" onclick="sendComment()">Enviar</button>
+    </div>
+    <div id="comments-list"></div>
+  </div>
+ </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-msg" id="confirm-msg">¿Borrar este comentario?</div>
+    <div class="confirm-btns">
+      <button class="confirm-btn confirm-yes" id="confirm-yes">Eliminar</button>
+      <button class="confirm-btn confirm-no" id="confirm-no">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de rechazo personalizado -->
+<div class="reject-overlay" id="reject-modal">
+  <div class="reject-box">
+    <div class="reject-title">Rechazar registro</div>
+    <p class="reject-desc">Indica el motivo del rechazo (opcional):</p>
+    <textarea class="reject-textarea" id="reject-reason" placeholder="Escribe el motivo aquí..." rows="3"></textarea>
+    <div class="reject-btns">
+      <button type="button" class="reject-btn reject-btn-yes" id="reject-confirm">Rechazar</button>
+      <button type="button" class="reject-btn reject-btn-no" id="reject-cancel">Cancelar</button>
     </div>
   </div>
 </div>
@@ -385,16 +817,32 @@ const SUPABASE_URL = 'https://gqzspbfeodmhnpxegpjf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxenNwYmZlb2RtaG5weGVncGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5ODcyMjQsImV4cCI6MjA5OTU2MzIyNH0.kwbuMH_UpMrGnBlpf4uuc09nXH0b7Yp4mAVgsjrn_tk';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Webhook de Discord para avisar aprobaciones/rechazos.
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1523544793458937997/_VVWJCWLF0SX0KpvjoJuzhuNIfnRavh-K10eJ3RNaTE_rTfb6HFXfom1aI7yZUpP9Ty5";
+
 const $ = id => document.getElementById(id);
 
 let currentProfiles = [];
+let isAdmin = false;
+let currentChar = null;
+let currentUser = null;
+
+async function checkAdmin(){
+  try{
+    const { data: { session } } = await db.auth.getSession();
+    if(!session){ isAdmin = false; currentUser = null; return; }
+    currentUser = session.user;
+    const { data: isAdm } = await db.rpc('is_admin');
+    isAdmin = !!isAdm;
+  } catch(_){ isAdmin = false; currentUser = null; }
+}
 
 /* ============================================================
    CARGAR PERFILES
    ============================================================ */
 async function loadProfiles(){
   const grid = $('profiles-grid');
-  grid.innerHTML = '<div class="loading">Cargando...</div>';
+  grid.innerHTML = '<div class="inline-spinner" style="grid-column:1/-1;"><div class="sp"></div></div>';
 
   const { data, error } = await db.from('characters')
     .select('*')
@@ -407,7 +855,7 @@ async function loadProfiles(){
     return;
   }
 
-  currentProfiles = data || [];
+  currentProfiles = (data || []).filter(c => (c.name || '').trim() !== '');
 
   if(currentProfiles.length === 0){
     grid.innerHTML = '<div class="empty-state">No hay perfiles registrados aún.</div>';
@@ -420,6 +868,11 @@ async function loadProfiles(){
     card.type = 'button';
     card.className = 'profile-card';
     card.onclick = () => openModal(char);
+    if(char.card_bg)     card.style.backgroundColor = char.card_bg;
+    if(char.card_border){
+      card.style.borderColor = char.card_border;
+      card.style.setProperty('--card-glow', char.card_border);
+    }
 
     const portWrap = document.createElement('div');
     portWrap.className = 'card-portrait';
@@ -443,6 +896,8 @@ async function loadProfiles(){
     const nameSpan = document.createElement('span');
     nameSpan.className = 'card-name';
     nameSpan.textContent = char.name || 'Sin nombre';
+    if(char.card_font)   nameSpan.style.fontFamily = char.card_font;
+    if(char.card_text)   nameSpan.style.color = char.card_text;
     card.appendChild(nameSpan);
 
     grid.appendChild(card);
@@ -453,12 +908,40 @@ async function loadProfiles(){
    MODAL
    ============================================================ */
 function openModal(char){
+  currentChar = char;
   $('m-portrait').src = char.portrait_info || 'assets/foto_info.png';
-  $('m-name').textContent = char.name || '';
-  $('m-roblox').textContent = char.roblox || '';
-  $('m-age').textContent = char.age || '';
-  $('m-gender').textContent = char.gender || '';
-  $('m-bio').textContent = char.bio || '';
+  $('m-name').textContent   = char.name   || '';
+  $('m-age').textContent    = char.age    || '';
+  $('m-rank').textContent   = char.rank   || '';
+  $('m-zodiac').textContent = char.zodiac || '';
+  $('m-clan').textContent   = char.clan   || '';
+  $('m-bio').textContent    = char.bio    || '';
+
+  // Barra de edición solo para admins
+  cancelAdminEdit();
+  $('admin-edit-bar').style.display = isAdmin ? 'block' : 'none';
+
+  // Estado de aprobación + botones de moderación
+  const badge = $('modal-status-badge');
+  const status = char.status || 'pendiente';
+  const isOwner = currentUser && char.owner_id && currentUser.id === char.owner_id;
+  if(badge){
+    if(isAdmin || isOwner){
+      badge.className = 'status-badge ' + status;
+      badge.style.display = 'inline-flex';
+      let txt = ({pendiente:'🟡 Pendiente',aprobado:'✅ Aprobado',rechazado:'🔴 Rechazado'})[status] || 'Pendiente';
+      if(status === 'rechazado' && char.reject_reason) txt += ': ' + char.reject_reason;
+      badge.innerHTML = '<span class="dot"></span>' + txt;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+  if(isAdmin){
+    // Los botones de moderación solo aparecen si el registro está en revisión (pendiente).
+    $('approve-bar').style.display = (status === 'pendiente') ? 'flex' : 'none';
+  } else {
+    $('approve-bar').style.display = 'none';
+  }
 
   // Modes
   const modesContainer = $('m-modes-container');
@@ -486,11 +969,354 @@ function openModal(char){
     }
   });
 
+  // Aplicar tema de la tarjeta al modal (solo a .modal-box y .social-box)
+  const modalBox = document.querySelector('.modal-box');
+  const socialBox = document.querySelector('.social-box');
+  const containers = [modalBox, socialBox].filter(Boolean);
+  const bg = char.card_bg || '#f5f0e6';
+  const isDark = isColorDark(bg);
+  const borderColor = char.card_border || '#a3967d';
+  const textColor = char.card_text || (isDark ? '#e0d9ca' : '#333');
+  const labelColor = isDark ? '#e0d9ca' : '#4e3629';
+  const valueBg = isDark ? 'rgba(0,0,0,0.55)' : '#fff';
+  containers.forEach(el => {
+    el.style.setProperty('--perfil-bg', bg);
+    el.style.setProperty('--perfil-border', borderColor);
+    el.style.setProperty('--perfil-text', textColor);
+    el.style.setProperty('--perfil-label', labelColor);
+    el.style.setProperty('--perfil-value-bg', valueBg);
+  });
+
   $('detail-modal').classList.add('open');
+
+  // Cargar likes y comentarios
+  loadLikes();
+  loadComments();
+}
+
+function isColorDark(hex){
+  const c = hex.replace('#','');
+  const r = parseInt(c.substring(0,2),16);
+  const g = parseInt(c.substring(2,4),16);
+  const b = parseInt(c.substring(4,6),16);
+  return (r*0.299 + g*0.587 + b*0.114) < 140;
+}
+
+/* ============================================================
+   LIKES
+   ============================================================ */
+let userHasLiked = false;
+
+function refreshCommentBoxState(){
+  const logged = !!currentUser;
+  $('comment-form').style.display = logged ? 'flex' : 'none';
+  $('comment-login-note').style.display = logged ? 'none' : 'block';
+  $('like-btn').disabled = !logged;
+}
+
+async function loadLikes(){
+  if(!currentChar) return;
+  refreshCommentBoxState();
+  const { count } = await db.from('character_likes')
+    .select('id', { count: 'exact', head: true })
+    .eq('character_id', currentChar.id);
+  $('like-count').textContent = count || 0;
+
+  userHasLiked = false;
+  if(currentUser){
+    const { data } = await db.from('character_likes')
+      .select('id')
+      .eq('character_id', currentChar.id)
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    userHasLiked = !!data;
+  }
+  updateLikeBtn();
+}
+
+function updateLikeBtn(){
+  const btn = $('like-btn');
+  btn.classList.toggle('liked', userHasLiked);
+  $('like-label').textContent = userHasLiked ? 'Te gusta' : 'Me gusta';
+}
+
+async function toggleLike(){
+  if(!currentUser || !currentChar) return;
+  $('like-btn').disabled = true;
+  if(userHasLiked){
+    const { error } = await db.from('character_likes').delete()
+      .eq('character_id', currentChar.id)
+      .eq('user_id', currentUser.id);
+    if(!error) userHasLiked = false;
+  } else {
+    const { error } = await db.from('character_likes').insert({
+      character_id: currentChar.id,
+      user_id: currentUser.id
+    });
+    if(!error) userHasLiked = true;
+  }
+  await loadLikes();
+  $('like-btn').disabled = false;
+}
+
+/* ============================================================
+   COMENTARIOS
+   ============================================================ */
+function escapeHtml(s){
+  return (s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+async function loadComments(){
+  if(!currentChar) return;
+  const list = $('comments-list');
+  list.innerHTML = '<div class="comments-empty">Cargando...</div>';
+
+  const { data, error } = await db.from('character_comments')
+    .select('id, body, created_at, user_id, profiles(username, avatar_url)')
+    .eq('character_id', currentChar.id)
+    .order('created_at', { ascending: false });
+
+  if(error){
+    list.innerHTML = '<div class="comments-empty">Error al cargar comentarios.</div>';
+    return;
+  }
+  if(!data || data.length === 0){
+    list.innerHTML = '<div class="comments-empty">Aún no hay comentarios. ¡Sé el primero!</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  data.forEach(c => {
+    const prof = c.profiles || {};
+    const canDelete = currentUser && (currentUser.id === c.user_id || isAdmin);
+    const item = document.createElement('div');
+    item.className = 'comment-item';
+    const date = new Date(c.created_at).toLocaleDateString();
+    item.innerHTML =
+      '<img class="comment-avatar" src="' + (prof.avatar_url || 'assets/foto_lista1.png') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+      '<div class="comment-body">' +
+        '<span class="comment-author">@' + escapeHtml(prof.username || 'usuario') + '</span>' +
+        '<span class="comment-date">' + date + '</span>' +
+        '<div class="comment-text">' + escapeHtml(c.body) + '</div>' +
+      '</div>' +
+      (canDelete ? '<button class="comment-delete" title="Borrar" data-id="' + c.id + '">✕</button>' : '');
+    if(canDelete){
+      item.querySelector('.comment-delete').onclick = () => confirmDelete(c.id);
+    }
+    list.appendChild(item);
+  });
+}
+
+async function sendComment(){
+  if(!currentUser || !currentChar) return;
+  const input = $('comment-input');
+  const body = input.value.trim();
+  if(!body) return;
+  $('comment-send').disabled = true;
+  const { error } = await db.from('character_comments').insert({
+    character_id: currentChar.id,
+    user_id: currentUser.id,
+    body: body
+  });
+  $('comment-send').disabled = false;
+  if(error){ alert('Error al comentar: ' + error.message); return; }
+  input.value = '';
+  await loadComments();
+}
+
+let _deleteId = null;
+function confirmDelete(id){
+  _deleteId = id;
+  $('confirm-overlay').classList.add('open');
+}
+$('confirm-yes').onclick = async function(){
+  const id = _deleteId; _deleteId = null;
+  $('confirm-overlay').classList.remove('open');
+  if(!id) return;
+  const { error } = await db.from('character_comments').delete().eq('id', id);
+  if(error){ alert('Error al borrar: ' + error.message); return; }
+  await loadComments();
+};
+$('confirm-no').onclick = function(){
+  _deleteId = null;
+  $('confirm-overlay').classList.remove('open');
+};
+
+async function confirmReject(){
+  const reason = $('reject-reason').value.trim() || null;
+  $('reject-modal').classList.remove('open');
+  const updates = {
+    status: 'rechazado',
+    reviewed_by: currentUser.id,
+    reviewed_at: new Date().toISOString(),
+    reject_reason: reason,
+  };
+  const { error } = await db.from('characters').update(updates).eq('id', currentChar.id);
+  if(error){ alert('Error: ' + error.message); return; }
+  currentChar = { ...currentChar, ...updates };
+  let ownerDiscord = null;
+  if(currentChar.owner_id){
+    const { data: p } = await db
+      .from('profiles').select('discord_id')
+      .eq('id', currentChar.owner_id).single();
+    ownerDiscord = p?.discord_id || null;
+  }
+  try{
+    const autor = currentChar.name || 'Usuario';
+    const modName = currentUser?.email || 'Mod';
+    const ping = ownerDiscord ? '<@' + ownerDiscord + '>' : '';
+    let msg = `${ping}\n**🔴 Registro Rechazado:** ${autor}\nPor: ${modName}`;
+    if(reason) msg += `\nMotivo: ${reason}`;
+    const resp = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: msg }),
+    });
+    if(!resp.ok) console.error('[reject] Discord falló:', resp.status);
+  }catch(e){ console.error('[reject] discord', e); }
+  $('modal-status-badge').className = 'status-badge rechazado';
+  $('modal-status-badge').innerHTML = '<span class="dot"></span>🔴 Rechazado' + (reason ? ': ' + reason : '');
+  $('approve-bar').style.display = 'none';
+  await loadProfiles();
+  alert('Registro rechazado.');
+}
+$('reject-confirm').onclick = confirmReject;
+$('reject-cancel').onclick = function(){
+  $('reject-modal').classList.remove('open');
+};
+$('reject-modal').addEventListener('click', function(e){
+  if(e.target === this) $('reject-modal').classList.remove('open');
+});
+
+/* ---------- Edición por mods ---------- */
+const EDITABLE = [
+  { id: 'm-name',   field: 'name',   type: 'text' },
+  { id: 'm-age',    field: 'age',    type: 'number' },
+  { id: 'm-rank',   field: 'rank',   type: 'text' },
+  { id: 'm-zodiac', field: 'zodiac', type: 'text' },
+  { id: 'm-clan',   field: 'clan',   type: 'text' },
+];
+
+function startAdminEdit(){
+  if(!isAdmin || !currentChar) return;
+  EDITABLE.forEach(({id, type}) => {
+    const span = $(id);
+    const val = span.textContent;
+    const input = document.createElement('input');
+    input.type = type;
+    input.value = val;
+    input.dataset.for = id;
+    input.style.cssText = 'width:100%;font-size:12px;padding:2px 4px;box-sizing:border-box;';
+    span.replaceWith(input);
+    input.id = id;
+  });
+  $('btn-admin-edit').style.display = 'none';
+  $('btn-admin-save').style.display = 'inline-block';
+  $('btn-admin-cancel').style.display = 'inline-block';
+}
+
+function cancelAdminEdit(){
+  EDITABLE.forEach(({id}) => {
+    const el = $(id);
+    if(el && el.tagName === 'INPUT'){
+      const span = document.createElement('span');
+      span.id = id;
+      span.textContent = currentChar ? (currentChar[EDITABLE.find(e=>e.id===id).field] || '') : '';
+      el.replaceWith(span);
+    }
+  });
+  $('btn-admin-edit').style.display = 'inline-block';
+  $('btn-admin-save').style.display = 'none';
+  $('btn-admin-cancel').style.display = 'none';
+}
+
+async function saveAdminEdit(){
+  if(!isAdmin || !currentChar) return;
+  const updates = {};
+  EDITABLE.forEach(({id, field, type}) => {
+    const el = $(id);
+    if(!el) return;
+    let v = el.value.trim();
+    if(type === 'number') v = v === '' ? null : parseInt(v, 10);
+    else v = v === '' ? null : v;
+    updates[field] = v;
+  });
+
+  $('btn-admin-save').disabled = true;
+  const { error } = await db.from('characters').update(updates).eq('id', currentChar.id);
+  $('btn-admin-save').disabled = false;
+  if(error){ alert('Error al guardar: ' + error.message); return; }
+
+  currentChar = { ...currentChar, ...updates };
+  cancelAdminEdit();
+  await loadProfiles();
 }
 
 function closeModal(){
+  cancelAdminEdit();
   $('detail-modal').classList.remove('open');
+  // Restaurar colores por defecto del modal
+  ['.modal-box','.social-box'].forEach(sel => {
+    const el = document.querySelector(sel);
+    if(!el) return;
+    el.style.removeProperty('--perfil-bg');
+    el.style.removeProperty('--perfil-border');
+    el.style.removeProperty('--perfil-text');
+    el.style.removeProperty('--perfil-label');
+    el.style.removeProperty('--perfil-value-bg');
+  });
+}
+
+/* ============================================================
+   APROBACIÓN DE REGISTROS (mods)
+   ============================================================ */
+async function approveProfile(aprobar){
+  if(!isAdmin || !currentChar) return;
+  if(!aprobar){
+    $('reject-reason').value = '';
+    $('reject-modal').classList.add('open');
+    return;
+  }
+
+  const updates = {
+    status: 'aprobado',
+    reviewed_by: currentUser.id,
+    reviewed_at: new Date().toISOString(),
+    reject_reason: null,
+  };
+
+  const { error } = await db.from('characters').update(updates).eq('id', currentChar.id);
+  if(error){ alert('Error: ' + error.message); return; }
+
+  currentChar = { ...currentChar, ...updates };
+
+  let ownerDiscord = null;
+  if(currentChar.owner_id){
+    const { data: p } = await db
+      .from('profiles').select('discord_id')
+      .eq('id', currentChar.owner_id).single();
+    ownerDiscord = p?.discord_id || null;
+  }
+
+  try{
+    const autor = currentChar.name || 'Usuario';
+    const modName = currentUser?.email || 'Mod';
+    const ping = ownerDiscord ? '<@' + ownerDiscord + '>' : '';
+    const resp = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: `${ping}\n**✅ Registro Aprobado:** ${autor}\nPor: ${modName}` }),
+    });
+    if(!resp.ok) console.error('[approveProfile] Discord falló:', resp.status);
+  }catch(e){ console.error('[approveProfile] discord', e); }
+
+  $('modal-status-badge').className = 'status-badge aprobado';
+  $('modal-status-badge').innerHTML = '<span class="dot"></span>✅ Aprobado';
+  $('approve-bar').style.display = 'none';
+  await loadProfiles();
+  alert('Registro aprobado.');
 }
 
 $('detail-modal').addEventListener('click', e => {
@@ -500,7 +1326,35 @@ $('detail-modal').addEventListener('click', e => {
 /* ============================================================
    INIT
    ============================================================ */
-loadProfiles();
+(async () => {
+  await checkAdmin();
+  await loadProfiles();
+})();
+
+db.auth.onAuthStateChange(async () => {
+  await checkAdmin();
+  if($('detail-modal').classList.contains('open')){
+    $('admin-edit-bar').style.display = isAdmin ? 'block' : 'none';
+    loadLikes();
+    loadComments();
+  }
+});
+</script>
+<script>
+document.querySelectorAll('.nav-link').forEach(a => {
+  a.addEventListener('click', function(e){
+    if(this.hostname === location.hostname){
+      e.preventDefault();
+      document.getElementById('page-transition').classList.remove('hidden');
+      setTimeout(() => { location.href = this.href; }, 350);
+    }
+  });
+});
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    document.getElementById('page-transition').classList.add('hidden');
+  }, 200);
+});
 </script>
 </body>
 </html>

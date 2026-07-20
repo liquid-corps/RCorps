@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Perfil - RCorps</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@400;700&display=swap');
   @font-face{
     font-family:'Pixel Arial 11';
     src:url('PixelArial11.ttf') format('truetype');
@@ -14,11 +16,11 @@
     font-display:swap;
   }
   :root{
-    --page-bg:#808080;
+    --page-bg:#f1eee4;
     --card-bg:#F5EBE6;
-    --card-border:#4a3a24;
-    --field-bg:#ece6d6;
-    --field-border:#8a7c5f;
+    --card-border:#a99b78;
+    --field-bg:#f6f2e6;
+    --field-border:#b6a985;
     --text-dark:#4a3a24;
     --text-muted:#8a7c5f;
     --admin-color:#5a1414;
@@ -37,27 +39,30 @@
   }
 
   /* ============ TOP NAV ============ */
-  .top-nav{
-    width:100%;
-    max-width:640px;
-    background:#f0ebe0;
-    border:2px solid var(--card-border);
-    border-radius:4px;
-    padding:10px 16px;
-    margin-bottom:16px;
+  .hotbar{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:12px;
-    font-size:15px;
+    width:100%;
+    min-height:70px;
+    padding:12px 30px;
+    margin-bottom:24px;
+    background-image:url('assets/hotbar.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    flex-wrap:wrap;
+    gap:10px;
   }
-  .top-nav .nav-links{display:flex;align-items:center;gap:10px;}
-  .top-nav a{
-    color:var(--text-dark);text-decoration:none;
+  .hotbar-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:20px;
   }
-  .top-nav a:hover{opacity:0.7;}
-  .top-nav .sep{color:var(--text-muted);}
-  .top-nav .active{font-weight:bold;text-decoration:underline;text-decoration-style:dotted;}
+  .hotbar-nav a{color:var(--text-dark);text-decoration:none;}
+  .hotbar-nav a:hover{opacity:0.75;}
+  .hotbar-nav .sep{color:var(--text-muted);}
+  .hotbar-nav .active{font-weight:bold;text-decoration:underline;text-decoration-style:dotted;}
 
   /* Badge de ADMIN en la barra */
   .admin-badge{
@@ -73,36 +78,61 @@
   /* ============ LOGIN VIEW ============ */
   .login-view{
     width:100%;
-    max-width:640px;
-    background:var(--card-bg);
-    border:3px solid var(--card-border);
+    max-width:450px;
+    background:#f5f0e6;
+    border:1.5px solid #a3967d;
     border-radius:6px;
-    padding:48px 32px;
+    padding:30px;
     text-align:center;
     display:flex;
     flex-direction:column;
     align-items:center;
     gap:18px;
+    box-shadow:0 6px 12px rgba(0,0,0,0.05);
+    margin:40px auto;
   }
   .login-view h1{
     margin:0;
-    color:var(--admin-color);
-    font-size:34px;
+    color:#4e3629;
+    font-size:28px;
+    font-family:'Courier New',monospace;
+    font-weight:bold;
   }
   .login-view p{
     margin:0;
-    color:var(--text-muted);
+    color:#555;
     max-width:320px;
     line-height:1.5;
     font-size:13px;
   }
   .login-view .discord-btn{
-    background:none;border:none;padding:0;cursor:pointer;
-    margin-top:8px;
+    background:#5865F2;
+    color:#f5f0e6;
+    border:2px solid #404eed;
+    border-radius:4px;
+    padding:10px 24px;
+    font-weight:bold;
+    font-size:0.95em;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    cursor:pointer;
+    box-shadow:3px 3px 0px #000;
+    transition:all 0.1s ease;
+    margin:15px 0;
+    font-family:inherit;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
   }
-  .login-view .discord-btn img{display:block;width:220px;}
-  .login-view .discord-btn:hover{opacity:0.88;}
-  .login-view .discord-btn:active{transform:scale(0.98);}
+  .login-view .discord-btn:hover{
+    background:#4752c4;
+    box-shadow:1px 1px 0px #000;
+    transform:translate(2px,2px);
+  }
+  .login-view .discord-btn:active{
+    transform:translate(3px,3px);
+    box-shadow:none;
+  }
 
   /* ============ PROFILE CARD ============ */
   .card{
@@ -140,7 +170,8 @@
     color:var(--text-muted);
     font-size:14px;
     cursor:default;
-    /* SIN overflow:hidden — el tag debe sobresalir */
+    border-radius:6px;
+    overflow:hidden;
   }
   .photo-box.editable{cursor:pointer;}
   .photo-box img.photo-img{
@@ -205,6 +236,64 @@
   .skill-slot.has-img .plus{display:none;}
 
   /* Clan */
+  .clan-wrap{position:relative;}
+  .clan-display{
+    position:relative;
+    padding:0;
+    overflow:visible;
+    min-height:52px;
+    cursor:default;
+    justify-content:center;
+  }
+  .clan-display.editable{cursor:pointer;}
+  .clan-placeholder{font-size:13px;color:var(--text-muted);padding:8px 12px;}
+  .clan-icon{
+    width:100%;
+    height:56px;
+    object-fit:contain;
+    display:block;
+  }
+  /* Cuando hay clan, sin caja ni bordes: solo la imagen limpia */
+  .clan-display.has-clan{
+    background:transparent;
+    border:none;
+    padding:0;
+  }
+  /* Panel desplegable de clanes con iconos */
+  .clan-dropdown{
+    position:absolute;
+    top:calc(100% + 4px);
+    left:0;
+    right:0;
+    z-index:50;
+    background:var(--field-bg);
+    border:2px solid var(--card-border);
+    border-radius:6px;
+    padding:6px;
+    display:none;
+    max-height:260px;
+    overflow-y:auto;
+    box-shadow:0 8px 20px rgba(0,0,0,0.18);
+  }
+  .clan-dropdown.open{display:block;}
+  .clan-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    padding:6px 8px;
+    background:transparent;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--text-dark);
+    text-align:left;
+  }
+  .clan-option:hover{background:rgba(169,155,120,0.25);}
+  .clan-option.selected{background:rgba(169,155,120,0.4);}
+  .clan-option img{height:34px;max-width:90px;object-fit:contain;}
   .field-block{display:flex;flex-direction:column;gap:6px;}
   .field-block label{font-size:12px;color:var(--text-muted);}
   .field-value{
@@ -279,16 +368,101 @@
     border-top:none;
     border-radius:0 0 6px 6px;
   }
-  .card-btn-row button{
-    background:none;border:none;padding:0;cursor:pointer;
-    display:flex;align-items:center;gap:6px;
-    transition:opacity 0.15s, transform 0.1s;
-  }
-  .card-btn-row button:hover{opacity:0.85;}
-  .card-btn-row button:active{transform:scale(0.98);}
+  .card-btn-row button{display:flex;align-items:center;gap:6px;}
   .card-btn-row button:disabled{opacity:0.5;cursor:not-allowed;}
-  .card-btn-row img{display:block;height:38px;width:auto;}
+  .perfil-btn{
+    font-family:inherit;font-size:12px;font-weight:bold;text-transform:uppercase;
+    cursor:pointer;border-radius:4px;padding:6px 14px;
+    border:1.5px solid;transition:all 0.2s ease;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .perfil-btn-edit{
+    background:linear-gradient(180deg,#444,#222);
+    color:#e0d9ca;border-color:#a3967d;
+  }
+  .perfil-btn-edit:hover{
+    background:linear-gradient(180deg,#555,#333);
+    color:#fff;
+  }
+  .perfil-btn-logout{
+    background:linear-gradient(180deg,#d4a373,#a97142);
+    color:#1a1105;border-color:#7f5539;
+  }
+  .perfil-btn-logout:hover{
+    background:linear-gradient(180deg,#e6b88a,#bc8153);
+  }
+  .perfil-btn-delete{
+    background:linear-gradient(180deg,#38513c,#1e2f21);
+    color:#e0d9ca;border-color:#273e2b;
+  }
+  .perfil-btn-delete:hover{
+    background:linear-gradient(180deg,#47664c,#273e2b);
+    color:#fff;
+  }
+  .edit-btn{
+    font-family:inherit;font-size:12px;font-weight:bold;text-transform:uppercase;
+    cursor:pointer;border-radius:4px;padding:6px 16px;
+    border:1.5px solid;margin:0 5px;display:inline-block;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4);
+    transition:all 0.2s ease;
+  }
+  .edit-btn-cancel{
+    background:linear-gradient(180deg,#782727,#4a1414);
+    color:#e0d9ca;border-color:#2d0a0a;
+  }
+  .edit-btn-cancel:hover{filter:brightness(1.2);}
+  .edit-btn-submit{
+    background:linear-gradient(180deg,#38513c,#1e2f21);
+    color:#e0d9ca;border-color:#273e2b;
+  }
+  .edit-btn-submit:hover{
+    background:linear-gradient(180deg,#47664c,#273e2b);
+    color:#fff;
+  }
 
+  .custom-card-section{
+    margin-top:14px;padding:15px;
+    border:1px dashed #a3967d;border-radius:6px;
+    background:rgba(0,0,0,0.02);
+  }
+  .custom-card-label{
+    font-size:11px;color:#4e3629;display:block;margin-bottom:8px;
+    font-weight:bold;text-transform:uppercase;
+  }
+  .custom-card-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .custom-card-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:90px;}
+  .custom-card-field label{font-size:10px;color:#4e3629;font-weight:bold;text-transform:uppercase;}
+  .custom-card-field input[type=color]{
+    width:100%;height:32px;padding:2px;border:1px solid #a3967d;
+    border-radius:4px;cursor:pointer;background:#f6f2e6;
+  }
+  .custom-card-field select{
+    font-family:inherit;font-size:11px;padding:4px 6px;
+    border:1px solid #a3967d;border-radius:4px;
+    background:#f6f2e6;color:#4a3a24;cursor:pointer;
+  }
+  .theme-row{margin-top:10px;}
+  .theme-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0;}
+  .theme-btn{
+    padding:5px;font-size:10px;font-weight:bold;text-transform:uppercase;
+    border-radius:3px;cursor:pointer;border:1px solid rgba(0,0,0,0.2);
+    box-shadow:1px 1px 0px #000;transition:all 0.1s ease;font-family:inherit;
+  }
+  .theme-btn:hover{transform:translate(1px,1px);box-shadow:0px 0px 0px #000;}
+  #btn-save-card{
+    display:block;width:100%;margin-top:8px;padding:8px 16px;
+    background:linear-gradient(180deg,#d4a373,#a97142);
+    color:#1a1105;border:1.5px solid #7f5539;border-radius:4px;
+    font-family:inherit;font-weight:bold;font-size:13px;
+    text-transform:uppercase;letter-spacing:1px;
+    box-shadow:2px 2px 0px #000;cursor:pointer;
+    transition:all 0.1s ease;
+  }
+  #btn-save-card:hover{
+    background:linear-gradient(180deg,#e6b88a,#bc8153);
+    box-shadow:1px 1px 0px #000;
+    transform:translate(1px,1px);
+  }
   .hidden{display:none !important;}
 
   /* ============ DROPDOWN PANELS (Skills / Tags) ============ */
@@ -358,6 +532,55 @@
     vertical-align:middle;margin-right:6px;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes spinPulse{
+    0%{transform:rotate(0deg) scale(1);opacity:0.7;}
+    50%{transform:rotate(180deg) scale(1.15);opacity:1;}
+    100%{transform:rotate(360deg) scale(1);opacity:0.7;}
+  }
+  @keyframes fadeSlideUp{
+    from{opacity:0;transform:translateY(18px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .fade-in{animation:fadeSlideUp 0.45s ease-out both;}
+  .fade-in-fast{animation:fadeSlideUp 0.3s ease-out both;}
+  .page-transition{
+    position:fixed;inset:0;background:var(--page-bg);
+    display:flex;align-items:center;justify-content:center;z-index:9999;
+    opacity:1;transition:opacity 0.35s ease;
+  }
+  .page-transition.hidden{opacity:0;pointer-events:none;}
+  .page-transition .pt-spinner{
+    width:48px;height:48px;
+    border:4px solid rgba(169,155,120,0.25);
+    border-top-color:var(--card-border);
+    border-right-color:var(--text-muted);
+    border-radius:50%;
+    animation:spinPulse 1s ease-in-out infinite;
+    box-shadow:0 0 18px rgba(169,155,120,0.25);
+  }
+
+  /* ============ OVERLAY DE CARGA ============ */
+  .loading-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.55);
+    display:none;
+    align-items:center;justify-content:center;
+    flex-direction:column;gap:16px;
+    z-index:900;
+  }
+  .loading-overlay.open{display:flex;}
+  .loading-overlay .big-spinner{
+    width:56px;height:56px;
+    border:4px solid rgba(255,255,255,0.15);
+    border-top-color:#c2b59b;
+    border-right-color:rgba(255,255,255,0.4);
+    border-radius:50%;
+    animation:spinPulse 1s ease-in-out infinite;
+    box-shadow:0 0 24px rgba(0,0,0,0.3), 0 0 20px rgba(194,181,155,0.2);
+  }
+  .loading-overlay .loading-text{
+    color:#fff;font-size:14px;letter-spacing:0.5px;
+  }
 
   /* ============ MODAL DE CONFIRMACIÓN ============ */
   .overlay{
@@ -386,46 +609,103 @@
   .overlay-link.yes{color:#1a4fb5;}
   .overlay-link.no{color:var(--admin-color);}
 
+  /* ============ BADGE DE ESTADO (aprobación) ============ */
+  .status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 12px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:bold;
+    margin-bottom:12px;
+  }
+  .status-badge.pendiente{background:#f6e7b8;color:#8a6d1a;border:1px solid #d9c06a;}
+  .status-badge.aprobado{background:#d8f0d6;color:#2c6e2c;border:1px solid #9bd19b;}
+  .status-badge.rechazado{background:#f6d8d8;color:#9a2c2c;border:1px solid #d99b9b;}
+  .status-badge .dot{width:9px;height:9px;border-radius:50%;background:currentColor;}
+
+  /* ============ ÁREA DE ENVÍO A REVISIÓN ============ */
+  .submit-register{
+    display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:18px;
+  }
+  .submit-register .cooldown-msg{font-size:12px;color:var(--text-muted);text-align:center;}
+  .btn-send-register{
+    padding:10px 22px;
+    background:var(--card-border,#a99b78);
+    color:#fff;border:none;border-radius:10px;
+    font-family:inherit;font-size:15px;font-weight:bold;cursor:pointer;
+  }
+  .btn-send-register:disabled{filter:grayscale(0.6);cursor:not-allowed;opacity:0.7;}
+
   /* ============ RESPONSIVE ============ */
   @media(max-width:680px){
-    .card{grid-template-columns:1fr;padding:16px;gap:16px;}
+    .hotbar{justify-content:center;text-align:center;padding:12px 14px;gap:12px;}
+    .hotbar-nav{flex-wrap:wrap;justify-content:center;font-size:17px;gap:8px;}
+    .card{grid-template-columns:1fr;padding:16px;gap:16px;overflow:visible;}
+    .col-right .narrow{max-width:100%;}
+    .field-value input,.field-value select{width:100%;}
+    .photo-wrapper{margin-bottom:42px;}
     .card-btn-row{flex-wrap:wrap;}
     .card-btn-row button{flex:1 1 45%;justify-content:center;}
-    .card-btn-row img{height:34px;}
-    .skills-dropdown{width:100%;grid-template-columns:repeat(3, 1fr);}
+    .perfil-btn{padding:5px 10px;font-size:11px;}
+    .skills-dropdown{width:100%;grid-template-columns:repeat(3, 1fr);left:0;right:0;}
+    .tags-dropdown{width:100%;left:0;right:0;}
+    .clan-dropdown{left:0;right:0;}
+    .overlay-box{padding:22px 18px;}
+  }
+  @media(max-width:430px){
+    .hotbar-nav{font-size:15px;gap:6px;}
+    .login-view{padding:36px 18px;}
+    .login-view .discord-btn{padding:8px 18px;font-size:0.85em;}
+    .card{padding:12px;gap:14px;}
+    .card-btn-row button{flex:1 1 100%;}
+    .perfil-btn{padding:4px 8px;font-size:10px;}
+    .skills-dropdown{grid-template-columns:repeat(2, 1fr);}
+    .submit-register .cooldown-msg{font-size:11px;}
   }
 </style>
 </head>
 <body>
 
-<div class="top-nav">
-  <div class="nav-links">
-    <a href="libreria.html">Libreria</a>
+<div class="page-transition" id="page-transition">
+  <div class="pt-spinner"></div>
+</div>
+
+<div class="hotbar">
+  <div class="hotbar-nav">
+    <a href="libreria.html" class="nav-link">Libreria.</a>
     <span class="sep">|</span>
-    <a href="perfiles.html">Perfiles</a>
+    <a href="perfiles.html" class="nav-link">Perfiles.</a>
     <span class="sep">|</span>
-    <a href="index.html">Registro</a>
+    <a href="perfil.html" class="nav-link active">Mi Perfil.</a>
     <span class="sep">|</span>
-    <a href="perfil.html" class="active">Mi Perfil</a>
-  </div>
-  <div id="user-info" class="hidden">
-    <span class="admin-badge hidden" id="admin-badge">ADMIN</span>
+    <a href="index.html" class="nav-link">Inicio.</a>
+    <span id="user-info" class="hidden">
+      <span class="admin-badge hidden" id="admin-badge">ADMIN</span>
+    </span>
   </div>
 </div>
 
 <!-- ============ LOGIN VIEW ============ -->
-<div class="login-view" id="login-view">
+<div class="login-view hidden" id="login-view">
   <h1>Iniciar Sesión</h1>
   <p>Para acceder a tu perfil, inicia sesión con tu cuenta de Discord.</p>
   <button type="button" class="discord-btn" id="btn-discord-login">
-    <img src="assets/is.png" alt="Iniciar sesión con Discord" />
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 127.14 96.36" fill="#fff"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,56.6,124.08,32.64,107.7,8.07ZM42.17,65.69C36.47,65.69,31.78,60.7,31.78,54.11s4.56-11.59,10.39-11.59,10.65,5.24,10.39,11.59C52.56,60.7,47.87,65.69,42.17,65.69Zm42.86,0C79.33,65.69,74.64,60.7,74.64,54.11s4.56-11.59,10.39-11.59,10.65,5.24,10.39,11.59C95.42,60.7,90.73,65.69,85,65.69Z"/></svg>
+    Iniciar Sesión
   </button>
   <p style="font-size:11px;">Solo leemos tu nombre y avatar. No publicamos nada.</p>
 </div>
 
 <!-- ============ PROFILE VIEW ============ -->
 <div class="hidden" id="profile-view">
-  <div class="card">
+  <div class="card" id="profile-card">
+    <div style="grid-column:1 / -1;display:flex;justify-content:center;">
+      <div class="status-badge pendiente" id="status-badge" style="display:none;">
+        <span class="dot"></span><span id="status-text">Pendiente</span>
+      </div>
+    </div>
 
     <!-- LEFT -->
     <div class="col-left">
@@ -465,14 +745,13 @@
       <!-- Clan -->
       <div class="field-block">
         <label>Clan</label>
-        <div class="field-value" id="clan-value">
-          <select id="f-clan" disabled>
-            <option value="">-- Seleccionar --</option>
-            <option value="Mizu">Mizu</option>
-            <option value="Rain">Rain</option>
-            <option value="Equinox">Equinox</option>
-            <option value="Asakura">Asakura</option>
-          </select>
+        <div class="clan-wrap">
+          <div class="field-value clan-display" id="clan-display">
+            <span class="clan-placeholder" id="clan-placeholder">— Sin clan —</span>
+            <img id="clan-icon" class="clan-icon" src="" alt="" style="display:none;" />
+          </div>
+          <div class="dropdown-panel clan-dropdown" id="clan-dropdown"></div>
+          <input type="hidden" id="f-clan" value="" />
         </div>
       </div>
     </div>
@@ -515,6 +794,43 @@
         <label>Discord:</label>
         <div class="field-value readonly" id="discord-display">—</div>
       </div>
+
+      <!-- Personalización de tarjeta -->
+      <div class="custom-card-section" id="card-custom-section">
+        <label class="custom-card-label">Personalizar tarjeta</label>
+        <div class="custom-card-row">
+          <div class="custom-card-field">
+            <label>Fondo</label>
+            <input type="color" id="f-card-bg" value="#fdfbf7" />
+          </div>
+          <div class="custom-card-field">
+            <label>Borde</label>
+            <input type="color" id="f-card-border" value="#c2b59b" />
+          </div>
+          <div class="custom-card-field">
+            <label>Texto</label>
+            <input type="color" id="f-card-text" value="#3a2e1e" />
+          </div>
+          <div class="custom-card-field" style="flex:2;min-width:140px;">
+            <label>Fuente</label>
+            <select id="f-card-font">
+              <option value="Courier New">Courier New (Pixel)</option>
+              <option value="Cinzel">Cinzel (Fantasía)</option>
+              <option value="Montserrat">Montserrat (Moderno)</option>
+              <option value="Georgia">Georgia (Serif)</option>
+              <option value="'Times New Roman'">Times New Roman (Clásica)</option>
+              <option value="Verdana">Verdana (Sans-serif)</option>
+              <option value="'Trebuchet MS'">Trebuchet MS (Moderna)</option>
+              <option value="'Segoe UI'">Segoe UI (Elegante)</option>
+            </select>
+          </div>
+        </div>
+        <div class="theme-row">
+          <label class="custom-card-label">Temas rápidos</label>
+          <div class="theme-btns" id="theme-btns"></div>
+        </div>
+        <button type="button" id="btn-save-card">Guardar tarjeta</button>
+      </div>
     </div>
 
   </div>
@@ -523,28 +839,23 @@
   <div class="btn-outer">
     <!-- Vista normal -->
     <div class="card-btn-row" id="btn-row-view">
-      <button type="button" id="btn-edit" title="Editar">
-        <img src="assets/boton_editar_cerrado.png" alt="Editar" />
-      </button>
-      <button type="button" id="btn-logout" title="Cerrar Sesión">
-        <img src="assets/iniciar_sesion.png" alt="Cerrar Sesión" />
-      </button>
-      <button type="button" id="btn-delete" title="Borrar Cuenta">
-        <img src="assets/borrar_cuenta.png" alt="Borrar Cuenta" />
-      </button>
+      <button type="button" id="btn-edit" class="perfil-btn perfil-btn-edit">Editar</button>
+      <button type="button" id="btn-logout" class="perfil-btn perfil-btn-logout">Cerrar Sesión</button>
+      <button type="button" id="btn-delete" class="perfil-btn perfil-btn-delete">Borrar Cuenta</button>
     </div>
-    <!-- Modo edición -->
+    <!-- Modo edición: Cancelar + Guardar -->
     <div class="card-btn-row hidden" id="btn-row-edit">
-      <button type="button" id="btn-cancel" title="Cancelar">
-        <img src="assets/boton_cancelar.png" alt="Cancelar" />
-      </button>
-      <button type="button" id="btn-submit" title="Guardar">
-        <img src="assets/boton_enviar.png" alt="Guardar" />
-      </button>
+      <button type="button" id="btn-cancel" class="edit-btn edit-btn-cancel">Cancelar</button>
+      <button type="button" id="btn-submit" class="edit-btn edit-btn-submit">Enviar</button>
     </div>
   </div>
 
   <div class="status-msg" id="status-msg"></div>
+
+  <!-- Aviso de estado para el usuario normal -->
+  <div class="submit-register" id="submit-register" style="display:none;">
+    <div class="cooldown-msg" id="cooldown-msg"></div>
+  </div>
 </div>
 
 <!-- Modal de confirmación -->
@@ -565,6 +876,9 @@
 const SUPABASE_URL = 'https://gqzspbfeodmhnpxegpjf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxenNwYmZlb2RtaG5weGVncGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5ODcyMjQsImV4cCI6MjA5OTU2MzIyNH0.kwbuMH_UpMrGnBlpf4uuc09nXH0b7Yp4mAVgsjrn_tk';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Webhook de Discord: cada vez que se guarda un perfil se manda un aviso al canal.
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1523544793458937997/_VVWJCWLF0SX0KpvjoJuzhuNIfnRavh-K10eJ3RNaTE_rTfb6HFXfom1aI7yZUpP9Ty5";
 
 const $ = (id) => document.getElementById(id);
 
@@ -616,31 +930,59 @@ let originalData  = {};
 let selectedTag   = null;
 let pendingAction = null;
 let currentSkillSlot = null;
+let currentStatus   = 'pendiente';   // pendiente | aprobado | rechazado
+let lastSubmit     = null;           // timestamp del último envío (cooldown)
 
 /* ============================================================
    INIT
    ============================================================ */
+let authHandled = false;
+
+async function applySession(session){
+  if(session){
+    currentUser = session.user;
+    showLoadingView();
+    const start = Date.now();
+    await loadProfile();
+    const elapsed = Date.now() - start;
+    if(elapsed < 800) await new Promise(r => setTimeout(r, 800 - elapsed));
+    showProfileView();
+  } else {
+    currentUser = null;
+    showLoginView();
+  }
+}
+
 async function init(){
+  buildTagsDropdown();
+  buildSkillsDropdown();
+  setTodayDate();
+  buildThemeButtons();
+  setupListeners();
+
+  // Reaccionar a cambios de sesión (login, logout, refresh de token).
+  db.auth.onAuthStateChange(async (_event, session) => {
+    authHandled = true;
+    if(isEditing) return; // no recargar la vista mientras se edita
+    try{
+      await applySession(session);
+    }catch(err){
+      console.error('[onAuthStateChange]', err);
+    }
+  });
+
   try{
     const { data: { session }, error } = await db.auth.getSession();
     if(error) throw error;
-
-    if(session){
-      currentUser = session.user;
-      await loadProfile();
-      showProfileView();
-    } else {
-      showLoginView();
+    // Si onAuthStateChange ya resolvió, no dupliquemos el trabajo.
+    if(!authHandled){
+      await applySession(session);
     }
   } catch(err){
     console.error('[init]', err);
     showStatus('Error de conexión: ' + (err.message || err), 'err');
     showLoginView();
   }
-  buildTagsDropdown();
-  buildSkillsDropdown();
-  setTodayDate();
-  setupListeners();
 }
 
 async function loadProfile(){
@@ -665,9 +1007,12 @@ async function loadProfile(){
       .from('characters').select('*').eq('owner_id', currentUser.id);
     if(ec) throw ec;
     currentCharacter = (chars && chars.length) ? chars[0] : null;
+    currentStatus = currentCharacter?.status || 'pendiente';
+    lastSubmit   = currentCharacter?.last_submit || null;
 
     renderHeader();
     renderProfile();
+    renderStatusBadge();
   } catch(err){
     console.error('[loadProfile]', err);
     showStatus('Error al cargar perfil: ' + (err.message || err), 'err');
@@ -712,7 +1057,12 @@ function renderProfile(){
   $('f-rank').value   = ch.rank   || '';
   $('f-zodiac').value = ch.zodiac || '';
   $('f-clan').value   = ch.clan || '';
+  updateClanIcon();
   $('f-bio').value    = ch.bio    || '';
+  $('f-card-bg').value     = ch.card_bg     || '#fdfbf7';
+  $('f-card-border').value = ch.card_border || '#c2b59b';
+  $('f-card-text').value   = ch.card_text   || '#3a2e1e';
+  $('f-card-font').value   = ch.card_font   || 'Courier New';
   $('discord-display').textContent = currentProfile?.username ? '@' + currentProfile.username : '—';
 
   // Skills
@@ -745,6 +1095,58 @@ function renderProfile(){
   renderTagBadge();
 }
 
+const STATUS_LABELS = {
+  pendiente: 'Pendiente de aprobación',
+  aprobado:  'Aprobado',
+  rechazado: 'Rechazado',
+};
+
+function renderStatusBadge(){
+  const badge = $('status-badge');
+  const txt   = $('status-text');
+  const wrap  = $('submit-register');
+  const cd    = $('cooldown-msg');
+  if(!badge) return;
+
+  badge.className = 'status-badge ' + currentStatus;
+  badge.style.display = 'inline-flex';
+  let label = STATUS_LABELS[currentStatus] || 'Pendiente';
+  if(currentStatus === 'rechazado' && currentCharacter?.reject_reason){
+    label += ': ' + currentCharacter.reject_reason;
+  }
+  txt.textContent = label;
+
+  // El área de abajo solo se usa para avisar del cooldown (usuario normal).
+  if(wrap && cd){
+    const canSend = canResubmit();
+    if(isAdmin || canSend){
+      wrap.style.display = 'none';
+    } else {
+      wrap.style.display = 'flex';
+      cd.textContent = 'Debes esperar ' + daysLeftCooldown() + ' día(s) para volver a enviar tu registro.';
+    }
+  }
+}
+
+// ¿Han pasado 3 días desde el último envío?
+function canResubmit(){
+  // Si está pendiente, no puede re-enviar (ya está en revisión).
+  if(currentStatus === 'pendiente') return false;
+  // Si fue rechazado, puede re-enviar libre (sin cooldown).
+  if(currentStatus === 'rechazado') return true;
+  // Si está aprobado, espera 3 días para volver a enviar.
+  if(!lastSubmit) return true;
+  const diffMs = Date.now() - new Date(lastSubmit).getTime();
+  return diffMs >= 3 * 24 * 60 * 60 * 1000;
+}
+
+function daysLeftCooldown(){
+  if(!lastSubmit) return 0;
+  const elapsed = Date.now() - new Date(lastSubmit).getTime();
+  const left = Math.ceil((3 * 24 * 60 * 60 * 1000 - elapsed) / (24 * 60 * 60 * 1000));
+  return Math.max(0, left);
+}
+
 function setTodayDate(){
   const d = new Date();
   const fmt = String(d.getDate()).padStart(2,'0')+'/'+
@@ -757,14 +1159,28 @@ function setTodayDate(){
    MOSTRAR VISTAS
    ============================================================ */
 function showLoginView(){
-  $('login-view').classList.remove('hidden');
+  const lv = $('login-view');
+  lv.classList.remove('fade-in','hidden');
+  void lv.offsetWidth;
+  lv.classList.add('fade-in');
   $('profile-view').classList.add('hidden');
   $('user-info').classList.add('hidden');
 }
 
 function showProfileView(){
   $('login-view').classList.add('hidden');
-  $('profile-view').classList.remove('hidden');
+  const pv = $('profile-view');
+  pv.classList.remove('fade-in','hidden');
+  void pv.offsetWidth;
+  pv.classList.add('fade-in');
+}
+
+function showLoadingView(){
+  const pt = $('page-transition');
+  if(pt) pt.classList.remove('hidden');
+  $('login-view').classList.add('hidden');
+  $('profile-view').classList.add('hidden');
+  $('user-info').classList.add('hidden');
 }
 
 /* ============================================================
@@ -795,14 +1211,16 @@ function enterEditMode(){
     bio: $('f-bio').value,
     skills: [...(currentCharacter?.skills || [])],
     photo: currentCharacter?.portrait_info || null,
-    tag: selectedTag
+    tag: selectedTag,
+    card_bg: $('f-card-bg').value,
+    card_border: $('f-card-border').value,
+    card_text: $('f-card-text').value,
+    card_font: $('f-card-font').value
   };
 
-  // Habilitar inputs (todos para admin, solo algunos para user normal)
-  const canEditAll = isAdmin;
-  const idsToEnable = canEditAll
-    ? ['f-name','f-age','f-rank','f-zodiac','f-clan','f-bio']
-    : ['f-bio']; // usuario normal: solo bio
+  // Habilitar inputs. Con el sistema de aprobación, el usuario normal
+  // ahora también llena edad/rango/zodiaco/clan; el mod solo aprueba.
+  const idsToEnable = ['f-name','f-age','f-rank','f-zodiac','f-bio'];
 
   idsToEnable.forEach(id=>{
     const el = $(id);
@@ -823,12 +1241,9 @@ function enterEditMode(){
   // Foto clickable para todos
   $('photo-box').classList.add('editable');
 
-  // Clan: admin puede cambiar, user normal no
-  if(canEditAll){
-    $('f-clan').disabled = false;
-    const clanBox = $('clan-value');
-    if(clanBox) clanBox.classList.remove('readonly');
-  }
+  // Clan: menú con iconos editable por cualquiera al editar.
+  $('clan-display').classList.add('editable');
+  updateClanIcon();
 
   // Cambiar botones
   $('btn-row-view').classList.add('hidden');
@@ -841,15 +1256,16 @@ function exitEditMode(save=false){
   isEditing = false;
 
   // Deshabilitar inputs
-  ['f-name','f-age','f-rank','f-zodiac','f-clan','f-bio'].forEach(id=>{
+  ['f-name','f-age','f-rank','f-zodiac','f-bio'].forEach(id=>{
     const el = $(id);
     el.setAttribute('readonly','');
-    el.disabled = (id === 'f-clan'); // select queda disabled
     const box = el.closest('.field-value, .bio-box');
     if(box) box.classList.add('readonly');
   });
 
-  $('clan-value').classList.add('readonly');
+  // Cerrar el menú de clanes y quitar el modo editable
+  $('clan-display').classList.remove('editable');
+  $('clan-dropdown').classList.remove('open');
 
   [1,2].forEach(n=>{
     $('skill-slot-'+n).classList.remove('editable');
@@ -866,6 +1282,10 @@ function exitEditMode(save=false){
     $('f-zodiac').value = originalData.zodiac;
     $('f-clan').value = originalData.clan;
     $('f-bio').value = originalData.bio;
+    $('f-card-bg').value     = originalData.card_bg     || '#fdfbf7';
+    $('f-card-border').value = originalData.card_border || '#c2b59b';
+    $('f-card-text').value   = originalData.card_text   || '#3a2e1e';
+    $('f-card-font').value   = originalData.card_font   || 'Courier New';
     selectedTag = originalData.tag;
     if(currentCharacter){
       currentCharacter.skills = originalData.skills;
@@ -876,7 +1296,94 @@ function exitEditMode(save=false){
 
   $('btn-row-edit').classList.add('hidden');
   $('btn-row-view').classList.remove('hidden');
+  updateClanIcon();
   showStatus('', '');
+}
+
+/* ============================================================
+   ENVIAR REGISTRO A REVISIÓN (sistema de aprobación)
+   ============================================================ */
+async function sendToReview(){
+  if(!currentCharacter){
+    showStatus('No hay personaje vinculado a tu cuenta.', 'err');
+    return;
+  }
+  if(!canResubmit()){
+    showStatus('Debes esperar ' + daysLeftCooldown() + ' día(s) para volver a enviar.', 'err');
+    renderStatusBadge();
+    return;
+  }
+
+  // Recolectar datos actuales del formulario (puede no haber entrado a editar).
+  const updates = collectProfileUpdates();
+
+  showStatus('<span class="spinner"></span>Enviando a revisión…', '');
+  $('loading-overlay').classList.add('open');
+
+  const now = new Date().toISOString();
+  const changes = {
+    ...updates,
+    status: 'pendiente',
+    last_submit: now,
+    reviewed_by: null,
+    reviewed_at: null,
+    reject_reason: null,
+  };
+
+  let error;
+  if(currentCharacter.id){
+    const r = await db.from('characters').update(changes).eq('id', currentCharacter.id);
+    error = r.error;
+  } else {
+    const r = await db.from('characters').insert({
+      ...changes,
+      owner_id: currentUser.id,
+      category: 'Kages',
+      name: changes.name || 'Sin nombre',
+    }).select('id').single();
+    error = r.error;
+    if(!error && r.data) currentCharacter.id = r.data.id;
+  }
+
+  $('loading-overlay').classList.remove('open');
+  if(error){
+    showStatus('Error al enviar: ' + error.message, 'err');
+    return;
+  }
+
+  currentCharacter = { ...currentCharacter, ...changes };
+  currentStatus = 'pendiente';
+  lastSubmit = now;
+  if(isEditing) exitEditMode(true);
+  renderStatusBadge();
+  showStatus('¡Registro enviado a revisión! Un moderador lo revisará pronto.', 'ok');
+
+  // Avisar a Discord: pendiente
+  notifyDiscord(updates, false, 'pendiente');
+}
+
+// Recoge los campos editables del formulario (igual que saveProfile).
+function collectProfileUpdates(){
+  let currentSkills = (currentCharacter?.skills || []).filter(Boolean);
+  if(currentSkills.length === 0){
+    [1,2].forEach(n=>{
+      const img = document.querySelector('#skill-slot-'+n+' img.skill-img');
+      if(img && img.src && img.src !== '') currentSkills.push(img.src);
+    });
+  }
+  return {
+    bio: $('f-bio').value.trim(),
+    skills: currentSkills,
+    modes: selectedTag ? [selectedTag] : [],
+    portrait_info: currentCharacter?.portrait_info || null,
+    portrait_list: currentCharacter?.portrait_info || null,
+    is_wiki: false,
+    name: $('f-name').value.trim(),
+    age:    (()=>{ const v=$('f-age').value.trim(); return v==='' ? null : parseInt(v,10); })(),
+    rank:   $('f-rank').value.trim() || null,
+    zodiac: $('f-zodiac').value.trim() || null,
+    clan:   $('f-clan').value || null,
+  };
 }
 
 /* ============================================================
@@ -888,39 +1395,34 @@ async function saveProfile(){
     return;
   }
 
-  // skills del currentCharacter (ya debe estar cargado)
-  let currentSkills = (currentCharacter.skills || []).filter(Boolean);
-  // Si skills está vacío pero hay skills en el DOM (edición en curso), tomar de ahí
-  if(currentSkills.length === 0){
-    [1,2].forEach(n=>{
-      const img = document.querySelector('#skill-slot-'+n+' img.skill-img');
-      if(img && img.src && img.src !== ''){
-        currentSkills.push(img.src);
-      }
-    });
+  // Usuario normal: respetar reglas de envío (pendiente = bloqueado,
+  // aprobado = cooldown 3 días, rechazado = libre).
+  if(!isAdmin){
+    if(currentStatus === 'pendiente'){
+      showStatus('Ya enviaste tu registro y está en revisión. Espera a que un moderador lo apruebe o rechace.', 'err');
+      return;
+    }
+    if(currentStatus === 'aprobado' && !canResubmit()){
+      showStatus('Debes esperar ' + daysLeftCooldown() + ' día(s) para volver a enviar tu registro.', 'err');
+      return;
+    }
   }
 
-  const updates = {
-    bio: $('f-bio').value.trim(),
-    skills: currentSkills,
-    modes: selectedTag ? [selectedTag] : [],
-    portrait_info: currentCharacter.portrait_info || null,
-    portrait_list: currentCharacter.portrait_info || null,
-    is_wiki: false,  // personaje de perfil, NO aparece en librería
-  };
+  const updates = collectProfileUpdates();
 
-  // Si es admin, puede editar todos los campos
-  if(isAdmin){
-    const rawAge = $('f-age').value.trim();
-    updates.name   = $('f-name').value.trim();
-    updates.age    = rawAge === '' ? null : parseInt(rawAge, 10);
-    updates.rank   = $('f-rank').value.trim() || null;
-    updates.zodiac = $('f-zodiac').value.trim() || null;
-    updates.clan   = $('f-clan').value || null;
+  // El mod/admin guarda libre; el usuario normal manda a revisión (pendiente).
+  if(!isAdmin){
+    updates.status = 'pendiente';
+    updates.last_submit = new Date().toISOString();
+    updates.reviewed_by = null;
+    updates.reviewed_at = null;
+    updates.reject_reason = null;
   }
 
   showStatus('<span class="spinner"></span>Guardando…', '');
+  $('loading-overlay').classList.add('open');
   let error, data;
+  const esNuevo = !currentCharacter.id;
 
   if(currentCharacter.id){
     // Actualizar personaje existente
@@ -928,27 +1430,218 @@ async function saveProfile(){
       .update(updates).eq('id', currentCharacter.id);
     error = r.error;
   } else {
-    // Crear personaje nuevo (admin sin personaje, o usuario pre-migración)
+    // Crear personaje nuevo
     const insertData = {
       ...updates,
       owner_id: currentUser.id,
       category: 'Kages',
       name: updates.name || 'Sin nombre',
+      status: 'pendiente',
+      last_submit: new Date().toISOString(),
     };
     const r = await db.from('characters')
       .insert(insertData).select('id').single();
     error = r.error;
     data = r.data;
-    if(!error && data) currentCharacter.id = data.id;
+    if(!error && data){
+      currentCharacter.id = data.id;
+      currentStatus = 'pendiente';
+      lastSubmit = insertData.last_submit;
+    }
   }
+
+  $('loading-overlay').classList.remove('open');
 
   if(error){
     showStatus('Error al guardar: ' + error.message, 'err');
     return;
   }
   currentCharacter = { ...currentCharacter, ...updates };
-  showStatus('¡Cambios guardados!', 'ok');
-  exitEditMode(true);
+  if(!isAdmin){
+    currentStatus = 'pendiente';
+    lastSubmit = updates.last_submit;
+  }
+  renderStatusBadge();
+
+  if(isAdmin){
+    showStatus('¡Cambios guardados!', 'ok');
+    exitEditMode(true);
+    notifyDiscord(updates, esNuevo);
+  } else {
+    showStatus('¡Registro enviado a revisión! Un moderador lo revisará pronto.', 'ok');
+    exitEditMode(true);
+    notifyDiscord(updates, esNuevo, 'pendiente');
+  }
+}
+
+/* ============================================================
+   GUARDAR PERSONALIZACIÓN DE TARJETA (independiente, sin Discord, sin cooldown)
+   ============================================================ */
+async function saveCardCustomization(){
+  if(!currentCharacter?.id){
+    showStatus('Guarda primero tu perfil antes de personalizar la tarjeta.', 'err');
+    return;
+  }
+  const changes = {
+    card_bg:     $('f-card-bg').value,
+    card_border: $('f-card-border').value,
+    card_text:   $('f-card-text').value,
+    card_font:   $('f-card-font').value,
+  };
+  $('loading-overlay').classList.add('open');
+  const { error } = await db.from('characters')
+    .update(changes)
+    .eq('id', currentCharacter.id);
+  $('loading-overlay').classList.remove('open');
+  if(error){
+    showStatus('Error al guardar personalización: ' + error.message, 'err');
+    return;
+  }
+  currentCharacter = { ...currentCharacter, ...changes };
+  showStatus('¡Tarjeta personalizada!', 'ok');
+}
+
+/* ============================================================
+   TEMAS DE TARJETA
+   ============================================================ */
+const CARD_THEMES = [
+  { id:'clasico',  label:'Clásico',    bg:'#f5f0e6', border:'#a3967d', text:'#333', font:'Courier New' },
+  { id:'vampiro',  label:'Vampiro',    bg:'#1a0a0a', border:'#8b0000', text:'#ffcccc', font:'Cinzel' },
+  { id:'ninja',    label:'Ninja',      bg:'#0d1117', border:'#1f6feb', text:'#c9d1d9', font:"'Trebuchet MS'" },
+  { id:'cyberpunk',label:'Cyberpunk',  bg:'#0a0a1a', border:'#ff00ff', text:'#00ffff', font:'Montserrat' },
+  { id:'dorado',   label:'Dorado',     bg:'#1a1200', border:'#d4a017', text:'#fff8dc', font:'Georgia' },
+  { id:'naturaleza',label:'Naturaleza',bg:'#0f1a0f', border:'#4a7c59', text:'#d4e7c5', font:'Verdana' },
+];
+
+function buildThemeButtons(){
+  const container = $('theme-btns');
+  container.innerHTML = '';
+  CARD_THEMES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'theme-btn';
+    btn.textContent = t.label;
+    btn.style.background = t.bg;
+    btn.style.color = t.text;
+    btn.style.borderColor = t.border;
+    btn.addEventListener('click', () => applyTheme(t));
+    container.appendChild(btn);
+  });
+}
+
+function applyTheme(t){
+  $('f-card-bg').value     = t.bg;
+  $('f-card-border').value = t.border;
+  $('f-card-text').value   = t.text;
+  $('f-card-font').value   = t.font;
+  showStatus('Tema "' + t.label + '" aplicado. ¡Guarda los cambios!', 'ok');
+}
+
+/* ============================================================
+   AVISO A DISCORD (webhook) — cada vez que se guarda el perfil
+   ============================================================ */
+function dataURLtoBlob(dataURL){
+  const parts = dataURL.split(',');
+  const mimeMatch = parts[0].match(/data:([^;]+)/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+  const binary = atob(parts[1]);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for(let i=0;i<len;i++){ bytes[i] = binary.charCodeAt(i); }
+  return new Blob([bytes], { type: mime });
+}
+
+async function notifyDiscord(updates, esNuevo, estado){  // estado: pendiente|aprobado|rechazado|undefined
+  try{
+    const name  = (updates.name || 'Sin nombre');
+    const foto  = updates.portrait_info || null;
+    const autor = currentProfile?.username || currentUser?.email || 'Usuario';
+
+    let prefijo = esNuevo ? 'Nuevo Perfil' : 'Perfil Actualizado';
+    if(estado === 'pendiente') prefijo = '🟡 Registro Pendiente';
+    else if(estado === 'aprobado') prefijo = '✅ Registro Aprobado';
+    else if(estado === 'rechazado') prefijo = '🔴 Registro Rechazado';
+
+    const titulo = prefijo;
+    const mensaje = `**${titulo}:** ${name}\nPor: ${autor}`;
+
+    // Capturar la ficha completa como imagen (como el Registro Civil de antes).
+    let blob = null;
+    try{
+      const card = $('profile-card');
+      if(card && typeof html2canvas === 'function'){
+        const canvas = await html2canvas(card, {
+          backgroundColor: '#f6f2e6',
+          scale: 3,
+          useCORS: true,
+          logging: false,
+          width: 620,
+          windowWidth: 900,
+          onclone: (doc)=>{
+            const c = doc.getElementById('profile-card');
+            if(c){
+              // Ficha compacta (más cuadrada) => el preview de Discord muestra
+              // el contenido más grande y legible sin abrir la imagen.
+              c.style.width = '620px';
+              c.style.maxWidth = '620px';
+              c.style.gridTemplateColumns = '1fr 1fr';
+              c.style.gap = '14px';
+              c.style.padding = '16px';
+            }
+            // Evitar que html2canvas estire la imagen del clan: forzar proporción.
+            const ci = doc.getElementById('clan-icon');
+            if(ci){
+              ci.style.width = 'auto';
+              ci.style.maxWidth = '100%';
+              ci.style.height = '56px';
+              ci.style.objectFit = 'contain';
+              ci.style.margin = '0 auto';
+              ci.style.display = 'block';
+            }
+            const cd = doc.getElementById('clan-display');
+            if(cd){
+              cd.style.display = 'flex';
+              cd.style.justifyContent = 'center';
+              cd.style.alignItems = 'center';
+            }
+            // Agrandar el texto de la ficha para mejor lectura en el preview.
+            if(c){
+              c.querySelectorAll('label').forEach(el=>{ el.style.fontSize = '14px'; });
+              c.querySelectorAll('input, textarea, .field-value, .field-value input, .field-value textarea')
+                .forEach(el=>{ el.style.fontSize = '16px'; });
+            }
+          },
+        });
+        blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      }
+    }catch(e){ console.error('[notifyDiscord] captura ficha', e); blob = null; }
+
+    // Fallback: si no se pudo capturar la ficha, mandar solo la foto.
+    if(!blob && foto){
+      try{
+        blob = foto.startsWith('data:') ? dataURLtoBlob(foto) : await (await fetch(foto)).blob();
+      }catch(e){ console.error('[notifyDiscord] foto->blob', e); blob = null; }
+    }
+    console.log('[notifyDiscord] blob:', blob && blob.size);
+
+    if(blob){
+      const fileName = 'perfil_' + name.replace(/[^a-zA-Z0-9_-]/g,'_') + '.png';
+      // Imagen como archivo directo => Discord la muestra en grande (sin embed).
+      const formData = new FormData();
+      formData.append('payload_json', JSON.stringify({ content: mensaje }));
+      formData.append('files[0]', blob, fileName);
+      await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
+    } else {
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: mensaje }),
+      });
+    }
+  }catch(err){
+    // El aviso a Discord no debe romper el guardado.
+    console.error('[notifyDiscord]', err);
+  }
 }
 
 /* ============================================================
@@ -1122,12 +1815,87 @@ $('confirm-overlay').addEventListener('click', (e)=>{
 /* ============================================================
    LISTENERS
    ============================================================ */
+const CLAN_OPTIONS = [
+  { name: 'Mizu',    image: 'Clan/mizu.png' },
+  { name: 'Rain',    image: 'Clan/rain.png' },
+  { name: 'Equinox', image: 'Clan/equinox.png' },
+  { name: 'Asakura', image: 'Clan/asakura.png' },
+];
+const CLAN_IMAGES = Object.fromEntries(CLAN_OPTIONS.map(c => [c.name, c.image]));
+
+function buildClanDropdown(){
+  const panel = $('clan-dropdown');
+  if(!panel) return;
+  panel.innerHTML = '';
+  // Opción "sin clan"
+  const none = document.createElement('button');
+  none.type = 'button';
+  none.className = 'clan-option';
+  none.dataset.value = '';
+  none.innerHTML = '<span>— Sin clan —</span>';
+  none.addEventListener('click', (e)=>{ e.stopPropagation(); selectClan(''); });
+  panel.appendChild(none);
+
+  CLAN_OPTIONS.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'clan-option';
+    btn.dataset.value = opt.name;
+    btn.innerHTML = `<img src="${opt.image}" alt="${opt.name}" /><span>${opt.name}</span>`;
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); selectClan(opt.name); });
+    panel.appendChild(btn);
+  });
+}
+
+function selectClan(value){
+  $('f-clan').value = value;
+  updateClanIcon();
+  $('clan-dropdown').classList.remove('open');
+}
+
+function updateClanIcon(){
+  const icon = $('clan-icon');
+  const box = $('clan-display');
+  const ph  = $('clan-placeholder');
+  if(!icon || !box) return;
+  const val = $('f-clan').value;
+  const src = CLAN_IMAGES[val];
+  // marcar la opción activa en el panel
+  $('clan-dropdown').querySelectorAll('.clan-option').forEach(o=>{
+    o.classList.toggle('selected', o.dataset.value === val);
+  });
+  if(src){
+    icon.src = src;
+    icon.alt = val;
+    icon.style.display = 'block';
+    if(ph) ph.style.display = 'none';
+    box.classList.add('has-clan');
+  } else {
+    icon.removeAttribute('src');
+    icon.style.display = 'none';
+    if(ph) ph.style.display = 'block';
+    box.classList.remove('has-clan');
+  }
+}
+
 function setupListeners(){
   $('btn-edit').addEventListener('click', enterEditMode);
   $('btn-cancel').addEventListener('click', ()=>exitEditMode(false));
   $('btn-submit').addEventListener('click', saveProfile);
+  $('btn-save-card').addEventListener('click', saveCardCustomization);
   $('btn-logout').addEventListener('click', logout);
   $('btn-delete').addEventListener('click', askDelete);
+
+  buildClanDropdown();
+  // Abrir/cerrar el menú de clanes (al editar, cualquiera puede elegir)
+  $('clan-display').addEventListener('click', (e)=>{
+    if(!isEditing) return;
+    e.stopPropagation();
+    $('clan-dropdown').classList.toggle('open');
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.clan-wrap')) $('clan-dropdown').classList.remove('open');
+  });
 
   $('btn-select-tag').addEventListener('click', (e)=>{
     e.stopPropagation();
@@ -1159,6 +1927,29 @@ function showStatus(msg, type){
    ARRANQUE
    ============================================================ */
 init();
+</script>
+
+<!-- Overlay de carga al guardar -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="big-spinner"></div>
+  <div class="loading-text">Guardando…</div>
+</div>
+
+<script>
+document.querySelectorAll('.nav-link').forEach(a => {
+  a.addEventListener('click', function(e){
+    if(this.hostname === location.hostname){
+      e.preventDefault();
+      document.getElementById('page-transition').classList.remove('hidden');
+      setTimeout(() => { location.href = this.href; }, 350);
+    }
+  });
+});
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    document.getElementById('page-transition').classList.add('hidden');
+  }, 200);
+});
 </script>
 
 </body>

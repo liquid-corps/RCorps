@@ -16,19 +16,19 @@
   }
   :root{
     --page-bg:#f1eee4;
-    --card-border:#a99b78;
-    --card-fill-top:#ece6d6;
-    --card-fill-bottom:#e2dbc6;
-    --field-bg:#f6f2e6;
-    --field-border:#b6a985;
-    --text-muted:#8a7c5f;
-    --text-dark:#4a3a24;
+    --card-border:#3b322b;
+    --card-fill-top:#f4f3ee;
+    --card-fill-bottom:#ecebe5;
+    --field-bg:#f5f4ef;
+    --field-border:#4a4238;
+    --text-muted:#8d8272;
+    --text-dark:#2b2216;
     --maroon:#5a1414;
-    --perfil-bg:#f5f0e6;
-    --perfil-border:#a3967d;
-    --perfil-text:#333;
-    --perfil-label:#4e3629;
-    --perfil-value-bg:#fff;
+    --perfil-bg:#f4f3ee;
+    --perfil-border:#3b322b;
+    --perfil-text:#2b2216;
+    --perfil-label:#6b5f4e;
+    --perfil-value-bg:#fbfaf7;
   }
   *{box-sizing:border-box;}
   img{max-width:100%;}
@@ -127,37 +127,29 @@
   }
 
   .profile-card{
-    background:#fdfbf7;
-    border-style:double;
-    border-width:3px;
-    border-color:#c2b59b;
+    background:#f4f3ee;
+    border:3px solid #3b322b;
     border-radius:8px;
-    padding:16px;
+    padding:12px;
     cursor:pointer;
     display:flex;
     flex-direction:column;
     align-items:center;
     gap:8px;
     font-family:inherit;
-    box-shadow:
-      inset 0 0 20px rgba(0,0,0,0.85),
-      0 0 8px var(--card-glow, transparent),
-      0 8px 16px rgba(0,0,0,0.5);
+    box-shadow:4px 4px 0 rgba(59,50,43,0.18);
     transition:transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
   }
   .profile-card:hover{
     transform:translateY(-6px) scale(1.01);
-    filter:brightness(1.15);
-    box-shadow:
-      inset 0 0 20px rgba(0,0,0,0.85),
-      0 0 14px var(--card-glow, transparent),
-      0 12px 24px rgba(0,0,0,0.6);
+    filter:brightness(1.04);
+    box-shadow:6px 8px 0 rgba(59,50,43,0.22);
   }
   .profile-card .card-portrait{
     width:100%;
     aspect-ratio:3/4;
-    background:#ddd;
-    border:1px solid #e0d9ca;
+    background:#fff;
+    border:2px solid #3b322b;
     border-radius:4px;
     overflow:hidden;
     display:flex;
@@ -172,24 +164,24 @@
   .profile-card .card-name{
     display:block;
     width:100%;
-    background:rgba(0,0,0,0.6);
-    color:#e0d9ca;
+    background:#f4f3ee;
+    color:#2b2216;
     padding:6px 0;
-    margin-top:15px;
+    margin-top:8px;
     font-weight:bold;
     font-size:12px;
     text-transform:uppercase;
     text-align:center;
     letter-spacing:1.5px;
     border-radius:4px;
-    border:1px solid rgba(255,255,255,0.15);
+    border:2px solid #3b322b;
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
   }
   .profile-card .card-tag{
-    width:60%;
-    max-height:18px;
+    width:80%;
+    max-height:30px;
     object-fit:contain;
   }
 
@@ -225,10 +217,10 @@
 
   /* SECCIÓN SOCIAL (likes + comentarios) */
   .social-box{
-    width:640px;
+    width:956px;
     max-width:92vw;
-    background:var(--perfil-bg, #f1eee4);
-    border:2px double var(--perfil-border, #2a2a2a);
+    background:var(--perfil-bg, #f4f3ee);
+    border:3px solid var(--perfil-border, #3b322b);
     border-radius:8px;
     padding:14px 18px;
     box-sizing:border-box;
@@ -242,19 +234,24 @@
   }
   .like-btn{
     display:inline-flex;align-items:center;gap:6px;
-    cursor:pointer;padding:6px 14px;font-family:inherit;font-size:13px;
+    cursor:pointer;padding:6px 14px;
+    font-family:'Pixel Arial 11', monospace;font-size:12px;
     font-weight:bold;border-radius:4px;
-    background:color-mix(in srgb, var(--perfil-border) 70%, #000) !important;
-    color:var(--perfil-text) !important;
-    border:2px solid var(--perfil-border) !important;
+    background:linear-gradient(180deg, #d4a373, #a97142) !important;
+    color:#1a1105 !important;
+    border:1.5px solid #7f5539 !important;
     box-shadow:2px 2px 0px #000;
     transition:all 0.1s ease;
   }
   .like-btn:hover{
-    filter:brightness(1.25) !important;
+    background:linear-gradient(180deg, #e6b88a, #bc8153) !important;
     box-shadow:1px 1px 0px #000;transform:translate(1px,1px);
   }
-  .like-btn.liked{filter:brightness(1.4) !important;}
+  .like-btn.liked{
+    background:linear-gradient(180deg, #e63946, #b71c1c) !important;
+    color:#fff !important;
+    border-color:#7f0000 !important;
+  }
   .like-btn:disabled{opacity:0.5;cursor:not-allowed;}
   .like-count{font-size:13px;font-weight:bold;color:var(--perfil-text, #333);}
   .comments-title{font-weight:bold;font-size:13px;margin:0 0 8px;color:var(--perfil-text, #333);}
@@ -267,31 +264,175 @@
     color:var(--perfil-text, #333);
   }
   .comment-form button{
-    font-family:inherit;font-size:11px;font-weight:bold;text-transform:uppercase;
-    cursor:pointer;padding:6px 16px;border-radius:4px;
-    background:color-mix(in srgb, var(--perfil-border) 60%, #000) !important;
-    color:var(--perfil-text) !important;
-    border:2px solid var(--perfil-border) !important;
-    box-shadow:2px 2px 0px #000;
-    transition:all 0.1s ease;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform 0.15s ease, filter 0.15s ease !important;
   }
   .comment-form button:hover{
-    filter:brightness(1.25) !important;
-    box-shadow:1px 1px 0px #000;transform:translate(1px,1px);
+    transform: scale(1.05) !important;
+    filter: brightness(1.15) !important;
   }
-  .comment-form button:disabled{opacity:0.5;cursor:not-allowed;}
-  .btn-admin-edit{
-    font-family:inherit;font-size:12px;font-weight:bold;text-transform:uppercase;
-    letter-spacing:0.5px;cursor:pointer;border-radius:4px;padding:6px 14px;
-    background:linear-gradient(180deg,#3a3a3a,#1a1a1a);
-    color:#e0d9ca;border:1.5px solid #a3967d;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4);
-    transition:all 0.2s ease;
+  .comment-form button img {
+    height: 42px !important;
+    width: auto !important;
+    display: block !important;
   }
-  .btn-admin-edit:hover{
-    background:linear-gradient(180deg,#4a4a4a,#2a2a2a);
-    color:#fff;border-color:#c2b59b;
+
+  .rpg-img-btn {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    transition: transform 0.15s ease, filter 0.15s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
+  .rpg-img-btn:hover {
+    transform: scale(1.06) !important;
+    filter: brightness(1.15) !important;
+  }
+  .rpg-img-btn:active {
+    transform: scale(0.96) !important;
+  }
+
+  .card-role-badge {
+    position: absolute !important;
+    top: 14px !important;
+    right: 18px !important;
+    background: linear-gradient(180deg, #8b0000, #4a0000) !important;
+    color: #fff !important;
+    border: 1.5px solid #d4af37 !important;
+    font-family: 'Pixel Arial 11', monospace !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    padding: 4px 10px !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
+    letter-spacing: 1px !important;
+    z-index: 10 !important;
+  }
+
+  /* ============ BUZÓN DE REVISIONES ESTILO FORO RPG ============ */
+  .mod-inbox-section {
+    background: #f5f0e6 !important;
+    border: 3px double #a3967d !important;
+    border-radius: 8px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2) !important;
+    font-family: 'Pixel Arial 11', monospace !important;
+  }
+  .mod-inbox-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 15px !important;
+    font-weight: bold !important;
+    color: #2b2216 !important;
+    border-bottom: 2px solid #8b7355 !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 14px !important;
+    letter-spacing: 0.5px !important;
+  }
+  .mod-inbox-list {
+    max-height: 320px !important;
+    overflow-y: auto !important;
+  }
+  .rpg-mailbox-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 13px !important;
+    background: #fff8ee !important;
+    border: 1px solid #c2b59b !important;
+  }
+  .rpg-mailbox-table th {
+    background: linear-gradient(180deg, #5c4738, #3b2c21) !important;
+    color: #f0e6d2 !important;
+    padding: 10px 14px !important;
+    text-align: left !important;
+    font-size: 12px !important;
+    border-bottom: 2px solid #2b1f17 !important;
+  }
+  .rpg-mailbox-table td {
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #e0d5c1 !important;
+    vertical-align: middle !important;
+  }
+  .rpg-mailbox-table tr:hover {
+    background: #f7ebd9 !important;
+  }
+  .rpg-mailbox-table img.inbox-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 1.5px solid #7f5539 !important;
+  }
+
+  /* BOTONES RPG DE ACCIÓN PARA MODERADORES */
+  .mod-btn-aceptar {
+    font-family: 'Pixel Arial 11', monospace !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    color: #fff !important;
+    background: linear-gradient(180deg, #2e7d32, #1b5e20) !important;
+    border: 1.5px solid #4caf50 !important;
+    padding: 6px 14px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    transition: all 0.15s ease !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mod-btn-aceptar:hover { filter: brightness(1.2) !important; transform: scale(1.05) !important; }
+
+  .mod-btn-rechazar {
+    font-family: 'Pixel Arial 11', monospace !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    color: #fff !important;
+    background: linear-gradient(180deg, #c62828, #8e0000) !important;
+    border: 1.5px solid #ef5350 !important;
+    padding: 6px 14px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    transition: all 0.15s ease !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mod-btn-rechazar:hover { filter: brightness(1.2) !important; transform: scale(1.05) !important; }
+
+  .mod-btn-editar {
+    font-family: 'Pixel Arial 11', monospace !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    color: #1a1105 !important;
+    background: linear-gradient(180deg, #d4a373, #a97142) !important;
+    border: 1.5px solid #7f5539 !important;
+    padding: 6px 14px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    transition: all 0.15s ease !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mod-btn-editar:hover { filter: brightness(1.2) !important; transform: scale(1.05) !important; }
+  .mod-btn-hidden { display: none !important; }
   .btn-admin-save,.btn-admin-cancel{
     font-family:inherit;font-size:12px;font-weight:bold;cursor:pointer;
     border-radius:4px;padding:6px 14px;border:none;
@@ -365,8 +506,9 @@
   }
   .confirm-overlay.open{display:flex;}
   .confirm-box{
-    background-image:url('assets/caja_info.png');
-    background-size:100% 100%;background-repeat:no-repeat;
+    background:#f4f3ee;
+    border:3px solid #3b322b;border-radius:8px;
+    box-shadow:5px 5px 0 rgba(59,50,43,0.18);
     padding:32px 28px 28px;width:320px;text-align:center;
   }
   .confirm-icon{font-size:32px;margin-bottom:8px;}
@@ -425,177 +567,276 @@
     overflow-y:auto;
     padding-right:6px;
   }
-  .modal-box{
-    background-color:var(--perfil-bg);
-    background-image:url('assets/caja_info.png');
-    background-size:100% 100%;
-    background-repeat:no-repeat;
-    background-blend-mode:overlay;
-    width:640px;
-    height:430px;
-    position:relative;
-    padding:24px 20px 20px 20px;
-    display:flex;
-    gap:16px;
-    animation:modalFadeIn 0.2s ease-out;
-    box-shadow:
-      inset 0 0 30px rgba(0,0,0,0.4),
-      0 0 12px var(--perfil-border),
-      0 10px 25px rgba(0,0,0,0.5);
-    border:2px double var(--perfil-border);
-    border-radius:10px;
+  /* ============================================================
+     CANVAS DE TARJETA RPG (TAMAÑO NATIVO 956x579 DE LOS PNG)
+     ============================================================ */
+  .rpg-card-canvas,
+  .rpg-card-canvas * {
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    outline: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  html, body {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  /* ============================================================
+     CONTENEDOR Y ESCALADOR DE TARJETA RPG
+     ============================================================ */
+  .rpg-canvas-wrapper {
+    width: 956px;
+    max-width: 100vw !important;
+    margin: 0 auto;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .rpg-canvas-scaler {
+    width: 956px !important;
+    height: 579px !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+  }
+  .rpg-card-canvas, .modal-box {
+    width: 956px !important;
+    height: 579px !important;
+    min-width: 956px !important;
+    min-height: 579px !important;
+    background-image: url('card/base.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: 330px 480px !important;
+    gap: 24px !important;
+    padding: 46px 44px 36px 44px !important;
+    font-family: 'Pixel Arial 11', monospace !important;
+    color: #2b2216 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    animation: modalFadeIn 0.2s ease-out;
   }
   @keyframes modalFadeIn{
     from{opacity:0;transform:scale(0.96);}
     to{opacity:1;transform:scale(1);}
   }
   .modal-close-btn{
-    position:absolute;
-    top:12px;right:12px;
-    background:color-mix(in srgb, var(--perfil-bg) 70%, #000);
-    border:1px solid var(--perfil-border);
-    color:var(--perfil-text);
-    width:20px;height:20px;
-    display:flex;align-items:center;justify-content:center;
-    font-family:inherit;font-size:10px;
-    cursor:pointer;z-index:30;
-    box-shadow:inset 0 1px 3px rgba(0,0,0,0.8);
+    position:absolute !important;
+    top:14px !important;right:14px !important;
+    background:color-mix(in srgb, var(--perfil-bg) 70%, #000) !important;
+    border:1px solid var(--perfil-border) !important;
+    color:var(--perfil-text) !important;
+    width:24px !important;height:24px !important;
+    display:flex !important;align-items:center !important;justify-content:center !important;
+    font-family:inherit !important;font-size:12px !important;
+    cursor:pointer !important;z-index:50 !important;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,0.8) !important;
   }
-  .modal-close-btn:hover{background:#333;}
+  .modal-close-btn:hover{background:#333 !important;}
 
-  .modal-portrait-container{
-    position:absolute;
-    left:20px;top:24px;
-    width:270px;height:386px;
-    z-index:10;
-    pointer-events:none;
-    border:2px solid var(--perfil-border);
-    border-radius:6px;
-    background:color-mix(in srgb, var(--perfil-bg) 60%, #000);
-    overflow:hidden;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .modal-portrait-container img{
-    width:100%;height:100%;
-    display:block;
-    object-fit:cover;
+  .rpg-card-canvas .canvas-left {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    position: relative !important;
   }
 
-  .modal-details{
-    margin-left:310px;
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    min-height:0;
-    justify-content:flex-start;
-    gap:8px;
-    overflow-y:auto;
-  }
-  .modal-details > * {
-    flex-shrink:0;
-  }
-  .modal-fields{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-  .status-badge{
-    display:inline-flex;align-items:center;gap:6px;
-    padding:4px 11px;border-radius:999px;font-size:12px;font-weight:bold;
-  }
-  .status-badge.pendiente{background:#f6e7b8;color:#8a6d1a;border:1px solid #d9c06a;}
-  .status-badge.aprobado{background:#d8f0d6;color:#2c6e2c;border:1px solid #9bd19b;}
-  .status-badge.rechazado{background:#f6d8d8;color:#9a2c2c;border:1px solid #d99b9b;}
-  .status-badge .dot{width:8px;height:8px;border-radius:50%;background:currentColor;}
-  .modal-field-box{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:4px 10px;
-    height:auto;
-    min-height:28px;
-  }
-  .modal-field-box label{
-    font-size:11px;
-    color:var(--perfil-label, #4e3629);
-    font-weight:bold;
-    white-space:nowrap;
-    flex-shrink:0;
-  }
-  .modal-field-box span{
-    font-size:11px;
-    color:var(--perfil-text, #333);
-    white-space:nowrap;overflow:hidden;
-    text-overflow:ellipsis;
-    background:var(--perfil-value-bg, #fff);
-    border:1px solid var(--perfil-border, #c2b59b);
-    border-radius:3px;
-    padding:2px 8px;
-    flex:1;
-    min-width:0;
-  }
-  .modal-info-title{
-    font-size:14px;font-weight:bold;
-    color:var(--perfil-label, #4e3629);
-    margin:0 0 10px 0;
-    border-bottom:1px solid var(--perfil-border, #a3967d);
-    padding-bottom:4px;
+  .rpg-card-canvas .canvas-photo-wrap {
+    position: relative !important;
+    width: 270px !important;
+    height: 260px !important;
+    background-image: url('card/foto_perfil.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 20px !important;
+    margin-bottom: 30px !important;
   }
 
-  .modal-modes-row{
-    display:flex;align-items:center;
-    gap:8px;
-  }
-  .modal-modes-row label{font-size:11px;color:var(--perfil-label, #4e3629);font-weight:bold;}
-  .modal-modes-container{
-    display:flex;gap:8px;
-    align-items:center;flex-wrap:wrap;
-  }
-  .modal-modes-container img{
-    height:18px;width:auto;
-    object-fit:contain;
+  .rpg-card-canvas .canvas-photo-wrap img.portrait-img {
+    width: 82% !important;
+    height: 82% !important;
+    max-width: 222px !important;
+    max-height: 214px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+    display: block !important;
   }
 
-  .modal-skills-section{
-    display:flex;flex-direction:column;
-    gap:4px;
+  .rpg-card-canvas .canvas-clan-icon {
+    position: absolute !important;
+    top: -30px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 76px !important;
+    height: 72px !important;
+    background-image: url('card/clan_icon.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    z-index: 40 !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
-  .modal-skills-section label{font-size:11px;color:var(--perfil-label, #4e3629);font-weight:bold;}
-  .modal-skills-row{display:flex;gap:10px;}
-  .modal-skill-slot{
-    width:36px;height:36px;
-    background-image:url('assets/cuadrado_seleccion_skills.png');
-    background-size:100% 100%;
-    background-repeat:no-repeat;
-    display:flex;
-    align-items:center;justify-content:center;
+  .rpg-card-canvas .canvas-clan-icon.active {
+    display: flex !important;
   }
-  .modal-skill-slot img{
-    width:80%;height:80%;
-    object-fit:cover;
+  .rpg-card-canvas .canvas-clan-icon:not(.active) {
+    display: none !important;
   }
 
-  .modal-bio-section{display:flex;flex-direction:column;gap:4px;}
-  .modal-bio-box{
-    padding:4px 0;
-    min-height:auto;
-    height:auto;
+  .rpg-card-canvas .canvas-clan-icon img {
+    width: 68% !important;
+    height: 68% !important;
+    max-width: 52px !important;
+    max-height: 48px !important;
+    object-fit: contain !important;
   }
-  .modal-bio-box label{font-size:11px;color:var(--perfil-label, #4e3629);font-weight:bold;}
-  .modal-bio-text{
-    font-size:10px;color:var(--perfil-text, #333);
-    background:var(--perfil-value-bg, #fff);
-    border:1px solid var(--perfil-border, #c2b59b);
-    border-radius:3px;
-    padding:6px 10px;
-    line-height:1.4;
-    margin-top:4px;
-    max-height:none;
-    overflow:visible;
-    word-break:break-word;
-    white-space:pre-wrap;
+
+  .rpg-card-canvas .canvas-tag-badge {
+    position: absolute !important;
+    bottom: -24px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 88% !important;
+    height: 48px !important;
+    object-fit: contain !important;
+    z-index: 40 !important;
+    pointer-events: none !important;
+    display: none;
+  }
+
+  .rpg-card-canvas .canvas-skills-row {
+    display: flex !important;
+    gap: 16px !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .rpg-card-canvas .canvas-skill-slot {
+    width: 90px !important;
+    height: 84px !important;
+    min-width: 90px !important;
+    min-height: 84px !important;
+    background-image: url('card/skills.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  .rpg-card-canvas .canvas-skill-slot img {
+    width: 76% !important;
+    height: 76% !important;
+    max-width: 68px !important;
+    max-height: 64px !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+
+  .rpg-card-canvas .canvas-right {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding-top: 6px !important;
+  }
+
+  .rpg-card-canvas .rpg-label {
+    font-family: 'Pixel Arial 11', monospace !important;
+    font-size: 18px !important;
+    font-weight: normal !important;
+    color: #726350 !important;
+    margin-right: 8px !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+  }
+
+  .rpg-card-canvas .rpg-val-text,
+  .rpg-card-canvas input.rpg-input-val {
+    font-family: 'Pixel Arial 11', monospace !important;
+    font-size: 22px !important;
+    color: #2b2216 !important;
+    flex: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .rpg-card-canvas .canvas-area-large {
+    width: 480px !important;
+    height: 56px !important;
+    background-image: url('card/large_area.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 22px !important;
+  }
+
+  .rpg-card-canvas .canvas-area-medium {
+    width: 314px !important;
+    max-width: 100% !important;
+    height: 52px !important;
+    background-image: url('card/medium_area.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 20px !important;
+  }
+
+  .rpg-card-canvas .canvas-row-small {
+    display: flex !important;
+    gap: 10px !important;
+    width: 480px !important;
+  }
+
+  .rpg-card-canvas .canvas-area-small {
+    width: 235px !important;
+    height: 52px !important;
+    background-image: url('card/small_area.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 18px !important;
+  }
+
+  .rpg-card-canvas .canvas-area-bio {
+    width: 480px !important;
+    height: 220px !important;
+    background-image: url('card/biografy.png') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 16px 22px !important;
+  }
+
+  .rpg-card-canvas .rpg-bio-text,
+  .rpg-card-canvas textarea.rpg-bio-input {
+    font-family: 'Pixel Arial 11', monospace !important;
+    font-size: 17px !important;
+    color: #2b2216 !important;
+    flex: 1 !important;
+    line-height: 1.4 !important;
+    word-break: break-word !important;
+    white-space: pre-wrap !important;
+    overflow-y: auto !important;
+    margin-top: 6px !important;
   }
   .loading{
     grid-column:1/-1;
@@ -605,39 +846,64 @@
     font-size:12px;
   }
 
-  /* ============ RESPONSIVE MÓVIL ============ */
-  @media(max-width:680px){
-    body{padding:0 8px 80px;}
-    .hotbar{justify-content:center;text-align:center;padding:12px 14px;gap:12px;}
-    .hotbar-nav{flex-wrap:wrap;justify-content:center;font-size:17px;gap:8px;}
-    .profiles-grid{grid-template-columns:repeat(2, 1fr);max-width:100%;}
-    .modal-box{
-      width:94vw;
-      height:auto;
-      min-height:430px;
-      flex-direction:column;
-      padding:18px 14px;
-      gap:12px;
+  /* ============================================================
+     ESCALADO PERFECTO PROPORCIONAL PARA MÓVILES (IPHONE & ANDROID)
+     ============================================================ */
+  @media (max-width: 980px) {
+    .hotbar-nav {
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      gap: 6px 12px !important;
+      font-size: 13px !important;
     }
-    .modal-portrait-container{
-      position:relative;
-      left:auto;top:auto;
-      width:50%;
-      height:auto;
-      aspect-ratio:3/4;
-      margin:24px auto 8px;
+    .mod-inbox-section {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 10px !important;
+      box-sizing: border-box !important;
     }
-    .modal-portrait-container img{position:absolute;inset:0;}
-    .modal-details{margin-left:0;height:auto;}
-    .social-box{width:94vw;max-width:94vw;padding:12px 14px;}
-    .comment-form button{padding:0 12px;}
+    .rpg-mailbox-table {
+      display: block !important;
+      overflow-x: auto !important;
+      white-space: nowrap !important;
+    }
+    .modal-overlay {
+      padding: 10px 4px !important;
+      align-items: flex-start !important;
+      justify-content: center !important;
+      overflow-y: auto !important;
+    }
+    .modal-stack {
+      width: 100% !important;
+      max-width: 100vw !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+    }
+    .social-box {
+      width: 100% !important;
+      max-width: 95vw !important;
+      box-sizing: border-box !important;
+      margin-top: 12px !important;
+    }
+    #mod-action-bar {
+      width: 100% !important;
+      max-width: 100vw !important;
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+      justify-content: center !important;
+    }
   }
-  @media(max-width:430px){
-    .hotbar-nav{font-size:15px;gap:6px;}
-    .profiles-grid{gap:10px;}
-    .modal-field-box.medium,.modal-field-box.short{width:100%;}
-    .modal-bio-box{min-height:70px;}
-    .like-btn{padding:6px 10px;font-size:12px;}
+
+  @media (max-width: 480px) {
+    .profiles-grid {
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+      gap: 10px !important;
+    }
+    .mod-btn-aceptar, .mod-btn-rechazar, .mod-btn-editar {
+      padding: 6px 10px !important;
+      font-size: 10px !important;
+    }
   }
 
   .page-transition{
@@ -683,13 +949,21 @@
 
 <div class="hotbar">
   <div class="hotbar-nav">
-    <a href="libreria.html" class="nav-link">Libreria.</a>
-    <span class="sep">|</span>
     <a href="perfiles.html" class="nav-link active">Perfiles.</a>
     <span class="sep">|</span>
     <a href="perfil.html" class="nav-link">Mi Perfil.</a>
     <span class="sep">|</span>
     <a href="index.html" class="nav-link">Inicio.</a>
+  </div>
+</div>
+
+<!-- BANDEJA DE REVISIONES PARA MODS -->
+<div id="mod-inbox-section" class="mod-inbox-section" style="display:none; width:956px; max-width:95vw; margin:0 auto 20px auto;">
+  <div class="mod-inbox-header">
+    <span>📥 Bandeja de Revisiones Pendientes (<span id="mod-inbox-count">0</span>)</span>
+  </div>
+  <div id="mod-inbox-list" class="mod-inbox-list">
+    <div style="font-size:12px;color:#7a6b58;text-align:center;padding:12px;">Cargando registros pendientes...</div>
   </div>
 </div>
 
@@ -702,67 +976,68 @@
 <!-- Modal -->
 <div class="modal-overlay" id="detail-modal">
  <div class="modal-stack">
-  <div class="modal-box">
-    <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
-    <div class="modal-portrait-container">
-      <img id="m-portrait" src="assets/foto_info.png" alt="" />
-    </div>
-    <div class="modal-details">
-      <div>
-        <h3 class="modal-info-title">Info:</h3>
-        <div class="modal-fields">
-          <div class="modal-field-box long">
-            <label>Nombre:</label>
-            <span id="m-name"></span>
+  <div class="rpg-canvas-wrapper">
+   <div class="rpg-canvas-scaler">
+    <div class="rpg-card-canvas modal-box" id="modal-rpg-card">
+      <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
+      <div class="card-role-badge" id="m-card-role-badge" style="display:none;">ADMIN</div>
+
+      <!-- COLUMNA IZQUIERDA -->
+      <div class="canvas-left">
+        <div class="canvas-photo-wrap">
+          <div class="canvas-clan-icon" id="m-clan-badge" style="display:none;">
+            <img id="m-clan-img" src="" alt="" />
           </div>
-          <div class="modal-field-box short">
-            <label>Edad:</label>
-            <span id="m-age"></span>
-          </div>
-          <div class="modal-field-box medium">
-            <label>Rango:</label>
-            <span id="m-rank"></span>
-          </div>
-          <div class="modal-field-box medium">
-            <label>Zodiacal:</label>
-            <span id="m-zodiac"></span>
-          </div>
-          <div class="modal-field-box medium">
-            <label>Clan:</label>
-            <span id="m-clan"></span>
-          </div>
+          <img class="portrait-img" id="m-portrait" src="assets/foto_info.png" alt="" />
+          <img class="canvas-tag-badge" id="m-tag-badge" src="" alt="" style="display:none;" />
+        </div>
+
+        <!-- Skills -->
+        <div class="canvas-skills-row">
+          <div class="canvas-skill-slot" id="m-skill-1"></div>
+          <div class="canvas-skill-slot" id="m-skill-2"></div>
         </div>
       </div>
-      <div id="modal-status-badge" class="status-badge" style="display:none;margin-top:10px;"></div>
-      <div id="admin-edit-bar" style="display:none;margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
-        <button type="button" id="btn-admin-edit" class="btn-admin-edit" onclick="startAdminEdit()">Editar</button>
-        <button type="button" id="btn-admin-save" class="btn-admin-save" onclick="saveAdminEdit()"
-          style="display:none;">Guardar</button>
-        <button type="button" id="btn-admin-cancel" class="btn-admin-cancel" onclick="cancelAdminEdit()"
-          style="display:none;">Cancelar</button>
-      </div>
-      <div class="modal-modes-row">
-        <label>Modos:</label>
-        <div class="modal-modes-container" id="m-modes-container"></div>
-      </div>
-      <div class="modal-skills-section">
-        <label>Skills:</label>
-        <div class="modal-skills-row">
-          <div class="modal-skill-slot" id="m-skill-1"></div>
-          <div class="modal-skill-slot" id="m-skill-2"></div>
+
+      <!-- COLUMNA DERECHA -->
+      <div class="canvas-right">
+        <div class="canvas-area-large">
+          <span class="rpg-label">Nombre:</span>
+          <span class="rpg-val-text" id="m-name"></span>
         </div>
-      </div>
-      <div class="modal-bio-section">
-        <div class="modal-bio-box">
-          <label>Biografia...</label>
-          <div class="modal-bio-text" id="m-bio"></div>
+
+        <div class="canvas-area-medium">
+          <span class="rpg-label">Clase:</span>
+          <span class="rpg-val-text" id="m-zodiac"></span>
         </div>
-      </div>
-      <div id="approve-bar" class="mod-actions-container" style="display:none;">
-        <button type="button" class="btn-aprobar" onclick="approveProfile(true)">Aprobar</button>
-        <button type="button" class="btn-rechazar" onclick="approveProfile(false)">Rechazar</button>
+
+        <div class="canvas-row-small">
+          <div class="canvas-area-small">
+            <span class="rpg-label">Edad:</span>
+            <span class="rpg-val-text" id="m-age"></span>
+          </div>
+          <div class="canvas-area-small">
+            <span class="rpg-label">Rango:</span>
+            <span class="rpg-val-text" id="m-rank"></span>
+          </div>
+        </div>
+
+        <div class="canvas-area-bio">
+          <span class="rpg-label">Biografía:</span>
+          <div class="rpg-bio-text" id="m-bio"></div>
+        </div>
       </div>
     </div>
+   </div>
+  </div>
+
+  <div id="modal-status-badge" class="status-badge" style="display:none;margin-top:6px;"></div>
+  <div id="mod-action-bar" style="display:none;margin-top:14px;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;">
+    <button type="button" id="btn-mod-edit" class="mod-btn-editar" onclick="startAdminEdit()" title="Editar Perfil" style="font-size:12px;padding:8px 18px;">✏️ Editar</button>
+    <button type="button" id="btn-mod-approve" class="mod-btn-aceptar" onclick="approveProfile(true)" title="Aceptar Perfil" style="font-size:12px;padding:8px 18px;">✅ Aceptar</button>
+    <button type="button" id="btn-mod-reject" class="mod-btn-rechazar" onclick="approveProfile(false)" title="Rechazar Perfil" style="font-size:12px;padding:8px 18px;">❌ Rechazar</button>
+    <button type="button" id="btn-mod-save" class="mod-btn-aceptar" onclick="saveAdminEdit()" style="display:none;font-size:12px;padding:8px 18px;" title="Guardar Cambios">💾 Guardar Cambios</button>
+    <button type="button" id="btn-mod-cancel-edit" class="mod-btn-rechazar" onclick="cancelAdminEdit()" style="display:none;font-size:12px;padding:8px 18px;" title="Cancelar Edición">↩️ Cancelar Edición</button>
   </div>
 
   <!-- Likes + comentarios -->
@@ -780,7 +1055,7 @@
     </div>
     <div class="comment-form" id="comment-form">
       <textarea id="comment-input" maxlength="500" placeholder="Escribe un comentario..."></textarea>
-      <button type="button" id="comment-send" onclick="sendComment()">Enviar</button>
+      <button type="button" id="comment-send" class="rpg-img-btn" onclick="sendComment()" title="Enviar"><img src="assets/boton_enviar.png" alt="Enviar" style="height:38px;" /></button>
     </div>
     <div id="comments-list"></div>
   </div>
@@ -847,6 +1122,7 @@ async function loadProfiles(){
   const { data, error } = await db.from('characters')
     .select('*')
     .eq('is_wiki', false)
+    .eq('status', 'aprobado')
     .not('owner_id', 'is', 'null')
     .order('id');
 
@@ -868,11 +1144,6 @@ async function loadProfiles(){
     card.type = 'button';
     card.className = 'profile-card';
     card.onclick = () => openModal(char);
-    if(char.card_bg)     card.style.backgroundColor = char.card_bg;
-    if(char.card_border){
-      card.style.borderColor = char.card_border;
-      card.style.setProperty('--card-glow', char.card_border);
-    }
 
     const portWrap = document.createElement('div');
     portWrap.className = 'card-portrait';
@@ -896,8 +1167,6 @@ async function loadProfiles(){
     const nameSpan = document.createElement('span');
     nameSpan.className = 'card-name';
     nameSpan.textContent = char.name || 'Sin nombre';
-    if(char.card_font)   nameSpan.style.fontFamily = char.card_font;
-    if(char.card_text)   nameSpan.style.color = char.card_text;
     card.appendChild(nameSpan);
 
     grid.appendChild(card);
@@ -905,23 +1174,172 @@ async function loadProfiles(){
 }
 
 /* ============================================================
+   BANDEJA DE REVISIONES PARA MODERADORES (ESTILO BUZÓN FORO RPG)
+   ============================================================ */
+async function loadModInbox(){
+  const inboxSec = $('mod-inbox-section');
+  const inboxList = $('mod-inbox-list');
+  const countSpan = $('mod-inbox-count');
+  if(!isAdmin){
+    if(inboxSec) inboxSec.style.display = 'none';
+    return;
+  }
+  if(inboxSec) inboxSec.style.display = 'block';
+
+  try {
+    const { data: pendingChars, error } = await db.from('characters')
+      .select('*')
+      .eq('status', 'pendiente')
+      .order('id', { ascending: false });
+
+    if(error){
+      inboxList.innerHTML = '<div style="font-size:12px;color:#8a1f1f;padding:12px;text-align:center;">Error: ' + error.message + '</div>';
+      return;
+    }
+
+    const chars = (pendingChars || []).filter(c => (c.name || '').trim() !== '' || (c.bio || '').trim() !== '' || c.last_submit !== null);
+    countSpan.textContent = chars.length;
+
+    if(chars.length === 0){
+      inboxList.innerHTML = '<div style="font-size:12px;color:#5a4b38;padding:16px;text-align:center;">📬 No hay ningún registro pendiente de aprobación en el buzón.</div>';
+      return;
+    }
+
+    const ownerIds = [...new Set(chars.map(c => c.owner_id).filter(Boolean))];
+    let profMap = {};
+    if(ownerIds.length > 0){
+      const { data: profs } = await db.from('profiles').select('id, username, avatar_url').in('id', ownerIds);
+      if(profs) profs.forEach(p => profMap[p.id] = p);
+    }
+
+    let html = `
+      <table class="rpg-mailbox-table">
+        <thead>
+          <tr>
+            <th>Personaje</th>
+            <th>Enviado por</th>
+            <th>Estado</th>
+            <th style="text-align:center;">Acciones de Moderación</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    chars.forEach(c => {
+      const p = profMap[c.owner_id] || {};
+      const photo = c.portrait_list || c.portrait_info || p.avatar_url || 'assets/foto_info.png';
+      html += `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <img class="inbox-avatar" src="${photo}" alt="" onerror="this.src='assets/foto_info.png'" />
+              <span style="font-weight:bold;color:#2b2216;">${escapeHtml(c.name || 'Sin Nombre')}</span>
+            </div>
+          </td>
+          <td><span style="color:#5a4b38;">@${escapeHtml(p.username || 'usuario')}</span></td>
+          <td><span class="status-badge pendiente" style="padding:2px 8px;font-size:11px;"><span class="dot"></span>Pendiente</span></td>
+          <td>
+            <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
+              <button type="button" class="mod-btn-editar" onclick="openModalById(${c.id})" title="Revisar / Editar">🔍 Revisar</button>
+              <button type="button" class="mod-btn-aceptar" onclick="quickApprove(${c.id}, true)" title="Aceptar Perfil">✅ Aceptar</button>
+              <button type="button" class="mod-btn-rechazar" onclick="quickApprove(${c.id}, false)" title="Rechazar Perfil">❌ Rechazar</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table>`;
+    inboxList.innerHTML = html;
+
+  } catch(err) {
+    console.error('[loadModInbox]', err);
+    inboxList.innerHTML = '<div style="font-size:12px;color:#8a1f1f;padding:12px;text-align:center;">Error de conexión al buzón.</div>';
+  }
+}
+
+async function openModalById(id){
+  const { data: char } = await db.from('characters').select('*').eq('id', id).single();
+  if(char) openModal(char);
+}
+
+async function quickApprove(id, isApprove){
+  if(!isAdmin) return;
+  const { data: char } = await db.from('characters').select('*').eq('id', id).single();
+  if(!char) return;
+  currentChar = char;
+  if(!isApprove){
+    $('reject-reason').value = '';
+    $('reject-modal').classList.add('open');
+    return;
+  }
+  const updates = {
+    status: 'aprobado',
+    reviewed_by: currentUser?.id || null,
+    reviewed_at: new Date().toISOString(),
+    reject_reason: null
+  };
+  const { error } = await db.from('characters').update(updates).eq('id', id);
+  if(error){ alert('Error: ' + error.message); return; }
+  await loadModInbox();
+  await loadProfiles();
+}
+
+/* ============================================================
    MODAL
    ============================================================ */
-function openModal(char){
+async function openModal(char){
   currentChar = char;
-  $('m-portrait').src = char.portrait_info || 'assets/foto_info.png';
-  $('m-name').textContent   = char.name   || '';
-  $('m-age').textContent    = char.age    || '';
-  $('m-rank').textContent   = char.rank   || '';
-  $('m-zodiac').textContent = char.zodiac || '';
-  $('m-clan').textContent   = char.clan   || '';
-  $('m-bio').textContent    = char.bio    || '';
+  if($('m-portrait')) $('m-portrait').src = char.portrait_info || 'assets/foto_info.png';
+  if($('m-name')) $('m-name').textContent   = char.name   || '';
+  if($('m-age')) $('m-age').textContent    = char.age    || '';
+  if($('m-rank')) $('m-rank').textContent   = char.rank   || '';
+  if($('m-zodiac')) $('m-zodiac').textContent = char.zodiac || '';
+  if($('m-bio')) $('m-bio').textContent    = char.bio    || '';
 
-  // Barra de edición solo para admins
-  cancelAdminEdit();
-  $('admin-edit-bar').style.display = isAdmin ? 'block' : 'none';
+  // Badge de ROL MOD/ADMIN en la esquina del modal
+  const roleBadge = $('m-card-role-badge');
+  if(roleBadge){
+    if(char.owner_id){
+      const { data: ownerProf } = await db.from('profiles').select('role').eq('id', char.owner_id).single();
+      if(ownerProf && (ownerProf.role === 'admin' || ownerProf.role === 'mod')){
+        roleBadge.textContent = ownerProf.role === 'admin' ? 'ADMIN' : 'MOD';
+        roleBadge.style.display = 'block';
+      } else {
+        roleBadge.style.display = 'none';
+      }
+    } else {
+      roleBadge.style.display = 'none';
+    }
+  }
 
-  // Estado de aprobación + botones de moderación
+  // Clan badge superpuesto arriba de la foto
+  const clanImages = { Mizu: 'Clan/mizu.png', Rain: 'Clan/rain.png', Equinox: 'Clan/equinox.png', Asakura: 'Clan/asakura.png' };
+  const clanBadge = $('m-clan-badge');
+  const clanImg = $('m-clan-img');
+  if(clanBadge && clanImg){
+    if(char.clan && clanImages[char.clan]){
+      clanImg.src = clanImages[char.clan];
+      clanBadge.style.display = 'flex';
+    } else {
+      clanBadge.style.display = 'none';
+      clanImg.removeAttribute('src');
+    }
+  }
+
+  // Tag badge superpuesto abajo de la foto
+  const tagBadge = $('m-tag-badge');
+  if(tagBadge){
+    if(char.modes && char.modes[0]){
+      tagBadge.src = char.modes[0];
+      tagBadge.style.display = 'block';
+    } else {
+      tagBadge.style.display = 'none';
+      tagBadge.removeAttribute('src');
+    }
+  }
+
+  // Estado de aprobación + barra unificada de moderación
   const badge = $('modal-status-badge');
   const status = char.status || 'pendiente';
   const isOwner = currentUser && char.owner_id && currentUser.id === char.owner_id;
@@ -936,71 +1354,107 @@ function openModal(char){
       badge.style.display = 'none';
     }
   }
-  if(isAdmin){
-    // Los botones de moderación solo aparecen si el registro está en revisión (pendiente).
-    $('approve-bar').style.display = (status === 'pendiente') ? 'flex' : 'none';
-  } else {
-    $('approve-bar').style.display = 'none';
+
+  cancelAdminEdit();
+  const modBar = $('mod-action-bar');
+  if(modBar){
+    if(isAdmin){
+      modBar.style.display = 'flex';
+      if($('btn-mod-edit')) $('btn-mod-edit').classList.remove('mod-btn-hidden');
+      if($('btn-mod-save')) $('btn-mod-save').classList.add('mod-btn-hidden');
+      if($('btn-mod-cancel-edit')) $('btn-mod-cancel-edit').classList.add('mod-btn-hidden');
+      if(status === 'pendiente'){
+        if($('btn-mod-approve')) $('btn-mod-approve').classList.remove('mod-btn-hidden');
+        if($('btn-mod-reject')) $('btn-mod-reject').classList.remove('mod-btn-hidden');
+      } else {
+        if($('btn-mod-approve')) $('btn-mod-approve').classList.add('mod-btn-hidden');
+        if($('btn-mod-reject')) $('btn-mod-reject').classList.add('mod-btn-hidden');
+      }
+    } else {
+      modBar.style.display = 'none';
+    }
   }
 
   // Modes
   const modesContainer = $('m-modes-container');
-  modesContainer.innerHTML = '';
-  (char.modes || []).forEach(path => {
-    const img = document.createElement('img');
-    img.src = path;
-    img.alt = 'Modo';
-    img.onerror = () => img.remove();
-    modesContainer.appendChild(img);
-  });
+  if(modesContainer){
+    modesContainer.innerHTML = '';
+    (char.modes || []).forEach(path => {
+      const img = document.createElement('img');
+      img.src = path;
+      img.alt = 'Modo';
+      img.onerror = () => img.remove();
+      modesContainer.appendChild(img);
+    });
+  }
 
   // Skills
   const skills = char.skills || [];
   [1,2].forEach(n => {
     const slot = $('m-skill-' + n);
-    slot.innerHTML = '';
-    const path = skills[n-1];
-    if(path){
-      const img = document.createElement('img');
-      img.src = path;
-      img.alt = 'Skill ' + n;
-      img.onerror = () => { slot.innerHTML = ''; };
-      slot.appendChild(img);
+    if(slot){
+      slot.innerHTML = '';
+      const path = skills[n-1];
+      if(path){
+        const img = document.createElement('img');
+        img.src = path;
+        img.alt = 'Skill ' + n;
+        img.onerror = () => { slot.innerHTML = ''; };
+        slot.appendChild(img);
+      }
     }
   });
 
-  // Aplicar tema de la tarjeta al modal (solo a .modal-box y .social-box)
-  const modalBox = document.querySelector('.modal-box');
-  const socialBox = document.querySelector('.social-box');
-  const containers = [modalBox, socialBox].filter(Boolean);
-  const bg = char.card_bg || '#f5f0e6';
-  const isDark = isColorDark(bg);
-  const borderColor = char.card_border || '#a3967d';
-  const textColor = char.card_text || (isDark ? '#e0d9ca' : '#333');
-  const labelColor = isDark ? '#e0d9ca' : '#4e3629';
-  const valueBg = isDark ? 'rgba(0,0,0,0.55)' : '#fff';
-  containers.forEach(el => {
-    el.style.setProperty('--perfil-bg', bg);
-    el.style.setProperty('--perfil-border', borderColor);
-    el.style.setProperty('--perfil-text', textColor);
-    el.style.setProperty('--perfil-label', labelColor);
-    el.style.setProperty('--perfil-value-bg', valueBg);
-  });
-
   $('detail-modal').classList.add('open');
+  scaleRpgCards();
 
   // Cargar likes y comentarios
   loadLikes();
   loadComments();
 }
 
-function isColorDark(hex){
-  const c = hex.replace('#','');
-  const r = parseInt(c.substring(0,2),16);
-  const g = parseInt(c.substring(2,4),16);
-  const b = parseInt(c.substring(4,6),16);
-  return (r*0.299 + g*0.587 + b*0.114) < 140;
+function scaleRpgCards(){
+  const wrappers = document.querySelectorAll('.rpg-canvas-wrapper');
+  const screenWidth = window.innerWidth;
+  wrappers.forEach(wrapper => {
+    const scaler = wrapper.querySelector('.rpg-canvas-scaler');
+    if(!scaler) return;
+    const parentWidth = wrapper.parentElement ? wrapper.parentElement.clientWidth : screenWidth;
+    const availableWidth = Math.min(screenWidth, parentWidth || screenWidth);
+    
+    if(availableWidth < 980){
+      const pad = 16;
+      const targetWidth = Math.min(availableWidth - pad, 956);
+      const scale = targetWidth / 956;
+      
+      scaler.style.position = 'absolute';
+      scaler.style.left = '0';
+      scaler.style.top = '0';
+      scaler.style.transform = `scale(${scale})`;
+      scaler.style.transformOrigin = '0 0';
+      
+      wrapper.style.position = 'relative';
+      wrapper.style.width = `${targetWidth}px`;
+      wrapper.style.height = `${579 * scale}px`;
+      wrapper.style.margin = '0 auto';
+      wrapper.style.overflow = 'hidden';
+    } else {
+      scaler.style.position = 'relative';
+      scaler.style.left = '';
+      scaler.style.top = '';
+      scaler.style.transform = '';
+      scaler.style.transformOrigin = '';
+      
+      wrapper.style.position = 'relative';
+      wrapper.style.width = '956px';
+      wrapper.style.height = '579px';
+      wrapper.style.margin = '0 auto';
+      wrapper.style.overflow = 'visible';
+    }
+  });
 }
+window.addEventListener('resize', scaleRpgCards);
+window.addEventListener('DOMContentLoaded', scaleRpgCards);
 
 /* ============================================================
    LIKES
@@ -1087,15 +1541,35 @@ async function loadComments(){
     return;
   }
 
+  // Obtener la foto real del personaje (portrait_list o portrait_info) de cada usuario que comentó
+  const userIds = [...new Set(data.map(c => c.user_id).filter(Boolean))];
+  let charPhotoMap = {};
+  if(userIds.length > 0){
+    const { data: charData } = await db.from('characters')
+      .select('owner_id, portrait_list, portrait_info')
+      .in('owner_id', userIds);
+    if(charData){
+      charData.forEach(ch => {
+        if(ch.owner_id){
+          const pic = ch.portrait_list || ch.portrait_info;
+          if(pic && !pic.includes('foto_info.png')) {
+            charPhotoMap[ch.owner_id] = pic;
+          }
+        }
+      });
+    }
+  }
+
   list.innerHTML = '';
   data.forEach(c => {
     const prof = c.profiles || {};
+    const avatarUrl = charPhotoMap[c.user_id] || prof.avatar_url || 'assets/foto_info.png';
     const canDelete = currentUser && (currentUser.id === c.user_id || isAdmin);
     const item = document.createElement('div');
     item.className = 'comment-item';
     const date = new Date(c.created_at).toLocaleDateString();
     item.innerHTML =
-      '<img class="comment-avatar" src="' + (prof.avatar_url || 'assets/foto_lista1.png') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+      '<img class="comment-avatar" src="' + avatarUrl + '" alt="" onerror="this.src=\'assets/foto_info.png\'; this.onerror=null;">' +
       '<div class="comment-body">' +
         '<span class="comment-author">@' + escapeHtml(prof.username || 'usuario') + '</span>' +
         '<span class="comment-date">' + date + '</span>' +
@@ -1169,18 +1643,16 @@ async function confirmReject(){
     const ping = ownerDiscord ? '<@' + ownerDiscord + '>' : '';
     let msg = `${ping}\n**🔴 Registro Rechazado:** ${autor}\nPor: ${modName}`;
     if(reason) msg += `\nMotivo: ${reason}`;
-    const resp = await fetch(WEBHOOK_URL, {
+    await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: msg }),
     });
-    if(!resp.ok) console.error('[reject] Discord falló:', resp.status);
   }catch(e){ console.error('[reject] discord', e); }
-  $('modal-status-badge').className = 'status-badge rechazado';
-  $('modal-status-badge').innerHTML = '<span class="dot"></span>🔴 Rechazado' + (reason ? ': ' + reason : '');
-  $('approve-bar').style.display = 'none';
+
+  closeModal();
+  await loadModInbox();
   await loadProfiles();
-  alert('Registro rechazado.');
 }
 $('reject-confirm').onclick = confirmReject;
 $('reject-cancel').onclick = function(){
@@ -1203,18 +1675,32 @@ function startAdminEdit(){
   if(!isAdmin || !currentChar) return;
   EDITABLE.forEach(({id, type}) => {
     const span = $(id);
-    const val = span.textContent;
+    if(!span) return;
+    const val = span.textContent || '';
     const input = document.createElement('input');
     input.type = type;
     input.value = val;
     input.dataset.for = id;
-    input.style.cssText = 'width:100%;font-size:12px;padding:2px 4px;box-sizing:border-box;';
+    input.style.cssText = 'width:100%;font-size:14px;padding:4px 8px;box-sizing:border-box;background:rgba(255,255,255,0.9);border:1.5px solid #3b322b;border-radius:3px;font-family:\'Pixel Arial 11\', monospace;color:#2b2216;outline:none;';
     span.replaceWith(input);
     input.id = id;
   });
-  $('btn-admin-edit').style.display = 'none';
-  $('btn-admin-save').style.display = 'inline-block';
-  $('btn-admin-cancel').style.display = 'inline-block';
+
+  const bioDiv = $('m-bio');
+  if(bioDiv && bioDiv.tagName !== 'TEXTAREA'){
+    const val = bioDiv.textContent || '';
+    const txt = document.createElement('textarea');
+    txt.id = 'm-bio';
+    txt.value = val;
+    txt.style.cssText = 'width:100%;height:100px;font-size:13px;padding:6px;box-sizing:border-box;background:rgba(255,255,255,0.9);border:1.5px solid #3b322b;border-radius:3px;font-family:\'Pixel Arial 11\', monospace;color:#2b2216;outline:none;resize:vertical;';
+    bioDiv.replaceWith(txt);
+  }
+
+  if($('btn-mod-edit')) $('btn-mod-edit').classList.add('mod-btn-hidden');
+  if($('btn-mod-approve')) $('btn-mod-approve').classList.add('mod-btn-hidden');
+  if($('btn-mod-reject')) $('btn-mod-reject').classList.add('mod-btn-hidden');
+  if($('btn-mod-save')) $('btn-mod-save').classList.remove('mod-btn-hidden');
+  if($('btn-mod-cancel-edit')) $('btn-mod-cancel-edit').classList.remove('mod-btn-hidden');
 }
 
 function cancelAdminEdit(){
@@ -1223,13 +1709,33 @@ function cancelAdminEdit(){
     if(el && el.tagName === 'INPUT'){
       const span = document.createElement('span');
       span.id = id;
+      span.className = 'rpg-val-text';
       span.textContent = currentChar ? (currentChar[EDITABLE.find(e=>e.id===id).field] || '') : '';
       el.replaceWith(span);
     }
   });
-  $('btn-admin-edit').style.display = 'inline-block';
-  $('btn-admin-save').style.display = 'none';
-  $('btn-admin-cancel').style.display = 'none';
+
+  const bioEl = $('m-bio');
+  if(bioEl && bioEl.tagName === 'TEXTAREA'){
+    const div = document.createElement('div');
+    div.id = 'm-bio';
+    div.className = 'rpg-bio-text';
+    div.textContent = currentChar ? (currentChar.bio || '') : '';
+    bioEl.replaceWith(div);
+  }
+
+  if($('btn-mod-edit')) $('btn-mod-edit').classList.remove('mod-btn-hidden');
+  if($('btn-mod-save')) $('btn-mod-save').classList.add('mod-btn-hidden');
+  if($('btn-mod-cancel-edit')) $('btn-mod-cancel-edit').classList.add('mod-btn-hidden');
+
+  const status = currentChar?.status || 'pendiente';
+  if(status === 'pendiente'){
+    if($('btn-mod-approve')) $('btn-mod-approve').classList.remove('mod-btn-hidden');
+    if($('btn-mod-reject')) $('btn-mod-reject').classList.remove('mod-btn-hidden');
+  } else {
+    if($('btn-mod-approve')) $('btn-mod-approve').classList.add('mod-btn-hidden');
+    if($('btn-mod-reject')) $('btn-mod-reject').classList.add('mod-btn-hidden');
+  }
 }
 
 async function saveAdminEdit(){
@@ -1244,29 +1750,23 @@ async function saveAdminEdit(){
     updates[field] = v;
   });
 
-  $('btn-admin-save').disabled = true;
+  const bioEl = $('m-bio');
+  if(bioEl) updates.bio = bioEl.value.trim();
+
+  if($('btn-mod-save')) $('btn-mod-save').disabled = true;
   const { error } = await db.from('characters').update(updates).eq('id', currentChar.id);
-  $('btn-admin-save').disabled = false;
+  if($('btn-mod-save')) $('btn-mod-save').disabled = false;
   if(error){ alert('Error al guardar: ' + error.message); return; }
 
   currentChar = { ...currentChar, ...updates };
   cancelAdminEdit();
+  await loadModInbox();
   await loadProfiles();
 }
 
 function closeModal(){
   cancelAdminEdit();
   $('detail-modal').classList.remove('open');
-  // Restaurar colores por defecto del modal
-  ['.modal-box','.social-box'].forEach(sel => {
-    const el = document.querySelector(sel);
-    if(!el) return;
-    el.style.removeProperty('--perfil-bg');
-    el.style.removeProperty('--perfil-border');
-    el.style.removeProperty('--perfil-text');
-    el.style.removeProperty('--perfil-label');
-    el.style.removeProperty('--perfil-value-bg');
-  });
 }
 
 /* ============================================================
@@ -1304,19 +1804,16 @@ async function approveProfile(aprobar){
     const autor = currentChar.name || 'Usuario';
     const modName = currentUser?.email || 'Mod';
     const ping = ownerDiscord ? '<@' + ownerDiscord + '>' : '';
-    const resp = await fetch(WEBHOOK_URL, {
+    await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: `${ping}\n**✅ Registro Aprobado:** ${autor}\nPor: ${modName}` }),
     });
-    if(!resp.ok) console.error('[approveProfile] Discord falló:', resp.status);
   }catch(e){ console.error('[approveProfile] discord', e); }
 
-  $('modal-status-badge').className = 'status-badge aprobado';
-  $('modal-status-badge').innerHTML = '<span class="dot"></span>✅ Aprobado';
-  $('approve-bar').style.display = 'none';
+  closeModal();
+  await loadModInbox();
   await loadProfiles();
-  alert('Registro aprobado.');
 }
 
 $('detail-modal').addEventListener('click', e => {
@@ -1328,13 +1825,15 @@ $('detail-modal').addEventListener('click', e => {
    ============================================================ */
 (async () => {
   await checkAdmin();
+  await loadModInbox();
   await loadProfiles();
 })();
 
 db.auth.onAuthStateChange(async () => {
   await checkAdmin();
+  await loadModInbox();
   if($('detail-modal').classList.contains('open')){
-    $('admin-edit-bar').style.display = isAdmin ? 'block' : 'none';
+    $('admin-edit-bar').style.display = isAdmin ? 'flex' : 'none';
     loadLikes();
     loadComments();
   }
@@ -1350,11 +1849,17 @@ document.querySelectorAll('.nav-link').forEach(a => {
     }
   });
 });
-window.addEventListener('load', function(){
-  setTimeout(function(){
-    document.getElementById('page-transition').classList.add('hidden');
-  }, 200);
-});
+function hideTransition(){
+  const pt = document.getElementById('page-transition');
+  if(pt) pt.classList.add('hidden');
+}
+if(document.readyState === 'complete'){
+  hideTransition();
+} else {
+  window.addEventListener('load', hideTransition);
+}
+window.addEventListener('pageshow', hideTransition);
+setTimeout(hideTransition, 1500);
 </script>
 </body>
 </html>

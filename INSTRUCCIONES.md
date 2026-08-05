@@ -8,10 +8,10 @@ el botón "Iniciar sesión" dará error.
 
 ## ✅ Lo que ya está hecho (no tocar)
 
-- [x] `perfil.html` creado (login Discord + perfil editable)
-- [x] `libreria.html` adaptado (lee sesión de Discord, sin contraseñas)
-- [x] `index.html` corregido (clanes Equinox/Asakura ya no son "Rain")
-- [x] Botones "Perfil." ya apuntan a `perfil.html`
+- [x] `perfil.html` creado (login Discord + perfil editable con plantilla card/)
+- [x] `libreria.html` retirado y redirigido automáticamente a `perfiles.html`
+- [x] `index.html` corregido y estilizado
+- [x] Botones "Perfil." apuntan a `perfil.html` y "Perfiles." a `perfiles.html`
 - [x] Assets nuevos copiados a `assets/`
 - [x] BD limpia (6 personajes vacíos borrados)
 - [x] `migracion.sql` escrito (falta ejecutarlo — ver paso 1)
@@ -151,3 +151,25 @@ Verifícalo en Supabase → Table Editor → `profiles`.
 **El botón "Borrar Cuenta" no hace la solicitud a Discord**
 → Falta configurar `DELETE_REQUEST_WEBHOOK` en `perfil.html` (línea ~415).
 Pega ahí un webhook del canal donde quieres recibir las solicitudes.
+
+---
+
+## 🤖 PASO 6 — Configurar el Bot de Discord (`bot.py`)
+
+Creamos el script **`bot.py`** con los **Comandos Slash** que pidió el cliente:
+- **`/perfil [nombre]`**: Busca la ficha del personaje en Supabase y muestra un Embed interactivo con foto, clase, edad, rango, clan, biografía, estado y enlace directo a la web.
+- **`/perfiles`**: Muestra la lista de personajes aprobados registrados.
+- **`/link`**: Envía el botón directo para iniciar sesión o editar perfil.
+
+### Pasos para encender el Bot:
+1. Instala la librería si no la tienes: `pip install discord.py requests pillow`
+2. En https://discord.com/developers/applications abre tu App de Discord.
+3. En la pestaña **Bot** -> haz clic en **Reset Token** para copiar tu Token.
+4. Abre `bot.py` y reemplaza `"TU_TOKEN_DE_DISCORD_AQUI"` con tu Token real (o define la variable de entorno `DISCORD_BOT_TOKEN`).
+5. En la pestaña **OAuth2 -> URL Generator**, marca el scope `bot` y `applications.commands`.
+6. Copia la URL generada para **invitar al Bot a tu Servidor de Discord**.
+7. Ejecuta el bot localmente o en un servidor:
+   ```bash
+   python bot.py
+   ```
+8. Los comandos `/perfil`, `/perfiles` y `/link` aparecerán automáticamente en Discord.

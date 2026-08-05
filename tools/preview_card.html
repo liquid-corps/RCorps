@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vista previa - Nueva tarjeta</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@400;700&display=swap');
+  @font-face{
+    font-family:'Pixel Arial 11';
+    src:url('PixelArial11.ttf') format('truetype');
+    font-weight:normal;
+    font-style:normal;
+    font-display:swap;
+  }
+  :root{
+    --page-bg:#f1eee4;
+    --card-bg:#f4f3ee;
+    --card-border:#3b322b;
+    --field-bg:#f5f4ef;
+    --field-border:#4a4238;
+    --text-dark:#2b2216;
+    --text-muted:#8d8272;
+    --admin-color:#5a1414;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--page-bg);
+    font-family:'Pixel Arial 11', monospace;
+    color:var(--text-dark);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px 12px 80px;
+  }
+
+  /* ============ TOP NAV ============ */
+  .hotbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    min-height:70px;
+    padding:12px 30px;
+    margin-bottom:24px;
+    background-image:url('assets/hotbar.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .hotbar-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:20px;
+  }
+  .hotbar-nav a{color:var(--text-dark);text-decoration:none;}
+  .hotbar-nav a:hover{opacity:0.75;}
+  .hotbar-nav .sep{color:var(--text-muted);}
+  .hotbar-nav .active{font-weight:bold;text-decoration:underline;text-decoration-style:dotted;}
+
+  /* Badge de ADMIN en la barra */
+  .admin-badge{
+    background:var(--admin-color);
+    color:#fff;
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:3px;
+    font-weight:bold;
+    letter-spacing:0.5px;
+  }
+
+  /* ============ LOGIN VIEW ============ */
+  .login-view{
+    width:100%;
+    max-width:450px;
+    background:#f5f0e6;
+    border:1.5px solid #a3967d;
+    border-radius:6px;
+    padding:30px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+    box-shadow:0 6px 12px rgba(0,0,0,0.05);
+    margin:40px auto;
+  }
+  .login-view h1{
+    margin:0;
+    color:#4e3629;
+    font-size:28px;
+    font-family:'Courier New',monospace;
+    font-weight:bold;
+  }
+  .login-view p{
+    margin:0;
+    color:#555;
+    max-width:320px;
+    line-height:1.5;
+    font-size:13px;
+  }
+  .login-view .discord-btn{
+    background:#5865F2;
+    color:#f5f0e6;
+    border:2px solid #404eed;
+    border-radius:4px;
+    padding:10px 24px;
+    font-weight:bold;
+    font-size:0.95em;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    cursor:pointer;
+    box-shadow:3px 3px 0px #000;
+    transition:all 0.1s ease;
+    margin:15px 0;
+    font-family:inherit;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .login-view .discord-btn:hover{
+    background:#4752c4;
+    box-shadow:1px 1px 0px #000;
+    transform:translate(2px,2px);
+  }
+  .login-view .discord-btn:active{
+    transform:translate(3px,3px);
+    box-shadow:none;
+  }
+
+  /* ============ PROFILE CARD ============ */
+  .card{
+    width:100%;
+    max-width:640px;
+    background:var(--card-bg);
+    border:3px solid var(--card-border);
+    border-radius:8px;
+    box-shadow:6px 6px 0 rgba(59,50,43,0.18);
+    padding:24px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    overflow:visible;
+  }
+
+  /* ---- LEFT COLUMN ---- */
+  .col-left{display:flex;flex-direction:column;gap:18px;position:relative;}
+
+  /* Photo + Tag wrapper (CLAVE: overflow visible para que el tag no se corte) */
+  .photo-wrapper{
+    position:relative;
+    width:100%;
+    /* Reservamos espacio ABAJO para que el tag tenga hueco sin solaparse */
+    margin-bottom:48px;
+  }
+  .photo-box{
+    width:100%;
+    aspect-ratio:1/1;
+    background-image:url('card/foto_perfil.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-muted);
+    font-size:14px;
+    cursor:default;
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .photo-box.editable{cursor:pointer;}
+  .photo-box img.photo-img{
+    width:100%;height:100%;object-fit:cover;display:none;
+    padding:7px;box-sizing:border-box;  /* la foto se asienta DENTRO del marco */
+  }
+  .photo-box.has-img img.photo-img{display:block;}
+  .photo-box.has-img .placeholder{display:none;}
+  .photo-box .placeholder{padding:8px;text-align:center;}
+
+  /* Tag badge — tira horizontal montada sobre el borde INFERIOR de la foto.
+     Usa el hueco de 48px que tiene reservado .photo-wrapper (margin-bottom). */
+  .tag-badge{
+    position:absolute;
+    left:50%;
+    bottom:-42px;            /* cuelga bajo la foto, en su hueco reservado */
+    transform:translateX(-50%);
+    width:92%;
+    max-width:none;
+    object-fit:contain;
+    display:none;
+    z-index:10;
+    pointer-events:none;
+  }
+  .tag-badge.show{display:block;}
+
+  .btn-select-tag{
+    background:var(--field-bg);
+    border:2px solid var(--field-border);
+    border-radius:4px;
+    color:var(--text-dark);
+    padding:8px 12px;
+    font-family:inherit;
+    font-size:12px;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn-select-tag:hover{background:#e7e5df;}
+  .btn-select-tag:disabled{opacity:0.5;cursor:default;}
+
+  /* Skills */
+  .skills-block{position:relative;}
+  .skills-block .section-label{
+    font-size:13px;color:var(--text-dark);margin-bottom:6px;
+  }
+  .skills-row{display:flex;gap:12px;}
+  .skill-slot{
+    flex:1;
+    aspect-ratio:1/1;
+    background-image:url('card/skills.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-muted);
+    font-size:20px;
+    cursor:default;
+  }
+  .skill-slot.editable{cursor:pointer;}
+  .skill-slot .plus{display:block;}
+  .skill-slot img.skill-img{width:70%;height:70%;object-fit:cover;display:none;}
+  .skill-slot.has-img img.skill-img{display:block;}
+  .skill-slot.has-img .plus{display:none;}
+
+  /* Clan */
+  .clan-wrap{position:relative;}
+  .clan-display{
+    position:relative;
+    padding:0;
+    overflow:visible;
+    min-height:52px;
+    cursor:default;
+    justify-content:center;
+  }
+  .clan-display.editable{cursor:pointer;}
+  .clan-placeholder{font-size:13px;color:var(--text-muted);padding:8px 12px;}
+  .clan-icon{
+    width:100%;
+    height:56px;
+    object-fit:contain;
+    display:block;
+  }
+  /* Cuando hay clan, sin caja ni bordes: solo la imagen limpia */
+  .clan-display.has-clan{
+    background:transparent;
+    border:none;
+    padding:0;
+  }
+  /* Panel desplegable de clanes con iconos */
+  .clan-dropdown{
+    position:absolute;
+    top:calc(100% + 4px);
+    left:0;
+    right:0;
+    z-index:50;
+    background:var(--field-bg);
+    border:2px solid var(--card-border);
+    border-radius:6px;
+    padding:6px;
+    display:none;
+    max-height:260px;
+    overflow-y:auto;
+    box-shadow:0 8px 20px rgba(0,0,0,0.18);
+  }
+  .clan-dropdown.open{display:block;}
+  .clan-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    padding:6px 8px;
+    background:transparent;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--text-dark);
+    text-align:left;
+  }
+  .clan-option:hover{background:rgba(169,155,120,0.25);}
+  .clan-option.selected{background:rgba(169,155,120,0.4);}
+  .clan-option img{height:34px;max-width:90px;object-fit:contain;}
+  .field-block{display:flex;flex-direction:column;gap:6px;}
+  .field-block label{font-size:12px;color:var(--text-muted);}
+  .field-value{
+    background-image:url('card/small_area.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:transparent;
+    border:none;
+    padding:7px 18px;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--text-dark);
+    min-height:46px;
+    display:flex;
+    align-items:center;
+  }
+  .field-value.readonly{
+    background-image:url('card/small_area.png');
+    background-color:transparent;
+    color:var(--text-dark);
+  }
+  /* El nombre usa la pieza LARGA del kit */
+  #name-value{background-image:url('card/large_area.png');}
+  #name-value.readonly{background-image:url('card/large_area.png');}
+  .field-value input,.field-value select{
+    width:100%;
+    border:none;
+    background:transparent;
+    outline:none;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--text-dark);
+    padding:0;
+  }
+
+  /* ---- RIGHT COLUMN ---- */
+  .col-right{display:flex;flex-direction:column;gap:14px;}
+  .col-right .data-field{display:flex;flex-direction:column;gap:6px;}
+  .col-right .data-field label{font-size:12px;color:var(--text-muted);}
+  .col-right .data-field .field-value{background-color:transparent;}
+  .col-right .data-field .field-value.readonly{background-color:transparent;color:var(--text-dark);}
+  .col-right .data-field .field-value input{
+    width:100%;border:none;background:transparent;outline:none;
+    font-family:inherit;font-size:14px;color:var(--text-dark);padding:0;
+  }
+  .col-right .narrow{max-width:60%;}
+
+  /* Bio */
+  .bio-box{flex:1;display:flex;flex-direction:column;gap:6px;min-height:140px;}
+  .bio-box label{font-size:12px;color:var(--text-muted);}
+  .bio-box textarea{
+    flex:1;
+    background-image:url('card/biografy.png');
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+    background-color:transparent;
+    border:none;
+    padding:16px 22px;
+    font-family:inherit;
+    font-size:13px;
+    color:var(--text-dark);
+    resize:none;
+    outline:none;
+    line-height:1.5;
+    min-height:120px;
+  }
+  .bio-box textarea.readonly{
+    background-image:url('card/biografy.png');
+    background-color:transparent;
+    color:var(--text-dark);
+  }
+
+  /* ============ BOTONES ============ */
+  .btn-outer{width:100%;max-width:640px;}
+  .card-btn-row{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    align-items:center;
+    padding:16px;
+    background:var(--card-bg);
+    border:3px solid var(--card-border);
+    border-top:none;
+    border-radius:0 0 6px 6px;
+  }
+  .card-btn-row button{display:flex;align-items:center;gap:6px;}
+  .card-btn-row button:disabled{opacity:0.5;cursor:not-allowed;}
+  .perfil-btn{
+    font-family:inherit;font-size:12px;font-weight:bold;text-transform:uppercase;
+    cursor:pointer;border-radius:4px;padding:6px 14px;
+    border:1.5px solid;transition:all 0.2s ease;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .perfil-btn-edit{
+    background:linear-gradient(180deg,#444,#222);
+    color:#e0d9ca;border-color:#a3967d;
+  }
+  .perfil-btn-edit:hover{
+    background:linear-gradient(180deg,#555,#333);
+    color:#fff;
+  }
+  .perfil-btn-logout{
+    background:linear-gradient(180deg,#d4a373,#a97142);
+    color:#1a1105;border-color:#7f5539;
+  }
+  .perfil-btn-logout:hover{
+    background:linear-gradient(180deg,#e6b88a,#bc8153);
+  }
+  .perfil-btn-delete{
+    background:linear-gradient(180deg,#38513c,#1e2f21);
+    color:#e0d9ca;border-color:#273e2b;
+  }
+  .perfil-btn-delete:hover{
+    background:linear-gradient(180deg,#47664c,#273e2b);
+    color:#fff;
+  }
+  .edit-btn{
+    font-family:inherit;font-size:12px;font-weight:bold;text-transform:uppercase;
+    cursor:pointer;border-radius:4px;padding:6px 16px;
+    border:1.5px solid;margin:0 5px;display:inline-block;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4);
+    transition:all 0.2s ease;
+  }
+  .edit-btn-cancel{
+    background:linear-gradient(180deg,#782727,#4a1414);
+    color:#e0d9ca;border-color:#2d0a0a;
+  }
+  .edit-btn-cancel:hover{filter:brightness(1.2);}
+  .edit-btn-submit{
+    background:linear-gradient(180deg,#38513c,#1e2f21);
+    color:#e0d9ca;border-color:#273e2b;
+  }
+  .edit-btn-submit:hover{
+    background:linear-gradient(180deg,#47664c,#273e2b);
+    color:#fff;
+  }
+
+  .hidden{display:none !important;}
+
+  /* ============ DROPDOWN PANELS (Skills / Tags) ============ */
+  .dropdown-panel{
+    position:absolute;
+    z-index:200;
+    background:var(--card-bg);
+    border:2px solid var(--card-border);
+    padding:12px;
+    box-shadow:0 6px 16px rgba(0,0,0,0.3);
+    display:none;
+    max-height:220px;
+    overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:var(--text-muted) transparent;
+  }
+  .dropdown-panel.open{display:block;}
+  .dropdown-panel::-webkit-scrollbar{width:14px;}
+  .dropdown-panel::-webkit-scrollbar-track{background:transparent;}
+  .dropdown-panel::-webkit-scrollbar-thumb{
+    background-image:url('assets/scroll.png');
+    background-size:100% 100%;background-repeat:no-repeat;
+  }
+
+  /* Grid de skills (4 columnas) */
+  .skills-dropdown{
+    width:300px;
+    grid-template-columns:repeat(4, 1fr);
+    gap:8px;
+  }
+  .skills-dropdown.open{display:grid;}
+  .skill-option{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:none;border:none;padding:4px;cursor:pointer;font-family:inherit;
+  }
+  .skill-option img{
+    width:48px;height:48px;object-fit:cover;border:1px solid var(--field-border);
+  }
+  .skill-option span{font-size:8px;color:var(--text-dark);text-align:center;line-height:1.1;}
+  .skill-option.selected img{opacity:0.5;}
+
+  /* Lista de tags (1 columna) */
+  .tags-dropdown{
+    width:200px;
+  }
+  .tags-dropdown .tag-option{
+    display:block;width:100%;background:none;border:none;padding:2px 0;
+    cursor:pointer;margin-bottom:4px;
+  }
+  .tags-dropdown .tag-option img{width:100%;display:block;}
+  .tags-dropdown .tag-option.selected img{opacity:0.5;}
+
+  /* ============ STATUS ============ */
+  .status-msg{
+    margin-top:12px;text-align:center;font-size:13px;
+    min-height:20px;color:var(--text-muted);
+  }
+  .status-msg.ok{color:#2f5a2f;}
+  .status-msg.err{color:#8a1f1f;}
+
+  .spinner{
+    display:inline-block;width:14px;height:14px;
+    border:2px solid var(--text-muted);
+    border-top-color:var(--text-dark);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+    vertical-align:middle;margin-right:6px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes spinPulse{
+    0%{transform:rotate(0deg) scale(1);opacity:0.7;}
+    50%{transform:rotate(180deg) scale(1.15);opacity:1;}
+    100%{transform:rotate(360deg) scale(1);opacity:0.7;}
+  }
+  @keyframes fadeSlideUp{
+    from{opacity:0;transform:translateY(18px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .fade-in{animation:fadeSlideUp 0.45s ease-out both;}
+  .fade-in-fast{animation:fadeSlideUp 0.3s ease-out both;}
+  .page-transition{
+    position:fixed;inset:0;background:var(--page-bg);
+    display:flex;align-items:center;justify-content:center;z-index:9999;
+    opacity:1;transition:opacity 0.35s ease;
+  }
+  .page-transition.hidden{opacity:0;pointer-events:none;}
+  .page-transition .pt-spinner{
+    width:48px;height:48px;
+    border:4px solid rgba(169,155,120,0.25);
+    border-top-color:var(--card-border);
+    border-right-color:var(--text-muted);
+    border-radius:50%;
+    animation:spinPulse 1s ease-in-out infinite;
+    box-shadow:0 0 18px rgba(169,155,120,0.25);
+  }
+
+  /* ============ OVERLAY DE CARGA ============ */
+  .loading-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.55);
+    display:none;
+    align-items:center;justify-content:center;
+    flex-direction:column;gap:16px;
+    z-index:900;
+  }
+  .loading-overlay.open{display:flex;}
+  .loading-overlay .big-spinner{
+    width:56px;height:56px;
+    border:4px solid rgba(255,255,255,0.15);
+    border-top-color:#c2b59b;
+    border-right-color:rgba(255,255,255,0.4);
+    border-radius:50%;
+    animation:spinPulse 1s ease-in-out infinite;
+    box-shadow:0 0 24px rgba(0,0,0,0.3), 0 0 20px rgba(194,181,155,0.2);
+  }
+  .loading-overlay .loading-text{
+    color:#fff;font-size:14px;letter-spacing:0.5px;
+  }
+
+  /* ============ MODAL DE CONFIRMACIÓN ============ */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    display:none;align-items:center;justify-content:center;
+    z-index:500;padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .overlay-box{
+    background:var(--card-bg);
+    border:3px solid var(--card-border);
+    border-radius:6px;
+    padding:28px 32px;
+    max-width:380px;width:100%;
+    text-align:center;
+  }
+  .overlay-message{
+    font-size:15px;line-height:1.5;color:var(--text-dark);margin-bottom:20px;
+  }
+  .overlay-actions{display:flex;justify-content:center;gap:40px;}
+  .overlay-link{
+    font-family:inherit;font-size:18px;cursor:pointer;
+    background:none;border:none;padding:0;
+    text-decoration:underline;text-decoration-style:dotted;
+  }
+  .overlay-link.yes{color:#1a4fb5;}
+  .overlay-link.no{color:var(--admin-color);}
+
+  /* ============ BADGE DE ESTADO (aprobación) ============ */
+  .status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 12px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:bold;
+    margin-bottom:12px;
+  }
+  .status-badge.pendiente{background:#f6e7b8;color:#8a6d1a;border:1px solid #d9c06a;}
+  .status-badge.aprobado{background:#d8f0d6;color:#2c6e2c;border:1px solid #9bd19b;}
+  .status-badge.rechazado{background:#f6d8d8;color:#9a2c2c;border:1px solid #d99b9b;}
+  .status-badge .dot{width:9px;height:9px;border-radius:50%;background:currentColor;}
+
+  /* ============ ÁREA DE ENVÍO A REVISIÓN ============ */
+  .submit-register{
+    display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:18px;
+  }
+  .submit-register .cooldown-msg{font-size:12px;color:var(--text-muted);text-align:center;}
+  .btn-send-register{
+    padding:10px 22px;
+    background:var(--card-border,#a99b78);
+    color:#fff;border:none;border-radius:10px;
+    font-family:inherit;font-size:15px;font-weight:bold;cursor:pointer;
+  }
+  .btn-send-register:disabled{filter:grayscale(0.6);cursor:not-allowed;opacity:0.7;}
+
+  /* ============ RESPONSIVE ============ */
+  @media(max-width:680px){
+    .hotbar{justify-content:center;text-align:center;padding:12px 14px;gap:12px;}
+    .hotbar-nav{flex-wrap:wrap;justify-content:center;font-size:17px;gap:8px;}
+    .card{grid-template-columns:1fr;padding:16px;gap:16px;overflow:visible;}
+    .col-right .narrow{max-width:100%;}
+    .field-value input,.field-value select{width:100%;}
+    .photo-wrapper{margin-bottom:42px;}
+    .card-btn-row{flex-wrap:wrap;}
+    .card-btn-row button{flex:1 1 45%;justify-content:center;}
+    .perfil-btn{padding:5px 10px;font-size:11px;}
+    .skills-dropdown{width:100%;grid-template-columns:repeat(3, 1fr);left:0;right:0;}
+    .tags-dropdown{width:100%;left:0;right:0;}
+    .clan-dropdown{left:0;right:0;}
+    .overlay-box{padding:22px 18px;}
+  }
+  @media(max-width:430px){
+    .hotbar-nav{font-size:15px;gap:6px;}
+    .login-view{padding:36px 18px;}
+    .login-view .discord-btn{padding:8px 18px;font-size:0.85em;}
+    .card{padding:12px;gap:14px;}
+    .card-btn-row button{flex:1 1 100%;}
+    .perfil-btn{padding:4px 8px;font-size:10px;}
+    .skills-dropdown{grid-template-columns:repeat(2, 1fr);}
+    .submit-register .cooldown-msg{font-size:11px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="profile-view">
+  <div class="card" id="profile-card">
+    <div style="grid-column:1 / -1;display:flex;justify-content:center;">
+      <div class="status-badge aprobado" style="display:inline-flex;">
+        <span class="dot"></span><span>Aprobado</span>
+      </div>
+    </div>
+
+    <div class="col-left">
+      <div class="photo-wrapper">
+        <div class="photo-box has-img" id="photo-box">
+          <span class="placeholder">Foto</span>
+          <img class="photo-img" src="../riper_portrait.png" alt="" />
+        </div>
+        <img class="tag-badge show" src="../Tags/0079.gif" alt="" />
+      </div>
+      <button type="button" class="btn-select-tag">Elegir Tag</button>
+
+      <div class="skills-block">
+        <div class="section-label">Skills</div>
+        <div class="skills-row">
+          <div class="skill-slot has-img"><span class="plus">+</span><img class="skill-img" src="../Skills/katana_llama.png" alt="" /></div>
+          <div class="skill-slot has-img"><span class="plus">+</span><img class="skill-img" src="../Skills/fans_hielo.png" alt="" /></div>
+        </div>
+      </div>
+
+      <div class="field-block">
+        <label>Fecha</label>
+        <div class="field-value readonly">01/08/26</div>
+      </div>
+
+      <div class="field-block">
+        <label>Clan</label>
+        <div class="clan-wrap">
+          <div class="field-value clan-display has-clan">
+            <span class="clan-placeholder" style="display:none;">— Sin clan —</span>
+            <img class="clan-icon" src="../Clan/equinox.png" alt="" style="display:block;" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-right">
+      <div class="data-field">
+        <label>Name:</label>
+        <div class="field-value readonly" id="name-value">
+          <input type="text" readonly value="Suijin" />
+        </div>
+      </div>
+      <div class="data-field">
+        <label>Edad:</label>
+        <div class="field-value readonly"><input type="text" readonly value="20" /></div>
+      </div>
+      <div class="data-field narrow">
+        <label>Rango:</label>
+        <div class="field-value readonly"><input type="text" readonly value="Kage" /></div>
+      </div>
+      <div class="data-field">
+        <label>Zodiacal:</label>
+        <div class="field-value readonly"><input type="text" readonly value="Leo" /></div>
+      </div>
+
+      <div class="bio-box">
+        <label>Biografía:</label>
+        <textarea class="readonly" readonly>El que madruga... encuentra la nevera vacia.</textarea>
+      </div>
+
+      <div class="data-field">
+        <label>Discord:</label>
+        <div class="field-value readonly">@princesuijin</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="btn-outer">
+    <div class="card-btn-row">
+      <button type="button" class="perfil-btn perfil-btn-edit">Editar</button>
+      <button type="button" class="perfil-btn perfil-btn-logout">Cerrar Sesión</button>
+      <button type="button" class="perfil-btn perfil-btn-delete">Borrar Cuenta</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

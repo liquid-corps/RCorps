@@ -16,7 +16,7 @@ CANVAS = "base.png"                      # 956x579
 POS = {
     "foto":     (74, 66, 270, 260),       # foto_perfil.png
     "clan":     (171, 36, 76, 72),        # clan_icon.png (arriba de la foto)
-    "tag":      (90, 302, 237, 48),       # tag badge (abajo de la foto)
+    "tag":      (114, 308, 190, 38),      # tag badge (abajo de la foto, más compacto)
     "skill1":   (111, 356, 90, 84),       # skills.png slot 1
     "skill2":   (217, 356, 90, 84),       # skills.png slot 2
     "nombre":   (398, 52, 480, 56),       # large_area.png

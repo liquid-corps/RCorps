@@ -247,11 +247,11 @@
 
   .rpg-card-canvas .canvas-tag-badge {
     position: absolute !important;
-    bottom: -24px !important;
+    bottom: -18px !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
-    width: 88% !important;
-    height: 48px !important;
+    width: 72% !important;
+    height: 38px !important;
     object-fit: contain !important;
     z-index: 40 !important;
     pointer-events: none !important;
@@ -783,7 +783,7 @@
 
         <div class="canvas-area-medium" id="zodiac-value">
           <span class="rpg-label">Clase:</span>
-          <input type="text" class="rpg-input-val" id="f-zodiac" readonly value="" placeholder="ej. SS" maxlength="3" oninput="this.value = this.value.toUpperCase().slice(0,3)" />
+          <input type="text" class="rpg-input-val" id="f-zodiac" readonly value="" placeholder="ej. SS / Bestia" maxlength="25" />
         </div>
 
         <div class="canvas-row-small">
@@ -1368,13 +1368,13 @@ function validateProfileForm(updates){
     return false;
   }
 
-  // 2. Clase (Obligatoria, máximo 3 caracteres ej. SS, SSS, S, A)
+  // 2. Clase (Obligatoria)
   if(!updates.zodiac || updates.zodiac.trim() === ''){
-    showStatus('⚠️ Debes ingresar la Clase de tu personaje (ej. SS, S, A).', 'err');
+    showStatus('⚠️ Debes ingresar la Clase de tu personaje (ej. SS, Bestia, Piscis).', 'err');
     return false;
   }
-  if(updates.zodiac.trim().length > 3){
-    showStatus('⚠️ La Clase solo puede tener máximo 3 caracteres (ej. SS).', 'err');
+  if(updates.zodiac.trim().length > 25){
+    showStatus('⚠️ La Clase no puede superar los 25 caracteres.', 'err');
     return false;
   }
 

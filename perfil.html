@@ -1285,9 +1285,12 @@ function enterEditMode(){
     tag: selectedTag
   };
 
-  // Habilitar inputs. Con el sistema de aprobación, el usuario normal
-  // ahora también llena edad/rango/zodiaco/clan; el mod solo aprueba.
-  const idsToEnable = ['f-name','f-age','f-rank','f-zodiac','f-bio'];
+  // Habilitar inputs: los usuarios normales editan nombre, edad, bio.
+  // Rango y Clase solo son editables por el Moderador/Admin.
+  const idsToEnable = ['f-name', 'f-age', 'f-bio'];
+  if (isAdmin) {
+    idsToEnable.push('f-rank', 'f-zodiac');
+  }
 
   idsToEnable.forEach(id=>{
     const el = $(id);

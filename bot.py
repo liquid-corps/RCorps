@@ -347,6 +347,55 @@ async def cmd_link(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
 # ============================================================
+# COMANDO SLASH: /setrango (Solo Moderadores / Admins)
+# ============================================================
+@bot.tree.command(name="setrango", description="[MOD] Cambiar el rango de un personaje")
+@app_commands.describe(personaje="Nombre del personaje o usuario", nuevo_rango="Nuevo rango a asignar (ej. Jonin, Kage, Mod)")
+async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_rango: str):
+    await interaction.response.defer()
+    
+    char = fetch_character_by_name_or_discord(personaje, personaje)
+    if not char:
+        await interaction.followup.send(f"❌ No se encontró ningún personaje para `{personaje}`.", ephemeral=True)
+        return
+
+    url = f"{SUPABASE_URL}/rest/v1/characters?id=eq.{char['id']}"
+    res = requests.patch(url, json={"rank": nuevo_rango}, headers=HEADERS)
+    
+    if res.status_code in [200, 204]:
+        await interaction.followup.send(f"✅ Rango de **{char.get('name')}** actualizado a `{nuevo_rango}` con éxito.")
+    else:
+        await interaction.followup.send(f"❌ Error al actualizar el rango en la base de datos.", ephemeral=True)
+
+# ============================================================
+# COMANDO SLASH: /setclase (Solo Moderadores / Admins)
+# ============================================================
+@bot.tree.command(name="setclase", description="[MOD] Cambiar la clase de un personaje")
+@app_commands.describe(personaje="Nombre del personaje o usuario", nueva_clase="Nueva clase a asignar")
+@app_commands.choices(nueva_clase=[
+    app_commands.Choice(name="Miembro", value="Miembro"),
+    app_commands.Choice(name="Sensei", value="Sensei"),
+    app_commands.Choice(name="Ronin", value="Ronin"),
+    app_commands.Choice(name="Bestia", value="Bestia"),
+    app_commands.Choice(name="Lider", value="Lider")
+])
+async def cmd_setclase(interaction: discord.Interaction, personaje: str, nueva_clase: app_commands.Choice[str]):
+    await interaction.response.defer()
+    
+    char = fetch_character_by_name_or_discord(personaje, personaje)
+    if not char:
+        await interaction.followup.send(f"❌ No se encontró ningún personaje para `{personaje}`.", ephemeral=True)
+        return
+
+    url = f"{SUPABASE_URL}/rest/v1/characters?id=eq.{char['id']}"
+    res = requests.patch(url, json={"zodiac": nueva_clase.value}, headers=HEADERS)
+    
+    if res.status_code in [200, 204]:
+        await interaction.followup.send(f"✅ Clase de **{char.get('name')}** actualizada a `{nueva_clase.value}` con éxito.")
+    else:
+        await interaction.followup.send(f"❌ Error al actualizar la clase en la base de datos.", ephemeral=True)
+
+# ============================================================
 # INICIO DEL BOT
 # ============================================================
 if __name__ == "__main__":

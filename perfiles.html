@@ -1838,9 +1838,15 @@ $('detail-modal').addEventListener('click', e => {
    INIT
    ============================================================ */
 (async () => {
-  await checkAdmin();
-  await loadModInbox();
-  await loadProfiles();
+  try {
+    await checkAdmin();
+    await loadModInbox();
+    await loadProfiles();
+  } catch(e) {
+    console.error('Init error:', e);
+  } finally {
+    hideTransition();
+  }
 })();
 
 db.auth.onAuthStateChange(async () => {

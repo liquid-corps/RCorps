@@ -783,7 +783,14 @@
 
         <div class="canvas-area-medium" id="zodiac-value">
           <span class="rpg-label">Clase:</span>
-          <input type="text" class="rpg-input-val" id="f-zodiac" readonly value="" placeholder="ej. SS / Bestia" maxlength="25" />
+          <select class="rpg-input-val rpg-select-val" id="f-zodiac" disabled style="background:transparent;border:none;outline:none;font-family:inherit;font-size:20px;color:#2b2216;cursor:pointer;flex:1;">
+            <option value="" disabled selected>Selecciona Clase...</option>
+            <option value="Miembro">Miembro</option>
+            <option value="Sensei">Sensei</option>
+            <option value="Ronin">Ronin</option>
+            <option value="Bestia">Bestia</option>
+            <option value="Lider">Lider</option>
+          </select>
         </div>
 
         <div class="canvas-row-small">
@@ -1318,12 +1325,13 @@ function exitEditMode(save=false){
   $('edit-aux-controls').classList.add('hidden');
 
   // Deshabilitar inputs
-  ['f-name','f-age','f-rank','f-zodiac','f-bio'].forEach(id=>{
+  ['f-name','f-age','f-rank','f-bio'].forEach(id=>{
     const el = $(id);
     el.setAttribute('readonly','');
     const box = el.closest('.field-value, .bio-box');
     if(box) box.classList.add('readonly');
   });
+  $('f-zodiac').disabled = true;
 
   // Cerrar el menú de clanes y quitar el modo editable
   $('clan-display').classList.remove('editable');
@@ -1368,13 +1376,10 @@ function validateProfileForm(updates){
     return false;
   }
 
-  // 2. Clase (Obligatoria)
-  if(!updates.zodiac || updates.zodiac.trim() === ''){
-    showStatus('⚠️ Debes ingresar la Clase de tu personaje (ej. SS, Bestia, Piscis).', 'err');
-    return false;
-  }
-  if(updates.zodiac.trim().length > 25){
-    showStatus('⚠️ La Clase no puede superar los 25 caracteres.', 'err');
+  // 2. Clase (Obligatoria mediante selección)
+  const validClasses = ['Miembro', 'Sensei', 'Ronin', 'Bestia', 'Lider'];
+  if(!updates.zodiac || updates.zodiac.trim() === '' || !validClasses.includes(updates.zodiac)){
+    showStatus('⚠️ Debes seleccionar una Clase válida (Miembro, Sensei, Ronin, Bestia, Lider).', 'err');
     return false;
   }
 

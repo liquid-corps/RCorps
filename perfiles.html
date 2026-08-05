@@ -1320,9 +1320,9 @@ async function openModal(char){
     const clanName = (char.clan || '').toLowerCase().trim();
     if(clanName){
       clanImg.src = `Clan/${clanName}.png`;
-      clanBadge.style.display = 'flex';
+      clanBadge.classList.add('active');
     } else {
-      clanBadge.style.display = 'none';
+      clanBadge.classList.remove('active');
       clanImg.removeAttribute('src');
     }
   }
@@ -1333,9 +1333,9 @@ async function openModal(char){
     const tagVal = (char.modes && char.modes[0]) || char.tag || null;
     if(tagVal){
       tagBadge.src = tagVal;
-      tagBadge.style.display = 'block';
+      tagBadge.classList.add('show');
     } else {
-      tagBadge.style.display = 'none';
+      tagBadge.classList.remove('show');
       tagBadge.removeAttribute('src');
     }
   }

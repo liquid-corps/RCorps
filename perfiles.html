@@ -1314,12 +1314,12 @@ async function openModal(char){
   }
 
   // Clan badge superpuesto arriba de la foto
-  const clanImages = { Mizu: 'Clan/mizu.png', Rain: 'Clan/rain.png', Equinox: 'Clan/equinox.png', Asakura: 'Clan/asakura.png' };
   const clanBadge = $('m-clan-badge');
   const clanImg = $('m-clan-img');
   if(clanBadge && clanImg){
-    if(char.clan && clanImages[char.clan]){
-      clanImg.src = clanImages[char.clan];
+    const clanName = (char.clan || '').toLowerCase().trim();
+    if(clanName){
+      clanImg.src = `Clan/${clanName}.png`;
       clanBadge.style.display = 'flex';
     } else {
       clanBadge.style.display = 'none';
@@ -1330,14 +1330,28 @@ async function openModal(char){
   // Tag badge superpuesto abajo de la foto
   const tagBadge = $('m-tag-badge');
   if(tagBadge){
-    if(char.modes && char.modes[0]){
-      tagBadge.src = char.modes[0];
+    const tagVal = (char.modes && char.modes[0]) || char.tag || null;
+    if(tagVal){
+      tagBadge.src = tagVal;
       tagBadge.style.display = 'block';
     } else {
       tagBadge.style.display = 'none';
       tagBadge.removeAttribute('src');
     }
   }
+
+  // Skills (m-skill-1 y m-skill-2)
+  const skills = char.skills || [];
+  [1, 2].forEach(n => {
+    const slot = $('m-skill-' + n);
+    if(slot){
+      if(skills[n-1]){
+        slot.innerHTML = `<img class="skill-img" src="${skills[n-1]}" alt="" style="width:76%;height:76%;max-width:68px;max-height:64px;object-fit:contain;display:block;" />`;
+      } else {
+        slot.innerHTML = '';
+      }
+    }
+  });
 
   // Estado de aprobación + barra unificada de moderación
   const badge = $('modal-status-badge');

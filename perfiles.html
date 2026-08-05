@@ -1197,7 +1197,7 @@ async function loadModInbox(){
       return;
     }
 
-    const chars = (pendingChars || []).filter(c => (c.name || '').trim() !== '' || (c.bio || '').trim() !== '' || c.last_submit !== null);
+    const chars = pendingChars || [];
     countSpan.textContent = chars.length;
 
     if(chars.length === 0){

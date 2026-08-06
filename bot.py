@@ -20,6 +20,9 @@ from discord.ext import commands
 import requests
 from PIL import Image
 
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
 # Importar generador de tarjetas de la carpeta tools
 sys.path.append(os.path.join(os.path.dirname(__file__), "tools"))
 try:
@@ -43,12 +46,35 @@ if os.path.exists(".env"):
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN", "")
 
-WEB_URL_PERFILES = "http://localhost:3000/perfiles.html"
-WEB_URL_MI_PERFIL = "http://localhost:3000/perfil.html"
+WEB_URL_PERFILES = "https://liquid-corps.github.io/RCorps/perfiles.html"
+WEB_URL_MI_PERFIL = "https://liquid-corps.github.io/RCorps/perfil.html"
 
-# Configuración del Bot de Discord
+# Configuración del Bot de Discord con Intents completos
 intents = discord.Intents.default()
+intents.members = True
+intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+# Servidor de Health Check para Render ($PORT) para evitar reinicios
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(b"RCorps Discord Bot is Live 24/7!")
+    def log_message(self, format, *args):
+        return
+
+def run_health_server():
+    try:
+        port = int(os.getenv("PORT", 10000))
+        server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+        print(f"🌐 Servidor de Health Check activo en puerto {port}")
+        server.serve_forever()
+    except Exception as e:
+        print("Aviso en servidor Health Check:", e)
+
+threading.Thread(target=run_health_server, daemon=True).start()
 
 def generate_card_png(char):
     """Genera la imagen PNG completa de la tarjeta RPG (956x579) con los datos del personaje."""

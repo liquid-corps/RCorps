@@ -176,32 +176,49 @@ def get_supabase_headers():
         "Content-Type": "application/json"
     }
 
-def fetch_character_by_name_or_discord(query, discord_username=None):
-    """Busca personaje por nombre o por discord_username en Supabase."""
-    url = f"{SUPABASE_URL}/rest/v1/characters?select=*"
+def fetch_character_by_name_or_discord(query_or_user):
     headers = get_supabase_headers()
+    url = f"{SUPABASE_URL}/rest/v1/characters?select=*"
     
-    # 1. Buscar por nombre exacto o parcial
-    if query:
-        res = requests.get(f"{url}&name=ilike.*{query}*", headers=headers)
-        if res.status_code == 200 and res.json():
-            return res.json()[0]
-            
-    # 2. Buscar por nombre de usuario de discord
-    if discord_username:
-        # Primero buscar profile_id por username
-        prof_res = requests.get(f"{SUPABASE_URL}/rest/v1/profiles?select=id&username=ilike.{discord_username}", headers=headers)
-        if prof_res.status_code == 200 and prof_res.json():
-            owner_id = prof_res.json()[0]['id']
-            char_res = requests.get(f"{url}&owner_id=eq.{owner_id}", headers=headers)
-            if char_res.status_code == 200 and char_res.json():
-                return char_res.json()[0]
-                
-    # 3. Fallback: buscar por query directa
-    res = requests.get(f"{url}&limit=1", headers=headers)
-    if res.status_code == 200 and res.json():
-        return res.json()[0]
-        
+    clean_str = ""
+    target_id = None
+    target_username = None
+
+    if isinstance(query_or_user, (discord.User, discord.Member)):
+        target_id = str(query_or_user.id)
+        target_username = query_or_user.name
+        clean_str = query_or_user.name
+    else:
+        clean_str = str(query_or_user).replace("@", "").replace("<", "").replace(">", "").replace("!", "").strip()
+        if clean_str.isdigit():
+            target_id = clean_str
+
+    # 1. Si tenemos Discord ID -> buscar profile -> luego character
+    if target_id:
+        p_res = requests.get(f"{SUPABASE_URL}/rest/v1/profiles?discord_id=eq.{target_id}", headers=headers)
+        if p_res.status_code == 200 and p_res.json():
+            owner_id = p_res.json()[0]["id"]
+            c_res = requests.get(f"{url}&owner_id=eq.{owner_id}", headers=headers)
+            if c_res.status_code == 200 and c_res.json():
+                return c_res.json()[0]
+
+    # 2. Buscar por username de Discord en profiles -> luego character
+    u_search = target_username or clean_str
+    if u_search:
+        p_res = requests.get(f"{SUPABASE_URL}/rest/v1/profiles?username=ilike.*{u_search}*", headers=headers)
+        if p_res.status_code == 200 and p_res.json():
+            for prof in p_res.json():
+                c_res = requests.get(f"{url}&owner_id=eq.{prof['id']}", headers=headers)
+                if c_res.status_code == 200 and c_res.json():
+                    return c_res.json()[0]
+
+    # 3. Buscar por nombre de personaje en characters
+    if clean_str:
+        c_res = requests.get(f"{url}&name=ilike.*{clean_str}*", headers=headers)
+        if c_res.status_code == 200 and c_res.json():
+            return c_res.json()[0]
+
+    # Nunca retornar personaje equivocado de fallback
     return None
 
 def fetch_all_approved_characters():
@@ -220,7 +237,7 @@ async def on_ready():
     print(f"✅ Bot conectado como: {bot.user.name} ({bot.user.id})")
     try:
         synced = await bot.tree.sync()
-        print(f"🔄 Sincronizados {len(synced)} comandos Slash (/perfil, /perfiles, /link)")
+        print(f"🔄 Sincronizados {len(synced)} comandos Slash")
     except Exception as e:
         print(f"❌ Error al sincronizar comandos: {e}")
 
@@ -232,20 +249,16 @@ async def on_ready():
 async def cmd_perfil(interaction: discord.Interaction, busqueda: str = None):
     await interaction.response.defer()
     
-    target_query = busqueda
-    discord_user = interaction.user.name
-    
-    char = fetch_character_by_name_or_discord(target_query, discord_user)
+    char = fetch_character_by_name_or_discord(busqueda or interaction.user)
     
     if not char:
         await interaction.followup.send(
-            f"❌ No se encontró ningún personaje registrado para `{busqueda or discord_user}`.\n"
+            f"❌ No se encontró ningún personaje registrado para `{busqueda or interaction.user.name}`.\n"
             f"Crea o edita tu perfil aquí: {WEB_URL_MI_PERFIL}",
             ephemeral=True
         )
         return
         
-    # Generar la imagen PNG oficial de la tarjeta RPG (956x579)
     status = char.get("status", "pendiente")
     status_icon = "🟢 Aprobado" if status == "aprobado" else ("🔴 Rechazado" if status == "rechazado" else "🟡 Pendiente")
     color = 0xd4af37 if status == "aprobado" else (0xe74c3c if status == "rechazado" else 0xf1c40f)
@@ -259,21 +272,17 @@ async def cmd_perfil(interaction: discord.Interaction, busqueda: str = None):
         print("Error generando tarjeta RPG PNG:", e)
 
     embed = discord.Embed(
-        title=f"🃏 TARJETA RPG — {char_name.upper()}",
-        description=f"**Estado:** {status_icon} | **Rango:** `{char.get('rank', '—')}` | **Clase:** `{char.get('zodiac', '—')}`",
+        title=f"📜 Perfil de {char_name}",
+        description=f"**Estado:** {status_icon}\n**Clan:** {char.get('clan') or 'Sin Clan'}\n**Clase:** {char.get('zodiac') or '—'}\n**Rango:** {char.get('rank') or '—'}",
         color=color
     )
-    
     if card_file:
         embed.set_image(url="attachment://tarjeta_rpg.png")
         
-    embed.set_footer(text="RCorps RPG System • Ficha generada en formato Imagen HD")
-    
-    # Crear botón de enlace a la web
     view = discord.ui.View()
     web_button = discord.ui.Button(
-        label="🌐 Ver / Editar Ficha en la Web",
-        url=f"{WEB_URL_PERFILES}?id={char.get('id')}",
+        label="📝 Ir a Mi Perfil (Editar / Crear)",
+        url=WEB_URL_MI_PERFIL,
         style=discord.ButtonStyle.link
     )
     view.add_item(web_button)
@@ -363,23 +372,41 @@ def is_mod_or_admin(interaction: discord.Interaction) -> bool:
 # COMANDO SLASH: /setrango (Solo Moderadores / Admins)
 # ============================================================
 @bot.tree.command(name="setrango", description="[MOD] Cambiar el rango de un personaje")
-@app_commands.describe(personaje="Nombre del personaje o usuario", nuevo_rango="Nuevo rango a asignar (B, A, S, SS, Jonin, Kage, Mod, etc.)")
-async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_rango: str):
+@app_commands.describe(usuario="Selecciona el usuario de Discord", nuevo_rango="Nuevo rango a asignar (B, A, S, SS)")
+@app_commands.choices(nuevo_rango=[
+    app_commands.Choice(name="B", value="B"),
+    app_commands.Choice(name="A", value="A"),
+    app_commands.Choice(name="S", value="S"),
+    app_commands.Choice(name="SS", value="SS")
+])
+async def cmd_setrango(interaction: discord.Interaction, usuario: discord.User, nuevo_rango: app_commands.Choice[str]):
     await interaction.response.defer(ephemeral=True)
     if not is_mod_or_admin(interaction):
         await interaction.followup.send("⛔ Solo los moderadores o soportes pueden usar este comando.", ephemeral=True)
         return
     
-    char = fetch_character_by_name_or_discord(personaje, personaje)
+    char = fetch_character_by_name_or_discord(usuario)
     if not char:
-        await interaction.followup.send(f"❌ No se encontró ningún personaje para `{personaje}`.", ephemeral=True)
+        await interaction.followup.send(f"❌ No se encontró ningún personaje registrado para {usuario.mention}.", ephemeral=True)
         return
 
     url = f"{SUPABASE_URL}/rest/v1/characters?id=eq.{char['id']}"
-    res = requests.patch(url, json={"rank": nuevo_rango}, headers=get_supabase_headers())
+    res = requests.patch(url, json={"rank": nuevo_rango.value}, headers=get_supabase_headers())
     
+    role_msg = ""
+    if interaction.guild:
+        try:
+            member = interaction.guild.get_member(usuario.id) or await interaction.guild.fetch_member(usuario.id)
+            if member:
+                discord_role = discord.utils.find(lambda r: r.name.lower() == nuevo_rango.value.lower(), interaction.guild.roles)
+                if discord_role:
+                    await member.add_roles(discord_role)
+                    role_msg = f" y se le asignó el rol @{discord_role.name} en Discord"
+        except Exception as e:
+            print("Error asignando rol en Discord:", e)
+
     if res.status_code in [200, 204]:
-        await interaction.followup.send(f"✅ Rango de **{char.get('name')}** actualizado a `{nuevo_rango}` con éxito.")
+        await interaction.followup.send(f"✅ Rango de **{char.get('name')}** ({usuario.mention}) actualizado a `{nuevo_rango.value}`{role_msg}.")
     else:
         await interaction.followup.send(f"❌ Error al actualizar el rango en la base de datos.", ephemeral=True)
 
@@ -387,7 +414,7 @@ async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_r
 # COMANDO SLASH: /setclase (Solo Moderadores / Admins)
 # ============================================================
 @bot.tree.command(name="setclase", description="[MOD] Cambiar la clase de un personaje")
-@app_commands.describe(personaje="Nombre del personaje o usuario", nueva_clase="Nueva clase a asignar")
+@app_commands.describe(usuario="Selecciona el usuario de Discord", nueva_clase="Nueva clase a asignar")
 @app_commands.choices(nueva_clase=[
     app_commands.Choice(name="Miembro", value="Miembro"),
     app_commands.Choice(name="Sensei", value="Sensei"),
@@ -397,22 +424,34 @@ async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_r
     app_commands.Choice(name="Kage", value="Kage"),
     app_commands.Choice(name="Lider", value="Lider")
 ])
-async def cmd_setclase(interaction: discord.Interaction, personaje: str, nueva_clase: app_commands.Choice[str]):
+async def cmd_setclase(interaction: discord.Interaction, usuario: discord.User, nueva_clase: app_commands.Choice[str]):
     await interaction.response.defer(ephemeral=True)
     if not is_mod_or_admin(interaction):
         await interaction.followup.send("⛔ Solo los moderadores o soportes pueden usar este comando.", ephemeral=True)
         return
     
-    char = fetch_character_by_name_or_discord(personaje, personaje)
+    char = fetch_character_by_name_or_discord(usuario)
     if not char:
-        await interaction.followup.send(f"❌ No se encontró ningún personaje para `{personaje}`.", ephemeral=True)
+        await interaction.followup.send(f"❌ No se encontró ningún personaje registrado para {usuario.mention}.", ephemeral=True)
         return
 
     url = f"{SUPABASE_URL}/rest/v1/characters?id=eq.{char['id']}"
     res = requests.patch(url, json={"zodiac": nueva_clase.value}, headers=get_supabase_headers())
     
+    role_msg = ""
+    if interaction.guild:
+        try:
+            member = interaction.guild.get_member(usuario.id) or await interaction.guild.fetch_member(usuario.id)
+            if member:
+                discord_role = discord.utils.find(lambda r: r.name.lower() == nueva_clase.value.lower(), interaction.guild.roles)
+                if discord_role:
+                    await member.add_roles(discord_role)
+                    role_msg = f" y se le asignó el rol @{discord_role.name} en Discord"
+        except Exception as e:
+            print("Error asignando rol en Discord:", e)
+
     if res.status_code in [200, 204]:
-        await interaction.followup.send(f"✅ Clase de **{char.get('name')}** actualizada a `{nueva_clase.value}` con éxito.")
+        await interaction.followup.send(f"✅ Clase de **{char.get('name')}** ({usuario.mention}) actualizada a `{nueva_clase.value}`{role_msg}.")
     else:
         await interaction.followup.send(f"❌ Error al actualizar la clase en la base de datos.", ephemeral=True)
 

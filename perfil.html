@@ -933,6 +933,7 @@ const TAG_OPTIONS = Array.from({length:96}, (_, i)=>{
 let currentUser   = null;
 let currentProfile = null;
 let currentCharacter = null;
+let currentUserRole  = 'user';
 let isAdmin       = false;
 let isEditing     = false;
 let originalData  = {};
@@ -1069,6 +1070,7 @@ async function loadProfile(){
       // Fallback: mirar el rol del perfil
       isAdmin = currentProfile?.role === 'admin';
     }
+    currentUserRole = currentProfile?.role || (isAdmin ? 'admin' : 'user');
 
     // Cargar personaje del usuario
     const { data: chars, error: ec } = await db
@@ -1144,8 +1146,26 @@ function renderProfile(){
   // Datos de solo lectura (siempre se llenan desde la BD)
   $('f-name').value   = ch.name   || '';
   $('f-age').value    = ch.age    || '';
-  $('f-rank').value   = ch.rank   || '';
-  $('f-zodiac').value = ch.zodiac || '';
+  // Asegurar que f-rank contenga el valor del personaje
+  const rankSel = $('f-rank');
+  if(ch.rank && !Array.from(rankSel.options).some(o => o.value === ch.rank)){
+    const opt = document.createElement('option');
+    opt.value = ch.rank;
+    opt.textContent = ch.rank;
+    rankSel.appendChild(opt);
+  }
+  rankSel.value = ch.rank || 'B';
+
+  // Asegurar que f-zodiac contenga la clase del personaje
+  const zodSel = $('f-zodiac');
+  if(ch.zodiac && !Array.from(zodSel.options).some(o => o.value === ch.zodiac)){
+    const opt = document.createElement('option');
+    opt.value = ch.zodiac;
+    opt.textContent = ch.zodiac;
+    zodSel.appendChild(opt);
+  }
+  zodSel.value = ch.zodiac || 'Miembro';
+
   $('f-clan').value   = ch.clan || '';
   updateClanIcon();
   $('f-bio').value    = ch.bio    || '';

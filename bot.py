@@ -44,7 +44,7 @@ if os.path.exists(".env"):
                 parts = line.strip().split("=", 1)
                 os.environ[parts[0].strip()] = parts[1].strip()
 
-DEFAULT_TOKEN_B64 = "TVRVek5EWTNOemsyTlRNM09EVTFOVGszTkEuRzVHVk5QLkpWVml2bldubENqTjJua0VkSy1ESmVNOElqREJtS1diN2FpU2E0"
+DEFAULT_TOKEN_B64 = "TVRVek5EWTNOemsyTlRNM09EVTFOVGszTkEuR0ltVTdELnpFSmZBaWloX2ZqVEhLRl9aQ0RmbEJnMFB2ak1YZjRpcWctLW5n"
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN") or base64.b64decode(DEFAULT_TOKEN_B64).decode()
 
 WEB_URL_PERFILES = "https://liquid-corps.github.io/RCorps/perfiles.html"

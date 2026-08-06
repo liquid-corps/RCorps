@@ -365,11 +365,10 @@ def is_mod_or_admin(interaction: discord.Interaction) -> bool:
 @bot.tree.command(name="setrango", description="[MOD] Cambiar el rango de un personaje")
 @app_commands.describe(personaje="Nombre del personaje o usuario", nuevo_rango="Nuevo rango a asignar (ej. Jonin, Kage, Mod)")
 async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_rango: str):
+    await interaction.response.defer(ephemeral=True)
     if not is_mod_or_admin(interaction):
-        await interaction.response.send_message("⛔ Solo los moderadores o soportes pueden usar este comando.", ephemeral=True)
+        await interaction.followup.send("⛔ Solo los moderadores o soportes pueden usar este comando.", ephemeral=True)
         return
-
-    await interaction.response.defer()
     
     char = fetch_character_by_name_or_discord(personaje, personaje)
     if not char:
@@ -377,7 +376,7 @@ async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_r
         return
 
     url = f"{SUPABASE_URL}/rest/v1/characters?id=eq.{char['id']}"
-    res = requests.patch(url, json={"rank": nuevo_rango}, headers=HEADERS)
+    res = requests.patch(url, json={"rank": nuevo_rango}, headers=get_supabase_headers())
     
     if res.status_code in [200, 204]:
         await interaction.followup.send(f"✅ Rango de **{char.get('name')}** actualizado a `{nuevo_rango}` con éxito.")
@@ -397,11 +396,10 @@ async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_r
     app_commands.Choice(name="Lider", value="Lider")
 ])
 async def cmd_setclase(interaction: discord.Interaction, personaje: str, nueva_clase: app_commands.Choice[str]):
+    await interaction.response.defer(ephemeral=True)
     if not is_mod_or_admin(interaction):
-        await interaction.response.send_message("⛔ Solo los moderadores o soportes pueden usar este comando.", ephemeral=True)
+        await interaction.followup.send("⛔ Solo los moderadores o soportes pueden usar este comando.", ephemeral=True)
         return
-
-    await interaction.response.defer()
     
     char = fetch_character_by_name_or_discord(personaje, personaje)
     if not char:
@@ -409,7 +407,7 @@ async def cmd_setclase(interaction: discord.Interaction, personaje: str, nueva_c
         return
 
     url = f"{SUPABASE_URL}/rest/v1/characters?id=eq.{char['id']}"
-    res = requests.patch(url, json={"zodiac": nueva_clase.value}, headers=HEADERS)
+    res = requests.patch(url, json={"zodiac": nueva_clase.value}, headers=get_supabase_headers())
     
     if res.status_code in [200, 204]:
         await interaction.followup.send(f"✅ Clase de **{char.get('name')}** actualizada a `{nueva_clase.value}` con éxito.")
@@ -427,15 +425,14 @@ async def cmd_setclase(interaction: discord.Interaction, personaje: str, nueva_c
     app_commands.Choice(name="Usuario normal", value="user")
 ])
 async def cmd_setrol(interaction: discord.Interaction, usuario: str, nuevo_rol: app_commands.Choice[str]):
+    await interaction.response.defer(ephemeral=True)
     if not is_mod_or_admin(interaction):
-        await interaction.response.send_message("⛔ Solo los administradores pueden cambiar roles del sistema.", ephemeral=True)
+        await interaction.followup.send("⛔ Solo los administradores pueden cambiar roles del sistema.", ephemeral=True)
         return
 
-    await interaction.response.defer()
-    
     clean_user = usuario.replace("@", "").strip()
     url = f"{SUPABASE_URL}/rest/v1/profiles?username=ilike.{clean_user}"
-    res = requests.get(url, headers=HEADERS)
+    res = requests.get(url, headers=get_supabase_headers())
     data = res.json() if res.status_code == 200 else []
     
     if not data:
@@ -443,7 +440,7 @@ async def cmd_setrol(interaction: discord.Interaction, usuario: str, nuevo_rol: 
         return
 
     prof_id = data[0]["id"]
-    patch_res = requests.patch(f"{SUPABASE_URL}/rest/v1/profiles?id=eq.{prof_id}", json={"role": nuevo_rol.value}, headers=HEADERS)
+    patch_res = requests.patch(f"{SUPABASE_URL}/rest/v1/profiles?id=eq.{prof_id}", json={"role": nuevo_rol.value}, headers=get_supabase_headers())
     
     if patch_res.status_code in [200, 204]:
         await interaction.followup.send(f"✅ Rol del sistema para **@{data[0].get('username')}** cambiado a `{nuevo_rol.name}` con éxito.")
@@ -456,12 +453,11 @@ async def cmd_setrol(interaction: discord.Interaction, usuario: str, nuevo_rol: 
 @bot.tree.command(name="darroles", description="[MOD] Asignar roles en el servidor de Discord (Miembro y Rango) a un usuario")
 @app_commands.describe(miembro="Usuario de Discord a quien dar roles", rango_rol="Nombre del rol de rango (por defecto: B)")
 async def cmd_darroles(interaction: discord.Interaction, miembro: discord.Member, rango_rol: str = "B"):
+    await interaction.response.defer(ephemeral=True)
     if not is_mod_or_admin(interaction):
-        await interaction.response.send_message("⛔ Solo los moderadores pueden usar este comando.", ephemeral=True)
+        await interaction.followup.send("⛔ Solo los moderadores pueden usar este comando.", ephemeral=True)
         return
 
-    await interaction.response.defer()
-    
     guild = interaction.guild
     if not guild:
         await interaction.followup.send("❌ Este comando solo se puede usar dentro del servidor de Discord.", ephemeral=True)

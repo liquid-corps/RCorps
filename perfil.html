@@ -752,7 +752,7 @@
   <div class="rpg-canvas-wrapper">
    <div class="rpg-canvas-scaler">
     <div class="rpg-card-canvas" id="profile-card">
-      <div class="card-role-badge" id="card-role-badge" style="display:none;">ADMIN</div>
+      <div class="card-role-badge" id="card-role-badge" style="display:none;position:absolute;top:14px;right:50px;z-index:45;background:#8b0000;color:#fff;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:bold;font-family:monospace;border:1px solid #ff4444;box-shadow:0 2px 6px rgba(0,0,0,0.5);">ADMIN</div>
       <!-- COLUMNA IZQUIERDA -->
       <div class="canvas-left">
         <div class="canvas-photo-wrap photo-box" id="photo-box">
@@ -1121,15 +1121,21 @@ function renderHeader(){
 
   const isMod = currentProfile?.role === 'mod';
   if(isAdmin || isMod){
-    const roleText = isAdmin ? 'ADMIN' : 'MOD';
+    const roleText = isAdmin ? 'ADMIN' : 'SOPORTE';
+    const bg = isAdmin ? '#8b0000' : '#005588';
+    const border = isAdmin ? '#ff4444' : '#00bfff';
+
     const badge = document.createElement('span');
     badge.className = 'admin-badge';
     badge.textContent = roleText;
     badge.style.marginLeft = '8px';
+    badge.style.background = bg;
     userInfo.appendChild(badge);
 
     if(cardBadge){
       cardBadge.textContent = roleText;
+      cardBadge.style.backgroundColor = bg;
+      cardBadge.style.borderColor = border;
       cardBadge.style.display = 'block';
     }
   } else if(cardBadge){

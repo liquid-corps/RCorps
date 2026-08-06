@@ -392,11 +392,14 @@ def is_mod_or_admin(interaction: discord.Interaction) -> bool:
                 return True
     return False
 
+ALL_CLASS_ROLES = ["Miembro", "Sensei", "Ronin", "Soporte", "Bestia", "Kage", "Lider"]
+ALL_RANK_ROLES  = ["B", "A", "S", "SS"]
+
 # ============================================================
 # COMANDO SLASH: /setrango (Solo Moderadores / Admins)
 # ============================================================
 @bot.tree.command(name="setrango", description="[MOD] Cambiar el rango de un personaje")
-@app_commands.describe(usuario="Selecciona el usuario de Discord", nuevo_rango="Nuevo rango a asignar (B, A, S, SS)")
+@app_commands.describe(usuario="Selecciona el usuario de Discord", nuevo_rango="Nuevo rango a asignar")
 @app_commands.choices(nuevo_rango=[
     app_commands.Choice(name="B", value="B"),
     app_commands.Choice(name="A", value="A"),
@@ -422,6 +425,11 @@ async def cmd_setrango(interaction: discord.Interaction, usuario: discord.User, 
         try:
             member = interaction.guild.get_member(usuario.id) or await interaction.guild.fetch_member(usuario.id)
             if member:
+                # Quitar rangos anteriores
+                old_rank_roles = [r for r in member.roles if r.name.upper() in [x.upper() for x in ALL_RANK_ROLES] and r.name.upper() != nuevo_rango.value.upper()]
+                if old_rank_roles:
+                    await member.remove_roles(*old_rank_roles)
+
                 discord_role = discord.utils.find(lambda r: r.name.lower() == nuevo_rango.value.lower(), interaction.guild.roles)
                 if discord_role:
                     await member.add_roles(discord_role)
@@ -471,6 +479,11 @@ async def cmd_setclase(interaction: discord.Interaction, usuario: discord.User, 
         try:
             member = interaction.guild.get_member(usuario.id) or await interaction.guild.fetch_member(usuario.id)
             if member:
+                # Quitar clases anteriores
+                old_class_roles = [r for r in member.roles if r.name.lower() in [x.lower() for x in ALL_CLASS_ROLES] and r.name.lower() != nueva_clase.value.lower()]
+                if old_class_roles:
+                    await member.remove_roles(*old_class_roles)
+
                 discord_role = discord.utils.find(lambda r: r.name.lower() == nueva_clase.value.lower(), interaction.guild.roles)
                 if discord_role:
                     await member.add_roles(discord_role)

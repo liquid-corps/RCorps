@@ -980,7 +980,7 @@
    <div class="rpg-canvas-scaler">
     <div class="rpg-card-canvas modal-box" id="modal-rpg-card">
       <button type="button" class="modal-close-btn" onclick="closeModal()">✕</button>
-      <div class="card-role-badge" id="m-card-role-badge" style="display:none;">ADMIN</div>
+      <div class="card-role-badge" id="m-card-role-badge" style="display:none;position:absolute;top:14px;right:50px;z-index:45;background:#8b0000;color:#fff;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:bold;font-family:monospace;border:1px solid #ff4444;box-shadow:0 2px 6px rgba(0,0,0,0.5);">ADMIN</div>
 
       <!-- COLUMNA IZQUIERDA -->
       <div class="canvas-left">
@@ -1308,7 +1308,9 @@ async function openModal(char){
     if(char.owner_id){
       const { data: ownerProf } = await db.from('profiles').select('role').eq('id', char.owner_id).single();
       if(ownerProf && (ownerProf.role === 'admin' || ownerProf.role === 'mod')){
-        roleBadge.textContent = ownerProf.role === 'admin' ? 'ADMIN' : 'MOD';
+        roleBadge.textContent = ownerProf.role === 'admin' ? 'ADMIN' : 'SOPORTE';
+        roleBadge.style.backgroundColor = ownerProf.role === 'admin' ? '#8b0000' : '#005588';
+        roleBadge.style.borderColor = ownerProf.role === 'admin' ? '#ff4444' : '#00bfff';
         roleBadge.style.display = 'block';
       } else {
         roleBadge.style.display = 'none';

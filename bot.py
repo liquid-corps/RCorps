@@ -402,6 +402,10 @@ async def cmd_setrango(interaction: discord.Interaction, usuario: discord.User, 
                 if discord_role:
                     await member.add_roles(discord_role)
                     role_msg = f" y se le asignó el rol @{discord_role.name} en Discord"
+                else:
+                    role_msg = f" (⚠️ Crea el rol @{nuevo_rango.value} en los ajustes de Discord para que el Bot lo asigne automáticamente)"
+        except discord.Forbidden:
+            role_msg = f" (⚠️ Mueve el rol de RCorps Bot por encima del rol @{nuevo_rango.value} en Ajustes de Servidor > Roles)"
         except Exception as e:
             print("Error asignando rol en Discord:", e)
 
@@ -447,6 +451,10 @@ async def cmd_setclase(interaction: discord.Interaction, usuario: discord.User, 
                 if discord_role:
                     await member.add_roles(discord_role)
                     role_msg = f" y se le asignó el rol @{discord_role.name} en Discord"
+                else:
+                    role_msg = f" (⚠️ Crea el rol @{nueva_clase.value} en los ajustes de Discord para que el Bot lo asigne automáticamente)"
+        except discord.Forbidden:
+            role_msg = f" (⚠️ Mueve el rol de RCorps Bot por encima del rol @{nueva_clase.value} en Ajustes de Servidor > Roles)"
         except Exception as e:
             print("Error asignando rol en Discord:", e)
 

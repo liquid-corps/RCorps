@@ -1149,7 +1149,11 @@ function renderProfile(){
   $('f-clan').value   = ch.clan || '';
   updateClanIcon();
   $('f-bio').value    = ch.bio    || '';
-  $('discord-display').textContent = currentProfile?.username ? '@' + currentProfile.username : '—';
+  let roleBadge = '';
+  if(currentUserRole === 'admin') roleBadge = ' <span style="background:#ffd700;color:#000;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:bold;margin-left:6px;">👑 Admin</span>';
+  else if(currentUserRole === 'mod') roleBadge = ' <span style="background:#00bfff;color:#fff;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:bold;margin-left:6px;">🛡️ Soporte</span>';
+
+  $('discord-display').innerHTML = (currentProfile?.username ? '@' + currentProfile.username : '—') + roleBadge;
 
   // Skills
   const skills = ch.skills || [];

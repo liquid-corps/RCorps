@@ -1117,60 +1117,65 @@ async function checkAdmin(){
    ============================================================ */
 async function loadProfiles(){
   const grid = $('profiles-grid');
+  if(!grid) return;
   grid.innerHTML = '<div class="inline-spinner" style="grid-column:1/-1;"><div class="sp"></div></div>';
 
-  const { data, error } = await db.from('characters')
-    .select('*')
-    .eq('is_wiki', false)
-    .eq('status', 'aprobado')
-    .not('owner_id', 'is', 'null')
-    .order('id');
+  try {
+    const { data, error } = await db.from('characters')
+      .select('*')
+      .eq('is_wiki', false)
+      .eq('status', 'aprobado')
+      .order('id');
 
-  if(error){
-    grid.innerHTML = '<div class="empty-state">Error al cargar: ' + error.message + '</div>';
-    return;
-  }
-
-  currentProfiles = (data || []).filter(c => (c.name || '').trim() !== '');
-
-  if(currentProfiles.length === 0){
-    grid.innerHTML = '<div class="empty-state">No hay perfiles registrados aún.</div>';
-    return;
-  }
-
-  grid.innerHTML = '';
-  currentProfiles.forEach(char => {
-    const card = document.createElement('button');
-    card.type = 'button';
-    card.className = 'profile-card';
-    card.onclick = () => openModal(char);
-
-    const portWrap = document.createElement('div');
-    portWrap.className = 'card-portrait';
-    const img = document.createElement('img');
-    img.src = char.portrait_list || char.portrait_info || 'assets/foto_lista1.png';
-    img.alt = char.name || 'Perfil';
-    img.onerror = () => { img.style.background = '#ccc'; };
-    portWrap.appendChild(img);
-    card.appendChild(portWrap);
-
-    const modes = char.modes || [];
-    if(modes.length > 0){
-      const tagImg = document.createElement('img');
-      tagImg.className = 'card-tag';
-      tagImg.src = modes[0];
-      tagImg.alt = 'Tag';
-      tagImg.onerror = () => { tagImg.style.display = 'none'; };
-      card.appendChild(tagImg);
+    if(error){
+      grid.innerHTML = '<div class="empty-state">Error al cargar: ' + (error.message || error) + '</div>';
+      return;
     }
 
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'card-name';
-    nameSpan.textContent = char.name || 'Sin nombre';
-    card.appendChild(nameSpan);
+    currentProfiles = (data || []).filter(c => (c.name || '').trim() !== '');
 
-    grid.appendChild(card);
-  });
+    if(currentProfiles.length === 0){
+      grid.innerHTML = '<div class="empty-state">No hay perfiles registrados aún.</div>';
+      return;
+    }
+
+    grid.innerHTML = '';
+    currentProfiles.forEach(char => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'profile-card';
+      card.onclick = () => openModal(char);
+
+      const portWrap = document.createElement('div');
+      portWrap.className = 'card-portrait';
+      const img = document.createElement('img');
+      img.src = char.portrait_list || char.portrait_info || 'assets/foto_lista1.png';
+      img.alt = char.name || 'Perfil';
+      img.onerror = () => { img.src = 'assets/foto_lista1.png'; };
+      portWrap.appendChild(img);
+      card.appendChild(portWrap);
+
+      const modes = char.modes || [];
+      if(modes.length > 0){
+        const tagImg = document.createElement('img');
+        tagImg.className = 'card-tag';
+        tagImg.src = modes[0];
+        tagImg.alt = 'Tag';
+        tagImg.onerror = () => { tagImg.style.display = 'none'; };
+        card.appendChild(tagImg);
+      }
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'card-name';
+      nameSpan.textContent = char.name || 'Sin nombre';
+      card.appendChild(nameSpan);
+
+      grid.appendChild(card);
+    });
+  } catch(err) {
+    console.error('[loadProfiles]', err);
+    grid.innerHTML = '<div class="empty-state">Error al conectar con la base de datos.</div>';
+  }
 }
 
 /* ============================================================

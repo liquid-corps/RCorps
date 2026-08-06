@@ -1345,79 +1345,19 @@ async function openModal(char){
     }
   }
 
-  // Skills (m-skill-1 y m-skill-2)
-  const skills = char.skills || [];
-  [1, 2].forEach(n => {
-    const slot = $('m-skill-' + n);
-    if(slot){
-      if(skills[n-1]){
-        slot.innerHTML = `<img class="skill-img" src="${skills[n-1]}" alt="" style="width:76%;height:76%;max-width:68px;max-height:64px;object-fit:contain;display:block;" />`;
-      } else {
-        slot.innerHTML = '';
-      }
-    }
-  });
-
-  // Estado de aprobación + barra unificada de moderación
-  const badge = $('modal-status-badge');
-  const status = char.status || 'pendiente';
-  const isOwner = currentUser && char.owner_id && currentUser.id === char.owner_id;
-  if(badge){
-    if(isAdmin || isOwner){
-      badge.className = 'status-badge ' + status;
-      badge.style.display = 'inline-flex';
-      let txt = ({pendiente:'🟡 Pendiente',aprobado:'✅ Aprobado',rechazado:'🔴 Rechazado'})[status] || 'Pendiente';
-      if(status === 'rechazado' && char.reject_reason) txt += ': ' + char.reject_reason;
-      badge.innerHTML = '<span class="dot"></span>' + txt;
-    } else {
-      badge.style.display = 'none';
-    }
-  }
-
-  cancelAdminEdit();
-  const modBar = $('mod-action-bar');
-  if(modBar){
-    if(isAdmin){
-      modBar.style.display = 'flex';
-      if($('btn-mod-edit')) $('btn-mod-edit').classList.remove('mod-btn-hidden');
-      if($('btn-mod-save')) $('btn-mod-save').classList.add('mod-btn-hidden');
-      if($('btn-mod-cancel-edit')) $('btn-mod-cancel-edit').classList.add('mod-btn-hidden');
-      if(status === 'pendiente'){
-        if($('btn-mod-approve')) $('btn-mod-approve').classList.remove('mod-btn-hidden');
-        if($('btn-mod-reject')) $('btn-mod-reject').classList.remove('mod-btn-hidden');
-      } else {
-        if($('btn-mod-approve')) $('btn-mod-approve').classList.add('mod-btn-hidden');
-        if($('btn-mod-reject')) $('btn-mod-reject').classList.add('mod-btn-hidden');
-      }
-    } else {
-      modBar.style.display = 'none';
-    }
-  }
-
-  // Modes
-  const modesContainer = $('m-modes-container');
-  if(modesContainer){
-    modesContainer.innerHTML = '';
-    (char.modes || []).forEach(path => {
-      const img = document.createElement('img');
-      img.src = path;
-      img.alt = 'Modo';
-      img.onerror = () => img.remove();
-      modesContainer.appendChild(img);
-    });
-  }
-
   // Skills
-  const skills = char.skills || [];
+  const charSkills = char.skills || [];
   [1,2].forEach(n => {
     const slot = $('m-skill-' + n);
     if(slot){
       slot.innerHTML = '';
-      const path = skills[n-1];
+      const path = charSkills[n-1];
       if(path){
         const img = document.createElement('img');
         img.src = path;
         img.alt = 'Skill ' + n;
+        img.className = 'skill-img';
+        img.style.cssText = 'width:76%;height:76%;max-width:68px;max-height:64px;object-fit:contain;display:block;';
         img.onerror = () => { slot.innerHTML = ''; };
         slot.appendChild(img);
       }

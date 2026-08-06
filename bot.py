@@ -49,10 +49,8 @@ BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN", "")
 WEB_URL_PERFILES = "https://liquid-corps.github.io/RCorps/perfiles.html"
 WEB_URL_MI_PERFIL = "https://liquid-corps.github.io/RCorps/perfil.html"
 
-# Configuración del Bot de Discord con Intents completos
+# Configuración del Bot de Discord con Intents estándar
 intents = discord.Intents.default()
-intents.members = True
-intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Servidor de Health Check para Render ($PORT) para evitar reinicios

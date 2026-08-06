@@ -417,6 +417,81 @@ async def cmd_setclase(interaction: discord.Interaction, personaje: str, nueva_c
         await interaction.followup.send(f"❌ Error al actualizar la clase en la base de datos.", ephemeral=True)
 
 # ============================================================
+# COMANDO SLASH: /setrol (Solo Admins)
+# ============================================================
+@bot.tree.command(name="setrol", description="[ADMIN] Cambiar el rol de sistema (admin/mod/user) de un usuario")
+@app_commands.describe(usuario="Nombre de usuario en la web o Discord", nuevo_rol="Nuevo rol de sistema")
+@app_commands.choices(nuevo_rol=[
+    app_commands.Choice(name="Admin", value="admin"),
+    app_commands.Choice(name="Mod / Soporte", value="mod"),
+    app_commands.Choice(name="Usuario normal", value="user")
+])
+async def cmd_setrol(interaction: discord.Interaction, usuario: str, nuevo_rol: app_commands.Choice[str]):
+    if not is_mod_or_admin(interaction):
+        await interaction.response.send_message("⛔ Solo los administradores pueden cambiar roles del sistema.", ephemeral=True)
+        return
+
+    await interaction.response.defer()
+    
+    clean_user = usuario.replace("@", "").strip()
+    url = f"{SUPABASE_URL}/rest/v1/profiles?username=ilike.{clean_user}"
+    res = requests.get(url, headers=HEADERS)
+    data = res.json() if res.status_code == 200 else []
+    
+    if not data:
+        await interaction.followup.send(f"❌ No se encontró ningún perfil con el nombre de usuario `@{clean_user}`.", ephemeral=True)
+        return
+
+    prof_id = data[0]["id"]
+    patch_res = requests.patch(f"{SUPABASE_URL}/rest/v1/profiles?id=eq.{prof_id}", json={"role": nuevo_rol.value}, headers=HEADERS)
+    
+    if patch_res.status_code in [200, 204]:
+        await interaction.followup.send(f"✅ Rol del sistema para **@{data[0].get('username')}** cambiado a `{nuevo_rol.name}` con éxito.")
+    else:
+        await interaction.followup.send(f"❌ Error al actualizar el rol en la base de datos.", ephemeral=True)
+
+# ============================================================
+# COMANDO SLASH: /darroles (Asignar roles de Discord 'Miembro' y Rango 'B')
+# ============================================================
+@bot.tree.command(name="darroles", description="[MOD] Asignar roles en el servidor de Discord (Miembro y Rango) a un usuario")
+@app_commands.describe(miembro="Usuario de Discord a quien dar roles", rango_rol="Nombre del rol de rango (por defecto: B)")
+async def cmd_darroles(interaction: discord.Interaction, miembro: discord.Member, rango_rol: str = "B"):
+    if not is_mod_or_admin(interaction):
+        await interaction.response.send_message("⛔ Solo los moderadores pueden usar este comando.", ephemeral=True)
+        return
+
+    await interaction.response.defer()
+    
+    guild = interaction.guild
+    if not guild:
+        await interaction.followup.send("❌ Este comando solo se puede usar dentro del servidor de Discord.", ephemeral=True)
+        return
+
+    added_roles = []
+    # Buscar rol 'Miembro'
+    role_miembro = discord.utils.find(lambda r: r.name.lower() == "miembro", guild.roles)
+    if role_miembro:
+        try:
+            await miembro.add_roles(role_miembro)
+            added_roles.append(role_miembro.name)
+        except Exception as e:
+            print("Error añadiendo rol Miembro:", e)
+
+    # Buscar rol de rango (ej. 'B' o 'b')
+    role_rango = discord.utils.find(lambda r: r.name.lower() == rango_rol.lower(), guild.roles)
+    if role_rango:
+        try:
+            await miembro.add_roles(role_rango)
+            added_roles.append(role_rango.name)
+        except Exception as e:
+            print("Error añadiendo rol de rango:", e)
+
+    if added_roles:
+        await interaction.followup.send(f"✅ Roles `{', '.join(added_roles)}` asignados a {miembro.mention} en el servidor de Discord.")
+    else:
+        await interaction.followup.send(f"⚠️ Se intentó asignar los roles, pero verifica que existan los roles `Miembro` y `{rango_rol}` creados en la lista de roles del servidor.", ephemeral=True)
+
+# ============================================================
 # INICIO DEL BOT
 # ============================================================
 if __name__ == "__main__":

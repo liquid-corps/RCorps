@@ -1196,26 +1196,17 @@ function renderStatusBadge(){
   }
   txt.textContent = label;
 
-  // El área de abajo solo se usa para avisar del cooldown (usuario normal).
+  // Quitar el aviso de cooldown de 3 días: siempre se permite editar salvo que esté pendiente.
   if(wrap && cd){
-    const canSend = canResubmit();
-    if(isAdmin || canSend){
-      wrap.style.display = 'none';
-    } else {
-      wrap.style.display = 'flex';
-      cd.textContent = 'Debes esperar ' + daysLeftCooldown() + ' día(s) para volver a enviar tu registro.';
-    }
+    wrap.style.display = 'none';
   }
 }
 
-// ¿Han pasado 3 días desde el último envío?
+// Sin tiempo de espera: se permite actualizar la ficha en cualquier momento.
+// Solo se bloquea temporalmente si el cambio anterior aún está 'pendiente' de revisión.
 function canResubmit(){
-  if(currentStatus === 'nuevo' || !currentCharacter || !currentCharacter.id) return true;
   if(currentStatus === 'pendiente') return false;
-  if(currentStatus === 'rechazado') return true;
-  if(!lastSubmit) return true;
-  const diffMs = Date.now() - new Date(lastSubmit).getTime();
-  return diffMs >= 3 * 24 * 60 * 60 * 1000;
+  return true;
 }
 
 function daysLeftCooldown(){

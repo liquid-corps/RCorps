@@ -1124,7 +1124,7 @@ async function loadProfiles(){
     const { data, error } = await db.from('characters')
       .select('*')
       .eq('is_wiki', false)
-      .eq('status', 'aprobado')
+      .or('status.eq.aprobado,status.eq.pendiente')
       .order('id');
 
     if(error){

@@ -414,11 +414,37 @@ async def cmd_setclase(interaction: discord.Interaction, personaje: str, nueva_c
     else:
         await interaction.followup.send(f"❌ Error al actualizar la clase en la base de datos.", ephemeral=True)
 
+def fetch_profile_by_any_query(query):
+    clean_query = query.replace("@", "").replace("<", "").replace(">", "").replace("!", "").strip()
+    headers = get_supabase_headers()
+    
+    # 1. Si es ID numérico de Discord
+    if clean_query.isdigit():
+        res = requests.get(f"{SUPABASE_URL}/rest/v1/profiles?discord_id=eq.{clean_query}", headers=headers)
+        if res.status_code == 200 and res.json():
+            return res.json()[0]
+
+    # 2. Buscar por username parcial en profiles
+    res = requests.get(f"{SUPABASE_URL}/rest/v1/profiles?username=ilike.*{clean_query}*", headers=headers)
+    if res.status_code == 200 and res.json():
+        return res.json()[0]
+
+    # 3. Buscar por nombre de personaje en characters
+    res_char = requests.get(f"{SUPABASE_URL}/rest/v1/characters?name=ilike.*{clean_query}*", headers=headers)
+    if res_char.status_code == 200 and res_char.json():
+        owner_id = res_char.json()[0].get("owner_id")
+        if owner_id:
+            res_prof = requests.get(f"{SUPABASE_URL}/rest/v1/profiles?id=eq.{owner_id}", headers=headers)
+            if res_prof.status_code == 200 and res_prof.json():
+                return res_prof.json()[0]
+
+    return None
+
 # ============================================================
 # COMANDO SLASH: /setrol (Solo Admins)
 # ============================================================
 @bot.tree.command(name="setrol", description="[ADMIN] Cambiar el rol de sistema (admin/mod/user) de un usuario")
-@app_commands.describe(usuario="Nombre de usuario en la web o Discord", nuevo_rol="Nuevo rol de sistema")
+@app_commands.describe(usuario="Nombre de personaje, mención o usuario en Discord", nuevo_rol="Nuevo rol de sistema")
 @app_commands.choices(nuevo_rol=[
     app_commands.Choice(name="Admin", value="admin"),
     app_commands.Choice(name="Mod / Soporte", value="mod"),
@@ -430,20 +456,16 @@ async def cmd_setrol(interaction: discord.Interaction, usuario: str, nuevo_rol: 
         await interaction.followup.send("⛔ Solo los administradores pueden cambiar roles del sistema.", ephemeral=True)
         return
 
-    clean_user = usuario.replace("@", "").strip()
-    url = f"{SUPABASE_URL}/rest/v1/profiles?username=ilike.{clean_user}"
-    res = requests.get(url, headers=get_supabase_headers())
-    data = res.json() if res.status_code == 200 else []
-    
-    if not data:
-        await interaction.followup.send(f"❌ No se encontró ningún perfil con el nombre de usuario `@{clean_user}`.", ephemeral=True)
+    prof = fetch_profile_by_any_query(usuario)
+    if not prof:
+        await interaction.followup.send(f"❌ No se encontró ningún perfil para `{usuario}`.", ephemeral=True)
         return
 
-    prof_id = data[0]["id"]
+    prof_id = prof["id"]
     patch_res = requests.patch(f"{SUPABASE_URL}/rest/v1/profiles?id=eq.{prof_id}", json={"role": nuevo_rol.value}, headers=get_supabase_headers())
     
     if patch_res.status_code in [200, 204]:
-        await interaction.followup.send(f"✅ Rol del sistema para **@{data[0].get('username')}** cambiado a `{nuevo_rol.name}` con éxito.")
+        await interaction.followup.send(f"✅ Rol del sistema para **@{prof.get('username')}** cambiado a `{nuevo_rol.name}` con éxito.")
     else:
         await interaction.followup.send(f"❌ Error al actualizar el rol en la base de datos.", ephemeral=True)
 

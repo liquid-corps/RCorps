@@ -1797,8 +1797,10 @@ $('detail-modal').addEventListener('click', e => {
 db.auth.onAuthStateChange(async () => {
   await checkAdmin();
   await loadModInbox();
-  if($('detail-modal').classList.contains('open')){
-    $('admin-edit-bar').style.display = isAdmin ? 'flex' : 'none';
+  const modal = $('detail-modal');
+  if(modal && modal.classList.contains('open')){
+    const modBar = $('mod-action-bar');
+    if(modBar) modBar.style.display = isAdmin ? 'flex' : 'none';
     loadLikes();
     loadComments();
   }

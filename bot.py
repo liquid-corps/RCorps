@@ -563,8 +563,38 @@ async def cmd_setrol(interaction: discord.Interaction, usuario: discord.User, nu
     prof_id = prof["id"]
     patch_res = requests.patch(f"{SUPABASE_URL}/rest/v1/profiles?id=eq.{prof_id}", json={"role": nuevo_rol.value}, headers=get_supabase_headers())
     
+    role_msg = ""
+    if interaction.guild:
+        try:
+            member = interaction.guild.get_member(usuario.id) or await interaction.guild.fetch_member(usuario.id)
+            if member:
+                # Determinar nombre del rol de Discord según la elección
+                target_role_names = []
+                if nuevo_rol.value == "mod":
+                    target_role_names = ["soporte", "mod", "moderador"]
+                elif nuevo_rol.value == "admin":
+                    target_role_names = ["admin", "administrador"]
+
+                if target_role_names:
+                    discord_role = discord.utils.find(lambda r: r.name.lower() in target_role_names, interaction.guild.roles)
+                    if discord_role:
+                        await member.add_roles(discord_role)
+                        role_msg = f" y se le asignó la etiqueta @{discord_role.name} en su perfil de Discord"
+                    else:
+                        role_msg = f" (⚠️ Crea el rol @soporte en Discord para asignárselo a su perfil)"
+                else:
+                    # Si pasa a usuario normal, quitar rol de soporte/admin de Discord
+                    old_roles = [r for r in member.roles if r.name.lower() in ["soporte", "mod", "moderador", "admin", "administrador"]]
+                    if old_roles:
+                        await member.remove_roles(*old_roles)
+                        role_msg = " y se le removió la etiqueta de soporte/admin en Discord"
+        except discord.Forbidden:
+            role_msg = " (⚠️ Mueve el rol de RCorps Bot por encima en Ajustes de Servidor > Roles para que pueda dar el rol @soporte)"
+        except Exception as e:
+            print("Error asignando rol de soporte/admin en Discord:", e)
+
     if patch_res.status_code in [200, 204]:
-        await interaction.followup.send(f"✅ Rol del sistema para **@{prof.get('username')}** ({usuario.mention}) cambiado a `{nuevo_rol.name}` con éxito.")
+        await interaction.followup.send(f"✅ Rol del sistema para **@{prof.get('username')}** ({usuario.mention}) cambiado a `{nuevo_rol.name}`{role_msg}.")
     else:
         await interaction.followup.send(f"❌ Error al actualizar el rol en la base de datos.", ephemeral=True)
 

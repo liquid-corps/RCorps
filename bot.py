@@ -346,12 +346,29 @@ async def cmd_link(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
+def is_mod_or_admin(interaction: discord.Interaction) -> bool:
+    if not interaction.guild:
+        return False
+    member = interaction.user
+    if isinstance(member, discord.Member):
+        if member.guild_permissions.administrator or member.guild_permissions.manage_roles:
+            return True
+        mod_role_names = ["mod", "moderador", "admin", "administrador", "soporte", "staff"]
+        for role in member.roles:
+            if any(m in role.name.lower() for m in mod_role_names):
+                return True
+    return False
+
 # ============================================================
 # COMANDO SLASH: /setrango (Solo Moderadores / Admins)
 # ============================================================
 @bot.tree.command(name="setrango", description="[MOD] Cambiar el rango de un personaje")
 @app_commands.describe(personaje="Nombre del personaje o usuario", nuevo_rango="Nuevo rango a asignar (ej. Jonin, Kage, Mod)")
 async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_rango: str):
+    if not is_mod_or_admin(interaction):
+        await interaction.response.send_message("⛔ Solo los moderadores o soportes pueden usar este comando.", ephemeral=True)
+        return
+
     await interaction.response.defer()
     
     char = fetch_character_by_name_or_discord(personaje, personaje)
@@ -380,6 +397,10 @@ async def cmd_setrango(interaction: discord.Interaction, personaje: str, nuevo_r
     app_commands.Choice(name="Lider", value="Lider")
 ])
 async def cmd_setclase(interaction: discord.Interaction, personaje: str, nueva_clase: app_commands.Choice[str]):
+    if not is_mod_or_admin(interaction):
+        await interaction.response.send_message("⛔ Solo los moderadores o soportes pueden usar este comando.", ephemeral=True)
+        return
+
     await interaction.response.defer()
     
     char = fetch_character_by_name_or_discord(personaje, personaje)

@@ -561,8 +561,15 @@ async def cmd_setrol(interaction: discord.Interaction, usuario: discord.User, nu
         return
 
     prof_id = prof["id"]
+    # 1. Intentar actualizar tabla profiles
     patch_res = requests.patch(f"{SUPABASE_URL}/rest/v1/profiles?id=eq.{prof_id}", json={"role": nuevo_rol.value}, headers=get_supabase_headers())
     
+    # 2. Actualizar tabla characters (para esquivar RLS y asegurar visualizacion inmediata en la web)
+    char = fetch_character_by_name_or_discord(usuario)
+    if char:
+        new_zod = "Soporte" if nuevo_rol.value == "mod" else ("Admin" if nuevo_rol.value == "admin" else char.get("zodiac"))
+        requests.patch(f"{SUPABASE_URL}/rest/v1/characters?id=eq.{char['id']}", json={"zodiac": new_zod}, headers=get_supabase_headers())
+
     role_msg = ""
     if interaction.guild:
         try:

@@ -1337,10 +1337,10 @@ async function openModal(char){
   const roleBadge = $('m-card-role-badge');
   if(roleBadge){
     let role = char.owner_role || 'user';
-    if(role === 'user' && char.owner_id){
-      const { data: ownerProf } = await db.from('profiles').select('role').eq('id', char.owner_id).single();
-      if(ownerProf?.role) role = ownerProf.role;
-    }
+    const zod = (char.zodiac || '').trim();
+    if(zod === 'Soporte' || zod === 'Mod') role = 'mod';
+    else if(zod === 'Admin') role = 'admin';
+
     if(role === 'admin' || role === 'mod'){
       roleBadge.textContent = role === 'admin' ? 'ADMIN' : 'SOPORTE';
       roleBadge.style.backgroundColor = role === 'admin' ? '#8b0000' : '#005588';

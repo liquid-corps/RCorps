@@ -784,8 +784,7 @@
         <div class="canvas-area-medium" id="zodiac-value">
           <span class="rpg-label">Clase:</span>
           <select class="rpg-input-val rpg-select-val" id="f-zodiac" disabled style="background:transparent;border:none;outline:none;font-family:inherit;font-size:20px;color:#2b2216;cursor:pointer;flex:1;">
-            <option value="" disabled selected>Selecciona Clase...</option>
-            <option value="Miembro">Miembro</option>
+            <option value="Miembro" selected>Miembro</option>
             <option value="Sensei">Sensei</option>
             <option value="Ronin">Ronin</option>
             <option value="Bestia">Bestia</option>
@@ -1385,56 +1384,43 @@ function exitEditMode(save=false){
    VALIDACIÓN DE FORMULARIO
    ============================================================ */
 function validateProfileForm(updates){
-  // 1. Nombre
+  // 1. Nombre (Obligatorio)
   if(!updates.name || updates.name.trim() === ''){
     showStatus('⚠️ Debes ingresar el Nombre de tu personaje.', 'err');
     return false;
   }
 
-  // 2. Clase (Obligatoria mediante selección)
-  const validClasses = ['Miembro', 'Sensei', 'Ronin', 'Bestia', 'Lider'];
-  if(!updates.zodiac || updates.zodiac.trim() === '' || !validClasses.includes(updates.zodiac)){
-    showStatus('⚠️ Debes seleccionar una Clase válida (Miembro, Sensei, Ronin, Bestia, Lider).', 'err');
-    return false;
-  }
-
-  // 3. Edad (Obligatoria, solo números)
+  // 2. Edad (Obligatoria, solo números)
   if(updates.age === null || updates.age === undefined || isNaN(updates.age)){
     showStatus('⚠️ La Edad es obligatoria y solo debe contener números (ej. 20).', 'err');
     return false;
   }
 
-  // 4. Rango (Obligatorio)
-  if(!updates.rank || updates.rank.trim() === ''){
-    showStatus('⚠️ Debes ingresar el Rango de tu personaje.', 'err');
-    return false;
-  }
-
-  // 5. Clan (Obligatorio)
+  // 3. Clan (Obligatorio)
   if(!updates.clan || updates.clan.trim() === ''){
     showStatus('⚠️ Debes elegir un Clan para tu personaje.', 'err');
     return false;
   }
 
-  // 6. Tag (Obligatorio)
+  // 4. Tag (Obligatorio)
   if(!selectedTag){
     showStatus('⚠️ Debes elegir un Tag para tu personaje.', 'err');
     return false;
   }
 
-  // 7. Habilidades / Skills (Obligatorio seleccionar al menos 1)
+  // 5. Habilidades / Skills (Obligatorio seleccionar al menos 1)
   if(!updates.skills || updates.skills.length === 0){
     showStatus('⚠️ Debes seleccionar al menos 1 Habilidad / Skill para tu personaje.', 'err');
     return false;
   }
 
-  // 8. Foto de Perfil (Obligatoria)
+  // 6. Foto de Perfil (Obligatoria)
   if(!currentCharacter?.portrait_info){
     showStatus('⚠️ Debes seleccionar una Foto de Perfil para tu personaje.', 'err');
     return false;
   }
 
-  // Biografía es opcional (no se invalida si está vacía).
+  // Biografía es opcional. Clase y Rango son gestionados exclusivamente por los Moderadores.
   return true;
 }
 
@@ -1515,8 +1501,8 @@ function collectProfileUpdates(){
     is_wiki: false,
     name: $('f-name').value.trim(),
     age:    (()=>{ const v=$('f-age').value.trim(); return v==='' ? null : parseInt(v,10); })(),
-    rank:   $('f-rank').value.trim() || null,
-    zodiac: $('f-zodiac').value.trim() || null,
+    rank:   $('f-rank').value.trim() || 'Genin',
+    zodiac: $('f-zodiac').value.trim() || 'Miembro',
     clan:   $('f-clan').value || null,
   };
 }

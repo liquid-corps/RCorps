@@ -1068,13 +1068,26 @@ async function loadProfile(){
     const { data: chars, error: ec } = await db
       .from('characters').select('*').eq('owner_id', currentUser.id);
     if(ec) throw ec;
-    currentCharacter = (chars && chars.length) ? chars[0] : null;
-    currentStatus = currentCharacter?.status || 'pendiente';
-    lastSubmit   = currentCharacter?.last_submit || null;
+
+    if(chars && chars.length){
+      currentCharacter = chars[0];
+      currentStatus = currentCharacter.status || 'pendiente';
+      lastSubmit   = currentCharacter.last_submit || null;
+    } else {
+      // Usuario nuevo sin personaje registrado aún
+      currentCharacter = { owner_id: currentUser.id };
+      currentStatus = 'nuevo';
+      lastSubmit = null;
+    }
 
     renderHeader();
     renderProfile();
     renderStatusBadge();
+
+    // Si es usuario nuevo o fue rechazado, habilitar el modo edición de inmediato
+    if(currentStatus === 'nuevo' || currentStatus === 'rechazado'){
+      enterEditMode();
+    }
   } catch(err){
     console.error('[loadProfile]', err);
     showStatus('Error al cargar perfil: ' + (err.message || err), 'err');
@@ -1163,9 +1176,10 @@ function renderProfile(){
 }
 
 const STATUS_LABELS = {
-  pendiente: 'Pendiente de aprobación',
-  aprobado:  'Aprobado',
-  rechazado: 'Rechazado',
+  nuevo:     '⚪ Ficha nueva — Completa tus datos y envía',
+  pendiente: '🟡 Pendiente de aprobación',
+  aprobado:  '✅ Aprobado',
+  rechazado: '🔴 Rechazado',
 };
 
 function renderStatusBadge(){
@@ -1197,11 +1211,9 @@ function renderStatusBadge(){
 
 // ¿Han pasado 3 días desde el último envío?
 function canResubmit(){
-  // Si está pendiente, no puede re-enviar (ya está en revisión).
+  if(currentStatus === 'nuevo' || !currentCharacter || !currentCharacter.id) return true;
   if(currentStatus === 'pendiente') return false;
-  // Si fue rechazado, puede re-enviar libre (sin cooldown).
   if(currentStatus === 'rechazado') return true;
-  // Si está aprobado, espera 3 días para volver a enviar.
   if(!lastSubmit) return true;
   const diffMs = Date.now() - new Date(lastSubmit).getTime();
   return diffMs >= 3 * 24 * 60 * 60 * 1000;
@@ -1431,8 +1443,7 @@ function validateProfileForm(updates){
    ============================================================ */
 async function sendToReview(){
   if(!currentCharacter){
-    showStatus('No hay personaje vinculado a tu cuenta.', 'err');
-    return;
+    currentCharacter = { owner_id: currentUser.id };
   }
   if(!canResubmit()){
     showStatus('Debes esperar ' + daysLeftCooldown() + ' día(s) para volver a enviar.', 'err');
@@ -1483,11 +1494,6 @@ async function sendToReview(){
   currentCharacter = { ...currentCharacter, ...changes };
   currentStatus = 'pendiente';
   lastSubmit = now;
-  if(isEditing) exitEditMode(true);
-  renderStatusBadge();
-  showStatus('¡Registro enviado a revisión! Un moderador lo revisará pronto.', 'ok');
-
-  // Avisar a Discord: pendiente
   notifyDiscord(updates, false, 'pendiente');
 }
 

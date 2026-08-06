@@ -1121,18 +1121,31 @@ async function loadProfiles(){
   grid.innerHTML = '<div class="inline-spinner" style="grid-column:1/-1;"><div class="sp"></div></div>';
 
   try {
-    const { data, error } = await db.from('characters')
+    const { data: charsData, error: charErr } = await db.from('characters')
       .select('*')
       .eq('is_wiki', false)
       .or('status.eq.aprobado,status.eq.pendiente')
       .order('id');
 
-    if(error){
-      grid.innerHTML = '<div class="empty-state">Error al cargar: ' + (error.message || error) + '</div>';
+    if(charErr){
+      grid.innerHTML = '<div class="empty-state">Error al cargar: ' + (charErr.message || charErr) + '</div>';
       return;
     }
 
-    currentProfiles = (data || []).filter(c => (c.name || '').trim() !== '');
+    // Cargar perfiles para asociar el rol del sistema (admin/mod) a cada personaje
+    const { data: profsData } = await db.from('profiles').select('id, discord_id, role, username');
+    const profMap = {};
+    if(profsData){
+      profsData.forEach(p => {
+        if(p.id) profMap[p.id] = p.role;
+        if(p.discord_id) profMap[p.discord_id] = p.role;
+      });
+    }
+
+    currentProfiles = (charsData || []).filter(c => (c.name || '').trim() !== '').map(c => {
+      c.owner_role = profMap[c.owner_id] || profMap[c.discord_id] || 'user';
+      return c;
+    });
 
     if(currentProfiles.length === 0){
       grid.innerHTML = '<div class="empty-state">No hay perfiles registrados aún.</div>';
@@ -1305,16 +1318,16 @@ async function openModal(char){
   // Badge de ROL MOD/ADMIN en la esquina del modal
   const roleBadge = $('m-card-role-badge');
   if(roleBadge){
-    if(char.owner_id){
+    let role = char.owner_role || 'user';
+    if(role === 'user' && char.owner_id){
       const { data: ownerProf } = await db.from('profiles').select('role').eq('id', char.owner_id).single();
-      if(ownerProf && (ownerProf.role === 'admin' || ownerProf.role === 'mod')){
-        roleBadge.textContent = ownerProf.role === 'admin' ? 'ADMIN' : 'SOPORTE';
-        roleBadge.style.backgroundColor = ownerProf.role === 'admin' ? '#8b0000' : '#005588';
-        roleBadge.style.borderColor = ownerProf.role === 'admin' ? '#ff4444' : '#00bfff';
-        roleBadge.style.display = 'block';
-      } else {
-        roleBadge.style.display = 'none';
-      }
+      if(ownerProf?.role) role = ownerProf.role;
+    }
+    if(role === 'admin' || role === 'mod'){
+      roleBadge.textContent = role === 'admin' ? 'ADMIN' : 'SOPORTE';
+      roleBadge.style.backgroundColor = role === 'admin' ? '#8b0000' : '#005588';
+      roleBadge.style.borderColor = role === 'admin' ? '#ff4444' : '#00bfff';
+      roleBadge.style.display = 'block';
     } else {
       roleBadge.style.display = 'none';
     }
